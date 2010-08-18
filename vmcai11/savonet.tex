@@ -17,51 +17,50 @@
 \maketitle
 
 \section*{Introduction}
-
 The widespread of broadband Internet access and digital media during the last
 decade has attracted a lot of attention on their potential applications.
-Classical applications from the analog era, such as television, 
-radio broadcasting and phone communications are being ported and enhanced to the digital
-world.
+Classical devices from the analog era, such as television, radio broadcasting
+and phone communications are being adapted to the digital world. Additionally,
+whilst analog applications were mostly based on hardware implementations, their
+digital counterpart often consist in software implementations, \eg{} hardware
+PBX for phone communications being replaced by software like Asterisk and IP
+phones. These software implementations usually offer much more flexibility and
+modularity in their design.
+% and allow updates, both for bugfix and new features, at virtually no cost.
 
-Additionally, while analog applications where mostly based on hardware implementations,
-their digital counterpart are often software implementations, \eg{} hardware PBX for phone
-communications being replaced by software like Asterisk and IP phones. These software
-implementation usually offer much more flexibility and allow updates, both 
-for bugfix and new features, at virtually no costs.
+In this context of improvements, updates and enhancements of old technologies,
+we are here specificaly interested in adapting audio and video broadcasting
+techniques to the digital world. Creating and broadcasting a stream of
+multimedia data with recent computers has become technically very easy. However,
+the software technologies available to perform such tasks have not yet brought
+the new ideas which are necessary in order to benefit from the new possibilities
+offered by modern computing devices.
 
-In this context of improvements, updates and enhancements of old technologies, we 
-are interested in audio and video broadcasting. Creating and broadcasting 
-a stream of multimedia data with recent computers has become very easy.
-Yet, the software technologies available to perform such tasks
-have brought very few new ideas related to the new possibilities offered
-by modern computing technologies.
-
-Designing a multimedia stream can require a lot of flexibility 
-in order to achieve the program that one may want to create. For instance,
-a radio stream may have jingles announcing next coming shows
-or commercials. It may also play those jingles at a regular 
-interval of time, between songs or on top of them. Also, a radio program may be 
-composed of automatic playlist for a certain period, \eg{} during the nigh, 
-and live shows during the day.
-
-Similarly, one may want to control and process the data before broadcasting
-it to the public, performing tasks like:
+Designing a generator form multimedia streams needs a lot of flexibility in
+order to be able to cope with most of the expectations and requirements of
+users. For instance, a radio stream may have jingles announcing next coming
+shows or commercials. It may also play those jingles at a regular interval of
+time, between songs or on top of them. Also, a radio program may be composed of
+automatic playlist for a certain period, \eg{} during the night, and live shows
+during the day. Similarly, one may want to control and process the data before
+broadcasting it to the public, performing tasks like
 \begin{itemize}
- \item Volume normalization.
- \item Cross-fading between tracks, possibly parameterized by the respective volumes
-of the old and new tracks or predefined settings.
- \item Cut blanks, either in automatic file streams or during live shows.
+ \item volume normalization,
+ \item cross-fading between tracks, possibly parameterized by the respective
+   volumes of the old and new tracks or predefined settings,
+ \item remove blanks, either in automatic file streams or during live shows,
+ \item etc.
 \end{itemize}
 
-Those examples, among many others, express the need for flexible
-and adaptative solutions for creating and broadcasting multimedia data.
-Classical tools to broadcast multimedia data over the Internet, like
-Darkice, Ezstream, VideoLAN, Rivendell, SAM Broadcaster, \dots mostly consist 
-of straight-forward adaptation of classical streaming technologies, whose 
-paradigms are based on predefined interfaces, such as a virtual mixing console
-or static file-based setups. Those tools, although quite powerful, are usually very hard 
-to adapt to a particular need.
+Those examples, among many others, show the need for very flexible and
+adaptative solutions for creating and broadcasting multimedia data. Classical
+tools to broadcast multimedia data over the Internet (such as Darkice, Ezstream,
+VideoLAN, Rivendell or SAM Broadcaster) mostly consist of straightforward
+adaptation of classical streaming technologies, whose paradigms are based on
+predefined interfaces, such as a virtual mixing console or static file-based
+setups. Those tools, although quite powerful, are usually very hard to adapt to
+a particular need and are more and more often perceived as limited by the very
+constrained design of the program.
 
 A particularly important aspect of modern software technologies is programming
 languages. Whether general or applicative, programming languages are the first 
