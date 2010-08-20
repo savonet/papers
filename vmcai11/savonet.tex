@@ -46,7 +46,7 @@ modularity in their design.
 % and allow updates, both for bugfix and new features, at virtually no cost.
 
 In this context of improvements, updates and enhancements of old technologies,
-we are here specificaly interested in adapting audio and video broadcasting
+we are here specifically interested in adapting audio and video broadcasting
 techniques to the digital world. Creating and broadcasting a stream of
 multimedia data with recent computers has become technically very easy. However,
 the software technologies available to perform such tasks have not yet brought
@@ -85,7 +85,7 @@ class tools to release creativity and flexibility for creating new software appl
 Programming languages have been used in various practical contexts to bring flexibility
 and overcome static pre-defined paradigms. One may, for instance, think of the Perl 
 language, invented to allow powerful and flexible word-based treatments, or the PHP
-language, invented to create easily dynamic webpages.
+language, invented to create easily dynamic web pages.
 
 The application we present in this paper brings to the domain of multimedia
 broadcasting the ideas and technologies of software engineering. It originated 
@@ -135,7 +135,7 @@ Also, a stream can be finite or infinite. Infinite streams are particularly inte
 because most of the time, we expect a radio, for instance, to be always online. However, this needs 
 a special care since it implies some assumption about the validity of the elements that build the stream.
 
-Because stream are infinite objects, they cannot be fully instanciated in memory. Hence, it is 
+Because stream are infinite objects, they cannot be fully instantiated in memory. Hence, it is 
 more appropriate to think of a \textit{stream generator} than of a stream itself which is how
 a stream is created in \liquidsoap{}. A stream generator, in \liquidsoap{}, is described as 
 an acyclic oriented graph. The edge of the graphs represent the operators, used to create and modify
@@ -143,22 +143,22 @@ a stream, while the vertices represent the connections between them.
 
 \subsection*{Stream generation}
 
-Given an acylic graph describing a stream generator, the roots of the graph are the operator that create 
-the initial stream, called \textit{sources}. Those sources can be create from a single file, a playlist, an HTTP input,
-the sound card, etc.. Then, the sources are then modified and composed with each other using 
+Given an acyclic graph describing a stream generator, the roots of the graph are the operator that create 
+the initial streams, called \textit{sources}. Those sources can be create from a single file, a playlist, an HTTP input,
+the sound card, etc.. The sources are then modified and composed with each other using 
 \textit{operators} that, for instance, play a source if it is available or a second one otherwise, or modify
 the metadata, mix the audio data of two sources, etc..
 Finally, the leaves of the graph describe the \textit{outputs} of the stream. Those outputs consist, for instance,
-in playing the stream on the local sound card, saving it to a file or sending it to and Icecast server. 
+of playing the stream on the local sound card, saving it to a file or sending it to and Icecast server. 
 For this initial description, we suppose that the graph has only one output.
 
-As explained, the graph consists of a \textit{stream generator}. Hence, once the graph has been instanciated,
-it is used to generate the stream in the following way: a elementary chunk of data, called a frame, is given to the 
-output operator, the leave of the graph, assumed to be unique for now, to be filled. 
-The output transmit the frame to the underlying operators to fill it. Those operators transmit the frame to their 
-underlying operator, until the frame reaches the root nodes, i.e. the initial stream operators. 
-Then, the initial stream operators fill the frame and send it back to the operators above, which in turn perform
-the modifications they have to do, until a filled frame reach back the output.
+As explained, the graph is a \textit{stream generator}. Hence, once the graph has been instantiated,
+it is used to generate the stream in the following way: a elementary chunk of data, called a frame, is given to be filled to the 
+output operator, the leave of the graph, assumed to be unique for now. 
+The output passes the frame to the underlying operators to fill it. Those operators, in turns, pass the frame to their 
+underlying operators, until the frame reaches a root node, i.e. a source. 
+Then, the source fills the frame and send it back to the operator above, which in turn performs
+the modifications it has to do, until a filled frame is returned to the output.
 
 \begin{figure}[htn]
  \begin{center}
@@ -177,19 +177,18 @@ the modifications they have to do, until a filled frame reach back the output.
 
 Using this method, the stream can be described using a finite amount of memory. In fact, the frames used
 to generate the stream can be statically allocated and passed as memory pointers during the generation, which 
-minimalizes the copies of data in memory. Also, the stream generator can be used at any required rate. For instance,
-for a stream broadcasted live, the generator will be asked to fill frames at the real rate, while 
+avoids copying data in memory. Also, the stream generator can be used at any rate. For instance,
+for a live broadcast, the generator will be asked to fill frames at real rate, while 
 for a stream saved to a file, the generator will be asked to fill frames at the maximal possible rate.
 
 Finally, the information of whether or not a stream can be assumed to be infinite is also carried by the 
-acyclic graph. By making sensible assumptions, it is possible to carry this information through the graph. 
-For instance, if a source is created from a single file, one can try to decode it before starting streaming.
-If the file can be decoded, and one assume that the file will not be deleted later, then the source 
-can be considered infallible. Later one, if this source is used, for instance in an operator that plays 
+graph. For instance, if a source is created from a single file, one can try to decode it before starting 
+streaming. If the file can be decoded, and one can assume that the file will not be deleted later, and then 
+the source can be considered infallible. Later one, if this source is used, for instance in an operator that plays 
 the first available source, then the source resulting of this operator is also infallible etc..
 By induction over the vertices of the graph, each node can be considered fallible or not. Eventually,
-an infallible output can be considered as describing an infinite stream generator, while a fallible
-output described a source that may or may not be infinite.
+an infallible output can be considered as describing an infinite stream, while a fallible
+output describes a stream that may not be infinite.
 
 \subsection*{Stream sharing}
 
@@ -229,7 +228,7 @@ transmit their frame to their underlying nodes once and, for the successive call
 Once all the filling operations have been done for a bunch of ticks, the nodes are informed that the 
 stream has moved to the next bunch and reset their cached values. 
 
-Finally, the necessity for a node to cache its current frame is detected when instanciating the graph, thus
+Finally, the necessity for a node to cache its current frame is detected when instantiating the graph, thus
 copying data in memory only when it is necessary.
 
 \subsection*{Stream clocks}
@@ -256,104 +255,62 @@ fade out the volume of an ending track, fade in the volume of a starting track a
 \end{tikzpicture}
 \end{center}
  \caption{A crossfade transition between two tracks}
+ \label{cross-fig}
  % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{figure}
+
+The initial source can be created, for instance, with a playlist of files. Then,
+a \texttt{crossfade} operator would take this source and return a source whose tracks are 
+crossfaded as shown in Figure \ref{cross-fig}. In order to do this, the operators has to 
+detect sufficiently in advance the end of the current track, collect the data of the
+end of the track, collect the data of the beginning of the next track, apply the respective
+fade out and fade in and add the two streams to create the transition.
+
+However, in this case we need to introduce a new notion in the model. Without transitions, the 
+source generator can be used with a uniform rate on all nodes: frames are filled
+at the same rate on every node. Unfortunately, the \texttt{crossfade} operator
+does not have this property: when it detects the end of a track, it will query many frames in advance 
+to the underlying source in order to compute the crossfade. This behaviour breaks the uniformity of 
+timing in the graph and requires to introduce \textit{local clocks}.
+
+
+\begin{figure}[htn]
+ \begin{center}
+\[
+\def\f#1{\save
+[ll].[]!C="f#1"*+<20pt>[F--]\frm{}\ar @{--} "1,1"\restore}%
+\def\g#1{\save
+[l].[]!C="g#1"*+<20pt>[F--]\frm{}\ar @{--} "2,1"\restore}%
+\xymatrix{
+   \mathtt{clock_1} &*+[F]{\mathtt{input.http}}\ar[r]&  *+[F]{\mathtt{fallback}}\ar[r]&
+  *+[F]{\mathtt{output.icecast}}\f1\\
+   \mathtt{clock_2} & *+[F]{\mathtt{playlist}}\ar[r] & *+[F]{\mathtt{crossfade}}\ar[u] \g1&&
+}
+\]
+\end{center}
+ \caption{A stream generator with different clocks}
+ % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
+\end{figure}
+
+Clocks are represented in the model by a notion of locality in the graph. The graph is then partitioned into 
+different sets, where each set shares the same clock.
+When instantiating the graph, each operator declares if it needs a custom clock. If an operator requires
+a new clock, a new set is created and all the nodes below this operator are attached to the new clock.
+Then, the attribution of clocks is done, as for filling frames, from the output to the sources.
+Because of caching, we do not want a source to be connected to two different operators with 
+two different clocks. In this case, this is detected when instantiating the graph and an error is raised.
+Similarly, some sources do not support clocks whose rate is different than real time, for instance input 
+from the local sound card. In this case too, if the clock attached to the source is not real time, an error
+is raised.
+
 
 
 \section{The \liquidsoap{} language}
 \label{sec:lang}
 
-\subsection*{Presentation}
+The \liquidsoap{} language is the formal tools developed to describe the graph of the
+stream generator of our model.
 
-The \liquidsoap{} language was developed in the \savonet{} project \cite{savonet}
-which, beside the \liquidsoap{} language, also provides multimedia-related
-applications, such as bindings for several multimedia libraries in OCaml or
-GUI interfaces for managing multimedia stream. The whole project contains
-more than 50~000 lines of code, among them 40~000 are written in OCaml
-and 8~000 in C (TODO: update). The \savonet{} project is still very active
-and has received many contributions and feedbacks from users, including
-large-scale applications \cite{radionomy,virtualdj}.
-
-Using the \liquidsoap{} language, one can very easily create a relatively complex stream. 
-For instance, using files and a live source, one can combine them and build a stream consisting of 
-live shows and automatic predefined file streaming. The live source is created using
-the \texttt{input.harbor} operator, which allows the running liquidsoap instance to receive data from 
-Icecast and Shoutcast source clients, and the file source is created using the \texttt{playlist} operator.
-The sources are combined using the \texttt{fallback} operator, which uses the live source if it is available
-or the playlist otherwise. If the live source becomes available later, the fallback operator switches back 
-to the live source at the end of the current track of the playlist source. Finally, the resulting source 
-is sent to an Icecast server.
-
-The following code\footnote{The examples is this paper
-are given using the syntax of the (currently) developpement version of the language. 
-At the time this text was written, the latest released version was 0.9.2 and 
-the current developpement version is intended to be released as 1.0.} achieves this:
-\begin{verbatim}
-files = playlist("/path/to/files")
-live = input.harbor("live")
-s = fallback([live,files])
-output.icecast(%vorbis, host="www.radio.com", name="my_radio", s)
-\end{verbatim}
-
-The first two lines in this example create two \texttt{sources}, or \texttt{streams}. Streams are 
-first-class variables in \liquidsoap{}. They contain a potentially infinite sequence of multimedia 
-data, but also metadata information and track markers. The possibility to define simply streams 
-variable that embeded all these informations together is what makes the \liquidsoap{} language 
-practical and easy to use to create complex streams.
-
-One may also want to change the metadata of the stream,
-to display informations about the radio, or execute a script on each metadata 
-in order, for instance, to keep track of the songs that are being played and 
-display this information on a website. This can be done using the following code:
-\begin{verbatim}
- def f(m) = 
-    title  = m["title"]
-    system("/path/to/script #{quote(title)}")
- end
- s = on_metadata(f, s)
- def new_metadata(m) = 
-    title  = m["title"]
-    [("title","#{title} -- My Radio !")]
- end
- s = map_metadata(new_metadata, s)
-\end{verbatim}
-The above code is an example of the need for a functional language to build multimedia 
-streams. Indeed, streams are infinite objects, hence, it is not possible to specify in advance
-the full data stream. For this reason, the \liquidsoap{} languages uses operators that take 
-a function as parameter and apply this function when the relevant data is available, here 
-a metadata.
-
-Passing functions as arguments is not the only functional aspect of \liquidsoap{}. The language is 
-also \textit{statically typed} and the types are \textit{inferred}. Static types are important to 
-assure consistency of the stream while the inferrence hides most of these aspects to 
-the final user which, as said before, is usually not a programming expert.
-
-We conclude this presentation with another example. When building a source composed
-of a live shows and local files, one may want, for instance, to play a jingle when starting
-or stopping the live show. Additionally, one may also want to fade the 
-end of the live and the beginning of the playlist. This can be done using \texttt{transitions}:
-\begin{verbatim}
- def transition(old,new) = 
-    jingle = single("/path/to/jingle.mp3")])
-    sequence([fade.out(old), 
-              jingle, 
-              fade.in(new)])
- end
- s = fallback(transitions=[transition,transition], 
-                          [live,files])
-\end{verbatim}
-In this example, the user defines a function that takes the old and new sources and combine them
-to create the required transition. In our case, the transition consists of fade out the old 
-source, then play a jingle and finally fade in the new source. As for the metadata operators,
-the transition function is passed as an argument for the fallback operator and applied 
-each time the operator needs to switch from one source to another.
-
-With this brief presentation of the \liquidsoap{} language, we have seen in very simple and 
-concise examples how to build a custom multimedia stream using operators of the language. 
-The possibilities offered by the use of a programming 
-language are vast. These features make \liquidsoap{} a language very attractive for users
-interested in building their custom stream where the usual tools do not provide 
-enough flexibility to fit their need.
 \bibliographystyle{abbrv}
 \bibliography{biblio}
 \end{document}
