@@ -280,13 +280,11 @@ timing in the graph and requires to introduce \textit{local clocks}.
 \def\f{\save
 *+<15pt>[F--]\frm{}\ar @{--} "1,1"\restore}%
 \def\g{\save
-"1,5"."1,3"*+<15pt>[F--]\frm{}\ar @{--} "2,5"\restore}%
-\def\h{\save
-*+<15pt>[F--]\frm{}\ar @{--} "2,3"\restore}%
+"2,4"."1,3"."1,5"!C*+<15pt>[F--]\frm{}\ar @{--} "2,2"\restore}%
 \xymatrix{
-   \mathtt{clock_1} & *+[F]{\mathtt{playlist}}\ar[r]\f&*+[F]{\mathtt{crossfade}}\ar[r]\g1&  *+[F]{\mathtt{fallback}}\ar[r]&
+   \mathtt{clock_1} & *+[F]{\mathtt{playlist}}\ar[r]\f&*+[F]{\mathtt{crossfade}}\ar[r]&  *+[F]{\mathtt{fallback}}\ar[r]&
   *+[F]{\mathtt{output.icecast}}\\
-   & &\mathtt{clock_3}  & *+[F]{\mathtt{input.alsa}}\ar[u]\h& \mathtt{clock_2}
+   &\mathtt{clock_2} &  & *+[F]{\mathtt{jingles}}\ar[u]\g& 
 }
 \]
 \end{center}
