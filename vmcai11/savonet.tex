@@ -296,9 +296,9 @@ timing in the graph and requires to introduce \textit{local clocks}.
 
 Clocks are represented in the model by a notion of locality in the graph. The graph is then partitioned into 
 different sets, where each set shares the same clock.
-When instantiating the graph, each operator declares if it needs a custom clock. Then, when initializing 
-the graph of the stream generator, the clocks are attributed by a constraint satisfaction algorithm.
-Because of caching, we do not want a source to be connected to two different operators with 
+When instantiating the graph, each operator declares if it needs a custom clock for him or its sources. 
+Then, when initializing the graph of the stream generator, the clocks are attributed by a constraint 
+satisfaction algorithm. Because of caching, we do not want a source to be connected to two different operators with 
 two different clocks. In this case, this is detected when instantiating the graph and an error is raised.
 Similarly, some sources do not support clocks whose rate is different than real time, for instance input 
 from the local sound card. In this case too, if the clock attached to the source is not real time, an error
