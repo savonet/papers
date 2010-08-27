@@ -277,14 +277,16 @@ timing in the graph and requires to introduce \textit{local clocks}.
 \begin{figure}[htn]
  \begin{center}
 \[
-\def\f#1{\save
-[].[]!C="f#1"*+<20pt>[F--]\frm{}\ar @{--} "1,1"\restore}%
-\def\g#1{\save
-[ll].[].[d]!C="g#1"*+<20pt>[F--]\frm{}\ar @{--} "2,2"\restore}%
+\def\f{\save
+*+<15pt>[F--]\frm{}\ar @{--} "1,1"\restore}%
+\def\g{\save
+"1,5"."1,3"*+<15pt>[F--]\frm{}\ar @{--} "2,5"\restore}%
+\def\h{\save
+*+<15pt>[F--]\frm{}\ar @{--} "2,3"\restore}%
 \xymatrix{
-   \mathtt{clock_1} & *+[F]{\mathtt{input.alsa}}\ar[r]\f1&*+[F]{\mathtt{crossfade}}\ar[r]&  *+[F]{\mathtt{fallback}}\ar[r]&
-  *+[F]{\mathtt{output.icecast}}\g1\\
-   &\mathtt{clock_2} &  & *+[F]{\mathtt{playlist}}\ar[u]&
+   \mathtt{clock_1} & *+[F]{\mathtt{playlist}}\ar[r]\f&*+[F]{\mathtt{crossfade}}\ar[r]\g1&  *+[F]{\mathtt{fallback}}\ar[r]&
+  *+[F]{\mathtt{output.icecast}}\\
+   & &\mathtt{clock_3}  & *+[F]{\mathtt{input.alsa}}\ar[u]\h& \mathtt{clock_2}
 }
 \]
 \end{center}
