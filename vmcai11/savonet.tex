@@ -278,13 +278,13 @@ timing in the graph and requires to introduce \textit{local clocks}.
  \begin{center}
 \[
 \def\f#1{\save
-[ll].[]!C="f#1"*+<20pt>[F--]\frm{}\ar @{--} "1,1"\restore}%
+[].[]!C="f#1"*+<20pt>[F--]\frm{}\ar @{--} "1,1"\restore}%
 \def\g#1{\save
-[l].[]!C="g#1"*+<20pt>[F--]\frm{}\ar @{--} "2,1"\restore}%
+[ll].[].[d]!C="g#1"*+<20pt>[F--]\frm{}\ar @{--} "2,2"\restore}%
 \xymatrix{
-   \mathtt{clock_1} &*+[F]{\mathtt{input.http}}\ar[r]&  *+[F]{\mathtt{fallback}}\ar[r]&
-  *+[F]{\mathtt{output.icecast}}\f1\\
-   \mathtt{clock_2} & *+[F]{\mathtt{playlist}}\ar[r] & *+[F]{\mathtt{crossfade}}\ar[u] \g1&&
+   \mathtt{clock_1} & *+[F]{\mathtt{input.alsa}}\ar[r]\f1&*+[F]{\mathtt{crossfade}}\ar[r]&  *+[F]{\mathtt{fallback}}\ar[r]&
+  *+[F]{\mathtt{output.icecast}}\g1\\
+   &\mathtt{clock_2} &  & *+[F]{\mathtt{playlist}}\ar[u]&
 }
 \]
 \end{center}
@@ -294,9 +294,8 @@ timing in the graph and requires to introduce \textit{local clocks}.
 
 Clocks are represented in the model by a notion of locality in the graph. The graph is then partitioned into 
 different sets, where each set shares the same clock.
-When instantiating the graph, each operator declares if it needs a custom clock. If an operator requires
-a new clock, a new set is created and all the nodes below this operator are attached to the new clock.
-Then, the attribution of clocks is done, as for filling frames, from the output to the sources.
+When instantiating the graph, each operator declares if it needs a custom clock. Then, when initializing 
+the graph of the stream generator, the clocks are attributed by a constraint satisfaction algorithm.
 Because of caching, we do not want a source to be connected to two different operators with 
 two different clocks. In this case, this is detected when instantiating the graph and an error is raised.
 Similarly, some sources do not support clocks whose rate is different than real time, for instance input 
