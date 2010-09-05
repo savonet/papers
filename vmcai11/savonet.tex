@@ -18,7 +18,7 @@
 \usepackage{tikz}
 \usetikzlibrary{snakes}
 
-\title{Design of a Modular Programming Language for Generating Multimedia Streams: Liquidsoap}
+\title{\liquidsoap{}: a high-level programming language for multimedia streaming}
 \author{David Baelde \and Romain Beauxis \and Samuel Mimram}
 
 \hypersetup{
@@ -33,6 +33,19 @@
 
 \begin{document}
 \maketitle
+
+\begin{abstract}
+Programming languages offer natural and flexible ways to describe various
+systems. A good language makes it easy to describe simple configurations, but,
+unlike other approaches based on configuration files or static graphical
+interfaces, it also allows the user to build complex, highly customized systems.
+In this papier, we present liquidsoap, a high-level functional programming
+language for generating, manipulating and broadcasting multimedia streams. We
+describe a model that supports a rich collection of operators (track scheduling,
+jingle insertion, mix, metadata updates, various transitions), and some aspects
+of language design that make it adapted to the application domain.
+\end{abstract}
+
 
 % \section*{Introduction}
 % DB: j'en ferais moins, par contre je renforcerais la
@@ -380,9 +393,9 @@ timing in the graph and requires to introduce \textit{multiple clocks}.
  \begin{center}
 \[
 \def\f{\save
-*+<15pt>[F--]\frm{}\ar @{--} "1,1"\restore}%
+*+<15pt>[F--]\frm{}\ar @{--} "2,2"\restore}%
 \def\g{\save
-"2,4"."1,3"."1,5"!C*+<15pt>[F--]\frm{}\ar @{--} "2,2"\restore}%
+"2,4"."1,2"."1,5"!C*+<27pt>[F--]\frm{}\ar @{--} "1,1"\restore}%
 \xymatrix{
    \mathtt{clock_1} & *+[F]{\mathtt{playlist}}\ar[r]\f&*+[F]{\mathtt{crossfade}}\ar[r]&  *+[F]{\mathtt{fallback}}\ar[r]&
   *+[F]{\mathtt{output.icecast}}\\
