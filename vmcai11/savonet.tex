@@ -109,31 +109,49 @@ adaptation of classical streaming technologies, whose paradigms are based on
 predefined interfaces, such as a virtual mixing console or static file-based
 setups. Those tools, although quite powerful, are usually very hard to adapt to
 a particular need and are more and more often perceived as limited by the very
-constrained design of the program.
+constrained design of the program. Here, we present a new methodology for
+achieving the task based on a dedicated \emph{programming language} called
+\emph{Liquidsoap}, which brings much more flexibility and has proved in practice
+to be adapted to the needs of a wide variety of users' requirements.
 
-A particularly important aspect of modern software technologies is programming
-languages. Whether general or applicative, programming languages are the first 
-% DB first class? tool of choice
-class tools to release creativity and flexibility for creating new software applications.
-Programming languages have been used in various practical contexts to bring flexibility
-and overcome static pre-defined paradigms. One may, for instance, think of the Perl 
-language, invented to allow powerful and flexible word-based treatments, or the PHP
-language, invented to create easily dynamic web pages.
+Programming languages are a particularly important aspect of modern software
+technologies.  Whether general or applicative, programming languages are often
+the right tool to release creativity and flexibility for creating new software
+applications.  They have been used in various practical contexts to bring
+flexibility and overcome static pre-defined paradigms. One may, for instance,
+think of Perl, invented to allow powerful and flexible word-based treatments, or
+PHP, which allows to easily create dynamic web pages. We believe that a good
+programming language should follow three fundamental principles: it should be
+\begin{enumerate}
+\item \emph{adapted}: users should be able to perform, most of the tasks in the
+  domain of application of the language (generating multimedia streams in our
+  case);
+\item \emph{simple}: users should be able to perform the tasks in a simple way
+  (this means that it should be reasonably concise, but also reasonably
+  understandable -- keep in mind that people willing to generate webradios are
+  far from being all good programmers);
+\item \emph{safe}: the compiler should perform checks to avoid as many bugs as
+  possible (a stream generator has for example to ensure that there will always
+  be data to stream).
+\end{enumerate}
 
-The application we present in this paper brings to the domain of multimedia
-broadcasting the ideas and technologies of software engineering. It originated 
-after realizing that the existing tools for digital broadcasting where not flexible
-and expressive enough to fit the authors' need. In order to overcome those shortcomings,
-an applied language was developed which, as for Perl and PHP, includes first-class
-notions of streams, with operators to create them, combine them and modify them.
-Using this language, the possibilities for designing and creating a multimedia stream
-are very broad and allow creative innovations.
+The motivation behind the language presented in this article was to bring the
+ideas and technologies of software engineering to the domain of multimedia
+broadcasting. It originated after realizing that the existing tools for digital
+broadcasting where not expressive enough to fit the authors' needs. In order to
+overcome those shortcomings, an applied language was developed which
+%, as for Perl and PHP,
+includes first-class notions of streams, as well as dedicated operators to
+create them, combine them and modify them. The resulting possibilities for
+designing and creating multimedia streams are very broad and allow creative
+innovations, but although the language is intended to be powerful, it is also
+relatively easy to use, even by people not very familiar with programming.
 
-Another important aspect of this application is its potential users. Multimedia stream 
-designers are not often programming language specialists. Moreover, creating an Internet 
-radio should not require advanced programming skills.
-For there reasons, although the language is intended to be powerful, it should 
-also be relatively easy to use, at least for building a basic stream.
+% Another important aspect of this application is its potential users. Multimedia
+% stream designers are not often programming language specialists. Moreover,
+% creating an Internet radio should not require advanced programming skills.  For
+% there reasons, although the language is intended to be powerful, it should also
+% be relatively easy to use, at least for building a basic stream.
 
 \section{\liquidsoap}
 
@@ -173,7 +191,7 @@ provides a good documentation and helpful error messages.
 Moreover, having our own language allowed us to design
 a few domain-specific type extensions.
 
-\subsection{Related work}
+\subsection{Related works}
 
 \liquidsoap\ is obviously different from tools such as Ices or Darkice in
 that it offers the user the freedom to assemble a stream
@@ -196,7 +214,7 @@ from the user.
 %   etc
 
 A last class of related tools is digital signal processing (DSP) languages.
-An interesting system in this category is Faust \cite{faust},
+An interesting system in this category is Faust~\cite{faust},
 which provides a high-level functional programming language for
 describing stream processing devices,
 and compiles this language down to C++, which enables an integration
@@ -214,13 +232,11 @@ the scripting language rather than in OCaml. Further, it should
 be studied whether such an approach can be undertaken in general with
 the kind of streaming system that we are considering.
 
-~
 
-% TODO: has been used in research
-%   \cite{baccigalupo2007case,baccigalupo2007sharing}
+TODO: has been used in research~\cite{baccigalupo2007case,baccigalupo2007sharing}
 %   on peut citer, je sais pas où, mais j'insisterais pas sur
 %   l'utilisation en recherche (c'est une utilisation comme une autre,
-%   la recherche de claudio est indépendante de liq)
+% la recherche de claudio est indépendante de liq)
 
 In the following, we describe the streaming model used in liquidsoap.
 The richness of that model induces some non-trivial correctness conditions,
