@@ -7,9 +7,9 @@
 
 \newcommand{\liquidsoap}{Liquidsoap}
 \newcommand{\savonet}{Savonet}
-\newcommand{\eg}{{\em e.g.,}}
-\newcommand{\ie}{{\em i.e.,}}
-\newcommand{\cf}{{\em cf.~}}
+\newcommand{\eg}{{e.g.}}
+\newcommand{\ie}{{i.e.}}
+\newcommand{\cf}{{cf.~}}
 \newcommand{\TODO}[1]{\marginpar{#1}}
 
 \usepackage{graphicx}
@@ -18,8 +18,15 @@
 \usepackage{tikz}
 \usetikzlibrary{snakes}
 
-\title{\liquidsoap{}: a high-level programming language for multimedia streaming}
-\author{David Baelde \and Romain Beauxis \and Samuel Mimram}
+\title{\liquidsoap{}: a High-Level Programming Language for Multimedia Streaming}
+\author{David Baelde\inst{1} \and Romain Beauxis\inst{2} \and Samuel Mimram\inst{3}}
+\institute{
+  ???
+  \and
+  ???
+  \and
+  CEA LIST -- LMeASI
+}
 
 \hypersetup{
   pdftitle={\csname @title\endcsname},
@@ -36,18 +43,16 @@
 
 \begin{abstract}
 Programming languages offer natural and flexible ways to describe various
-systems. A good language makes it easy to describe simple configurations, but,
+systems. A good language makes it easy to describe simple configurations but,
 unlike other approaches based on configuration files or static graphical
-interfaces, it also allows the user to build complex, highly customized systems.
-In this papier, we present liquidsoap, a high-level functional programming
+interfaces, it also allows the user to build complex and highly customized systems.
+We present Liquidsoap, a high-level functional programming
 language for generating, manipulating and broadcasting multimedia streams. We
 describe a model that supports a rich collection of operators (track scheduling,
 jingle insertion, mix, metadata updates, various transitions), and some aspects
 of language design that make it adapted to the application domain.
 \end{abstract}
 
-
-% \section*{Introduction}
 % DB: j'en ferais moins, par contre je renforcerais la
 %  conclusion:
 %   While software implementations can offer much more flexibility,
@@ -55,45 +60,51 @@ of language design that make it adapted to the application domain.
 %   that this is necessary for the simplicity of use. With liquidsoap,
 %   we seek a better compromise, following Alan Kay's commandment:
 %   ``simple things should be simple, complex things should be possible''.
-The widespread of broadband Internet access and digital media during the last
-decade has attracted a lot of attention on their potential applications.
-Classical devices from the analog era, such as television, radio broadcasting
-and phone communications are being adapted to the digital world. Additionally,
-whilst analog applications were mostly based on hardware implementations, their
-digital counterpart often consist in software implementations, \eg{} hardware
-PBX for phone communications being replaced by software like Asterisk and IP
-phones. These software implementations usually offer much more flexibility and
-modularity in their design.
+The widespread adoption of broadband internet access in the last decades has
+changed a lot our way of generating and transmitting information. Classical
+devices from the analog era, such as television or radio broadcasting devices
+have been rapidly adapted to the digital world in order to benefit from the new
+technologies available. Whilst analog devices were mostly based on hardware
+implementations, their digital counterpart often consists in software
+implementations,
+% , \eg{} hardware
+% PBX for phone communications being replaced by software like Asterisk and IP
+% phones.
+which potentially offers much more flexibility and modularity in their design.
 % and allow updates, both for bugfix and new features, at virtually no cost.
+% In this context of improvements, updates and enhancements of old technologies,
+% we are here specifically interested in adapting audio and video broadcasting
+% techniques to the digital world.
+% So, creating and broadcasting a stream of multimedia data with recent computers
+% has become technically very easy.
+However, we believe that the current software technologies to perform such tasks
+have not yet fully brought the new ideas which are necessary in order to really
+benefit from the new possibilities offered by modern computing devices.
 
-In this context of improvements, updates and enhancements of old technologies,
-we are here specifically interested in adapting audio and video broadcasting
-techniques to the digital world. Creating and broadcasting a stream of
-multimedia data with recent computers has become technically very easy. However,
-the software technologies available to perform such tasks have not yet brought
-the new ideas which are necessary in order to benefit from the new possibilities
-offered by modern computing devices.
+We are specifically interested here in the generation of multimedia streams
+(containing audio or video). For example, many webradios are continuously
+broadcasting audio data streams, and people can connect to these in order to
+listen to the radios. At first, generating the streams might seem really simple:
+it is just a bunch of concatenated audio files. However, in practice the needs
+of real-world radios are much higher than this, and designing a generator for
+multimedia streams needs a lot of flexibility in order to be able to cope with
+most of the expectations and requirements of users. For instance, a radio stream
+may have jingles announcing next coming shows or commercials. It may also play
+those jingles at a regular interval of time, between songs or on top of
+them. Also, a radio program may be composed of automatic playlist for a certain
+period, \eg{} during the night, and live shows during the day. Similarly, one
+may want to control and process the data before broadcasting it to the public,
+performing tasks like volume normalization, cross-fading between tracks
+(possibly parameterized by the respective volumes of the old and new tracks or
+predefined settings), blanks removal (nobody wants to listen to silence),
+etc. Moreover, the generation of the stream should be rock-solid: most webradios
+are broadcasting automatically 24/7 and don't want to have to manually restart
+the generator if it crashes after a few hours or a few days.
 
-Designing a generator form multimedia streams needs a lot of flexibility in
-order to be able to cope with most of the expectations and requirements of
-users. For instance, a radio stream may have jingles announcing next coming
-shows or commercials. It may also play those jingles at a regular interval of
-time, between songs or on top of them. Also, a radio program may be composed of
-automatic playlist for a certain period, \eg{} during the night, and live shows
-during the day. Similarly, one may want to control and process the data before
-broadcasting it to the public, performing tasks like
-\begin{itemize}
- \item volume normalization,
- \item cross-fading between tracks, possibly parameterized by the respective
-   volumes of the old and new tracks or predefined settings,
- \item remove blanks, either in automatic file streams or during live shows,
- \item etc.
-\end{itemize}
-
-Those examples, among many others, show the need for very flexible and
-adaptative solutions for creating and broadcasting multimedia data. Classical
-tools to broadcast multimedia data over the Internet (such as Darkice, Ezstream,
-VideoLAN, Rivendell or SAM Broadcaster) mostly consist of straightforward
+Those examples, among many others, show the need for very flexible and modular
+solutions for creating and broadcasting multimedia data. Most of the currently
+available tools to broadcast multimedia data over the Internet (such as Darkice,
+Ezstream, VideoLAN, Rivendell or SAM Broadcaster) consist of straightforward
 adaptation of classical streaming technologies, whose paradigms are based on
 predefined interfaces, such as a virtual mixing console or static file-based
 setups. Those tools, although quite powerful, are usually very hard to adapt to
