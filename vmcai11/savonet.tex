@@ -2,6 +2,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage{hyperref}
+\usepackage{wrapfig}
 
 \pagestyle{plain}
 
@@ -83,11 +84,11 @@ We are specifically interested here in the generation of multimedia streams
 broadcasting audio data streams, and people can connect to these in order to
 listen to the radios. At first, generating the streams might seem really simple:
 it is just a bunch of concatenated audio files. However, in practice the needs
-of real-world radios are much higher than this, and designing a generator for
-multimedia streams needs a lot of flexibility in order to be able to cope with
-most of the expectations and requirements of users. For instance, a radio stream
-may have jingles announcing next coming shows or commercials. It may also play
-those jingles at a regular interval of time, between songs or on top of
+of real-world radio makers are much higher than this, and designing a generator
+for multimedia streams needs a lot of flexibility in order to be able to cope
+with most of the expectations and requirements of users. For instance, a radio
+stream may have jingles announcing next coming shows or commercials. It may also
+play those jingles at a regular interval of time, between songs or on top of
 them. Also, a radio program may be composed of automatic playlist for a certain
 period, \eg{} during the night, and live shows during the day. Similarly, one
 may want to control and process the data before broadcasting it to the public,
@@ -144,42 +145,47 @@ quite natural in this context: the language Liquidsoap is functional (which
 confers a lot of expressiveness to it) and strongly typed (which allows to have
 strong guarantees on the behavior the stream generation).
 
+We first describe the language and its underlying model for streams in
+Section~1, and then detail the typing systems as well as the guarantees that it
+provides in Section~2.
 
 \section{A language for generating streams}
 \subsection{A model of streams}
 \label{sec:model}
-
-A stream can be understood as a timed sequence of data.
-In digital signal processing, it will simply be an infinite sequence of 
-samples | floating point values for audio, images for video.
-However, multimedia streaming also involves high-level notions such
-as metadata and tracks, and many useful operations rely on it.
-
-% use env{definition} ? of course, it's informal
-In liquidsoap, a \emph{stream} is a succession of \emph{tracks},
-which can be thought of as individual songs on a musical radio show.
-A track might be finite or infinite.
-It can contain any combination of audio, video and MIDI \emph{channels},
-which we discuss more in Section~\ref{sec:content}.
-Finally, any instant in a track can have metadata,
-consisting of a list of fields associated to (string) values.
+\TODO{DB this drawing (by me) doesn't look very good and doesn't bring much}
+\begin{wrapfigure}{r}{7.5cm}
+  \vspace{-7.5ex}
+  \label{fig:stream}
+  \begin{center}
+    \includegraphics{stream}
+  \end{center}
+  \vspace{-3ex}
+  \caption{A \liquidsoap{} stream}
+  \vspace{-4ex}
+  % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
+\end{wrapfigure}
+The continuous flow of multimedia (audio or video) data is modeled as a
+\emph{stream}, which is a succession of \emph{tracks}. The tracks can be thought
+as individual songs on a musical radio show. Concretely, these streams consist
+of interleaved sequences of samples (for audio data), images (for video data),
+etc. (see Section~\ref{sec:content}). Tracks can also contain a very important
+other kind of information: \emph{metadata}.\TODO{SM est-ce ça va de considérer
+  les end-of-tracks comme des metadata particulières ??? (pour la théorie)}
+These are punctual markers storing data, which can occur at any instant in the
+stream, and are constituted in practice of a pair of strings storing the name of
+the metadata and its value. They are used to store various information about the
+stream such as track-changes (the moment where a song ends and the next one
+starts in a radio for example), copyright information (title, artist, etc. of
+the current track), custom information about tracks (for example how loud it
+should be played); see Figure~\ref{fig:stream}.
 
 \TODO{Do we allow fallible streams or fallible sources?
   Is there a hole of a certain duration between tracks in a stream,
   or just a failure to produce by the source.
   I think it's the latter but I'm not sure.}
 
-% \TODO{DB this drawing (by me) doesn't look very good and doesn't bring much}
-% \begin{figure}[t]
- % \begin{center}
-% \includegraphics{stream}
-% \end{center}
- % \caption{A \liquidsoap{} stream}
- % % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
-% \end{figure}
-
-Being infinite objects,
-streams are not represented directly but generated on the fly.
+Being potentially infinite objects, streams are not represented directly and
+entirely but actually generated on the fly.
 Anyway, they are meant to be produced interactively, depending on various
 external factors.
 In liquidsoap, a stream generator is called a \emph{source}.
