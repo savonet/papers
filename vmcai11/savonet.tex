@@ -20,8 +20,8 @@
 \usepackage{tikz}
 \usetikzlibrary{snakes}
 
-\title{\liquidsoap{}: \\
-  a High-Level Programming~Language \\
+\title{\liquidsoap{}:\\
+  a High-Level Programming~Language\\
   for Multimedia~Streaming}
 \author{David Baelde\inst{1} \and Romain Beauxis\inst{2} \and Samuel Mimram\inst{3}}
 \institute{
@@ -57,13 +57,6 @@ jingle insertion, mix, metadata updates, various transitions), and some aspects
 of language design that make it adapted to the application domain.
 \end{abstract}
 
-% DB: j'en ferais moins, par contre je renforcerais la
-%  conclusion:
-%   While software implementations can offer much more flexibility,
-%   many applications have arbitrary limitations. It is often thought
-%   that this is necessary for the simplicity of use. With liquidsoap,
-%   we seek a better compromise, following Alan Kay's commandment:
-%   ``simple things should be simple, complex things should be possible''.
 The widespread adoption of broadband internet in the last decades has
 changed a lot our way of generating and transmitting information. Classical
 devices from the analog era, such as television or radio broadcasting devices
@@ -143,78 +136,17 @@ Designing a programming language is not an easy task in order to fulfill these
 requirements. Since the concept is quite new for the generation of streams, a
 lot of time was spent to identify the needs of potential users, and to find the
 right constructions and operators to build streams. The description of these is
-one of the main interests of the paper. Interestingly, we have been able to
-reuse and adapt classical techniques and tools for programming languages, which
-turn out to fit and be quite natural in this context: the language Liquidsoap is
-functional (which confers a lot of expressiveness to it) and strongly typed
-(which allows to have strong guarantees on the behavior the stream generation).
-
-% \TODO{DB le paragraphe suivant est principalement redondant}
-
-% The motivation behind the language presented in this article was to bring
-% ideas and technologies from programming languages to the domain of multimedia
-% broadcasting. It originated after realizing that the existing tools for digital
-% broadcasting where not expressive enough to fit the authors' needs. In order to
-% overcome those shortcomings, an applied language was developed which
-% %, as for Perl and PHP,
-% includes first-class notions of streams, as well as dedicated operators to
-% create them, combine them and modify them. The resulting possibilities for
-% designing and creating multimedia streams are very broad and allow creative
-% innovations, but although the language is intended to be powerful, it is also
-% relatively easy to use, even by people not very familiar with programming.
-
-% Another important aspect of this application is its potential users. Multimedia
-% stream designers are not often programming language specialists. Moreover,
-% creating an Internet radio should not require advanced programming skills.  For
-% there reasons, although the language is intended to be powerful, it should also
-% be relatively easy to use, at least for building a basic stream.
-
-TODO: PLAN OF THE PAPER
-
-\section{\liquidsoap}
-
-\emph{Now that related works is with the conclusion, this section doesn't say 
-much and should be moved in other places (a little bit in the introduction,
-other bits in other places)}
-
-The tool \liquidsoap\ \cite{liquidsoap} is in two parts:
-  a model of streams which allows the definition of enough
-  operators on streams, and a functional programming language
-  (called \liquidsoap, or the script language) which enables
-  the user to describe its streaming setup by composing those operators.
-
-The \liquidsoap\ language is interpreted.
-The evaluation of a script or expression triggers the construction
-of a stream processing devices, built by composing various elementary
-blocks.
-These devices are then initialized and perform their streaming task:
-decoding files, processing and communicating data, etc.
-
-% TODO the prog language is interpreted..
-%  this is important when comparing with faust
-
-Although the language \liquidsoap\ borrows from other programming
-languages, it is unique to our tool.
-There are several reasons for having created our own language.
-First, we felt that a static type discipline would be useful:
-A script describes a system that is intended to run for days,
-even month, with some parts rarely triggered.
-It would be very disappointing to notice a typo or basic type
-error only after two weeks of running, precisely at the time
-of a special show.
-Hence, we want to put as much static analysis as possible,
-as long as it doesn't put the burden on the user,
-\ie\ all types should be infered.
-There is not so much choice of static languages than can be
-easily embedded and are user-friendly.
-Designing our own simple functional programming language,
-and tightly integrating with the rest of the tool,
-provides a good documentation and helpful error messages.
-Moreover, having our own language allowed us to design
-a few domain-specific type extensions.
+one of the main interests of the paper: we both detail the abstract model for
+streams underlying our software, and describe the actual programming language
+Liquidsoap. Interestingly, we have been able to reuse and adapt classical
+techniques and tools for programming languages, which turn out to fit and be
+quite natural in this context: the language Liquidsoap is functional (which
+confers a lot of expressiveness to it) and strongly typed (which allows to have
+strong guarantees on the behavior the stream generation).
 
 
-\section{Streaming model}
+\section{A language for generating streams}
+\subsection{A model of streams}
 \label{sec:model}
 
 A stream can be understood as a timed sequence of data.
@@ -237,14 +169,14 @@ consisting of a list of fields associated to (string) values.
   or just a failure to produce by the source.
   I think it's the latter but I'm not sure.}
 
-% TODO DB this drawing (by me) doesn't look very good and doesn't bring much
-\begin{figure}[htn]
- \begin{center}
-\includegraphics{stream}
-\end{center}
- \caption{A \liquidsoap{} stream}
- % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
-\end{figure}
+% \TODO{DB this drawing (by me) doesn't look very good and doesn't bring much}
+% \begin{figure}[t]
+ % \begin{center}
+% \includegraphics{stream}
+% \end{center}
+ % \caption{A \liquidsoap{} stream}
+ % % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
+% \end{figure}
 
 Being infinite objects,
 streams are not represented directly but generated on the fly.
@@ -305,7 +237,14 @@ stream, which involves momentarily stopping it.
   qd je parle de stopper un flux c'est bien par rapport a une notion de 
   temps...}
 
-\begin{figure}[htn]
+\subsection{Concrete implementation}
+The \liquidsoap{} language is interpreted. The evaluation of a script or
+expression triggers the construction of a stream processing devices, built by
+composing various elementary blocks.
+
+Having introduced all the terminology, we can finally give an example of 
+\liquidsoap\ setup, in Figure~\ref{fig:simple}.
+\begin{figure}[t]
  \begin{center}
 \[
 \xymatrix{
@@ -319,9 +258,6 @@ stream, which involves momentarily stopping it.
  \caption{A stream generator} \label{fig:simple}
  % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{figure}
-
-Having introduced all the terminology, we can finally give an example of 
-\liquidsoap\ setup, in Figure~\ref{fig:simple}.
 Here, we have two elementary sources, respectively reading from an HTTP stream 
 and a playlist of files, composed in a fallback, filtered through a volume
 normalizer and sent to an Icecast server for broadcast. % TODO DB first occurrence of icecast
@@ -335,7 +271,7 @@ The script provides several other details, such as the encoding format
 (Vorbis) and the names of the Icecast radio, the input HTTP stream
 and the playlist file.
 
-\subsection{Sharing}
+\subsection{Sharing streams}
 
 \emph{The idea of this section\ldots
 having done the minimum to define the high-level terminology before,
@@ -355,7 +291,7 @@ broadcasted.
 In this case, the two outputs in the graph are connected to the same operator. Hence, when those output
 transmit their frame to this operator to be filled, the operator should fill them with the same data.
 
-\begin{figure}[htn]
+\begin{figure}[t]
  \begin{center}
 \[
 \xymatrix{
@@ -387,21 +323,11 @@ stream has moved to the next bunch and reset their cached values.
 Finally, the necessity for a node to cache its current frame is detected when instantiating the graph, thus
 copying data in memory only when it is necessary.
 
-\subsection{...}
+\subsection{Performances}
 
 Could be a good place to talk about how liquidsoap runs: parsing, type 
 checking, building sources, performing dynamic analysis (only fallibility for 
 now) and finally initializing them for streaming.
-
-\TODO{DB "infallible", and introduce the phases, "static/dynamic analysis"}
-Finally, the information of whether or not a stream can be assumed to be infinite is also carried by the 
-graph. For instance, if a source is created from a single file, one can try to decode it before starting 
-streaming. If the file can be decoded, and one can assume that the file will not be deleted later, and then 
-the source can be considered infallible. Later on, if this source is used, for instance in an operator that plays 
-the first available source, then the source resulting of this operator is also infallible.
-By induction over the vertices of the graph, each node can be considered fallible or not. Eventually,
-an infallible output can be considered as describing an infinite stream, while a fallible
-output describes a stream that may not be infinite.
 
 \subsection{Transitions}
 
@@ -411,14 +337,50 @@ Smooth add can be presented at this point,
 illustrating well how the langage can build non-trivial operators from
 our simple building blocks.
 
-\section{Heterogeneous stream contents} \label{sec:content}
+\section{Typing the language}
+\subsection{Motivations}
+Although the language \liquidsoap{} borrows from other programming languages, it
+is unique to our tool.  There are several reasons for having created our own
+language.  First, we felt that a static type discipline would be useful: A
+script describes a system that is intended to run for days, even month, with
+some parts rarely triggered.  It would be very disappointing to notice a typo or
+basic type error only after two weeks of running, precisely at the time of a
+special show.  Hence, we want to put as much static analysis as possible, as
+long as it doesn't put the burden on the user, \ie{} all types should be
+inferred.  There is not so much choice of static languages than can be easily
+embedded and are user-friendly. Designing our own simple functional programming
+language, and tightly integrating with the rest of the tool, provides a good
+documentation and helpful error messages.  Moreover, having our own language
+allowed us to design a few domain-specific type extensions.
+
+\TODO{also mention labels to help users}
+
+\subsection{The typing system}
+\TODO{describe the typing system}
+
+\subsection{Heterogeneous stream contents}
+\label{sec:content}
 
 Motivate why we need it (it's not only about video and MIDI)
 and how we make sure it's consistent.
 
 Fixed/variable arity, content kind, type, non-parametricity, inference.
 
-\section{Clocks}
+\subsection{Runtime checks}
+\TODO{SM expliquer qu'on n'arrive pas à tout faire de façon statique}
+\TODO{DB "infallible", and introduce the phases, "static/dynamic analysis"}
+Finally, the information of whether or not a stream can be assumed to be
+infinite is also carried by the graph. For instance, if a source is created from
+a single file, one can try to decode it before starting streaming. If the file
+can be decoded, and one can assume that the file will not be deleted later, and
+then the source can be considered infallible. Later on, if this source is used,
+for instance in an operator that plays the first available source, then the
+source resulting of this operator is also infallible.  By induction over the
+vertices of the graph, each node can be considered fallible or not. Eventually,
+an infallible output can be considered as describing an infinite stream, while a
+fallible output describes a stream that may not be infinite.
+
+\subsection{Clocks}
 
 \emph{Slogan: clocks are an abstraction of threads?
   It's easier to manipulate, users can't make mistakes\ldots almost.
@@ -451,7 +413,7 @@ the stream. For instance, one may want to use a crossfade between two tracks
 of the stream, \ie{}
 fade out the volume of an ending track, fade in the volume of a starting track and merge this together.
 
-\begin{figure}[htn]
+\begin{figure}[t]
  \begin{center}
 \begin{tikzpicture}[xscale=0.8,yscale=0.8]
 \draw[->] (0,0) -- (0,2.5);
@@ -488,7 +450,7 @@ to the underlying source in order to compute the crossfade. This behaviour break
 timing in the graph and requires to introduce \textit{multiple clocks}.
 
 
-\begin{figure}[htn]
+\begin{figure}[b]
  \begin{center}
 \[
 \def\f{\save
