@@ -12,7 +12,7 @@
 \newcommand{\eg}{{e.g.,}}
 \newcommand{\ie}{{i.e.,}}
 \newcommand{\cf}{{cf.~}}
-\newcommand{\TODO}[1]{\marginpar{#1}}
+\newcommand{\TODO}[1]{\marginpar{\tiny #1}}
 
 \usepackage{graphicx}
 \usepackage{xypic}
@@ -113,14 +113,14 @@ adaptation of classical streaming technologies, based on
 predefined interfaces, such as a virtual mixing console or static file-based
 setups. Those tools, although quite powerful, are usually very hard to adapt to
 a particular need and are more and more often perceived as limited by the very
-% DB "new" c'est abusé
+\TODO{DB "new" c'est abusé}
 constrained design of the program. Here, we present a new methodology for
 achieving the task based on a dedicated \emph{programming language} called
 \emph{Liquidsoap}, which brings much more flexibility and has proved in practice
 to be adapted to the needs of a wide variety of users' requirements.
 
 Programming languages are a particularly important aspect of modern software
-% DB definition d'applicatif = fonctionel en gros, pas domain-specific
+\TODO{DB definition d'applicatif = fonctionel en gros, pas domain-specific}
 technologies.  Whether general or applicative, programming languages are often
 the right tool to release creativity and flexibility for creating new software
 applications.  They have been used in various practical contexts to bring
@@ -141,7 +141,7 @@ programming language should follow three fundamental principles: it should be
   be data to stream).
 \end{enumerate}
 
-% DB le paragraphe suivant est principalement redondant
+\TODO{DB le paragraphe suivant est principalement redondant}
 
 The motivation behind the language presented in this article was to bring
 ideas and technologies from programming languages to the domain of multimedia
@@ -270,17 +270,17 @@ Streaming is performed top-down:
 only active sources actively attempt to produce their stream,
 pulling data from their input sources as needed,
 which pull data from dependent sources, and so on.
-% DB en fait parler de frames est pe trop précis: on omet de dire
-% qu'on remplit un break à la fois, ce qui correspond au paragraphe
-% suivant
+\TODO{DB en fait parler de frames est pe trop précis: on omet de dire
+qu'on remplit un break à la fois, ce qui correspond au paragraphe
+suivant}
 
 Two important aspects of sources is that
 (1) they do not constantly stream:
 the stream corresponding to an unused stream is frozen in time,
 and
 (2) they are allow to fail, \ie\ deny streaming, at the end of a track.
-% DB faudrait se documenter mais je crois que c'est vraiment particulier:
-%   ça nous distingue du DSP mais pe aussi gstreamer
+\TODO{DB faudrait se documenter mais je crois que c'est vraiment particulier:
+  ça nous distingue du DSP mais pe aussi gstreamer}
 
 This last ingredient is crucial to obtain the expected collection of operators.
 For example, a rotation operator will play alternatively several sources,
@@ -290,10 +290,10 @@ in the middle of a track when we come back to playing them.
 Also, we need to be able to insert a jingles in between two tracks of a 
 stream, which involves momentarily stopping it.
 
-% TODO DB J'ai pas parlé de cycles (clocks)
-%   mais on peut pe pas completement éviter
-%   qd je parle de stopper un flux c'est bien par rapport a une notion de 
-%   temps...
+\TODO{DB J'ai pas parlé de cycles (clocks)
+  mais on peut pe pas completement éviter
+  qd je parle de stopper un flux c'est bien par rapport a une notion de 
+  temps...}
 
 \begin{figure}[htn]
  \begin{center}
@@ -335,7 +335,7 @@ Efficiency issues, sharing.}
 Using this method, the stream can be described using a finite amount of memory. In fact, the frames used
 to generate the stream are statically allocated and passed as memory pointers during the generation, which 
 avoids copying data in memory.
-% TODO DB at this point the reader doesn't see why several frames are needed
+\TODO{DB at this point the reader doesn't see why several frames are needed}
 
 The description of a stream generator in the previous section is simple and 
 natural. Unfortunately, most of the time it is too limited. For instance, one 
@@ -383,7 +383,7 @@ Could be a good place to talk about how liquidsoap runs: parsing, type
 checking, building sources, performing dynamic analysis (only fallibility for 
 now) and finally initializing them for streaming.
 
-% TODO DB "infallible", and introduce the phases, "static/dynamic analysis"
+\TODO{DB "infallible", and introduce the phases, "static/dynamic analysis"}
 Finally, the information of whether or not a stream can be assumed to be infinite is also carried by the 
 graph. For instance, if a source is created from a single file, one can try to decode it before starting 
 streaming. If the file can be decoded, and one can assume that the file will not be deleted later, and then 
@@ -419,20 +419,20 @@ Fixed/variable arity, content kind, type, non-parametricity, inference.
 % <MOVED> DB The following has been moved from earlier sections
 
 The timing, or clock, associated to a multimedia stream can be real-time, if the stream is created 
-% DB scaled?
+\TODO{DB scaled?}
 or broadcasted live, or any scaled timing, for instance if the stream consists of files. \textit{A priori},
 describing and broadcasting a stream implies real-time output. As we see later, this is unfortunately 
 not sufficient for complex settings.
-% TODO DB infinite <> infallible
+\TODO{DB infinite <> infallible}
 Also, a stream can be finite or infinite. Infinite streams are particularly interesting for broadcasting
 because most of the time, we expect a radio, for instance, to be always online. However, this needs 
 a special care since it implies some assumption about the validity of the elements that build the stream.
 
-% TODO DB the following should move later
+\TODO{DB the following should move later}
 Also, the stream generator can be used at any rate. For instance,
 for a live broadcast, the generator will be asked to fill frames at real rate, while 
 for a stream saved to a file, the generator will be asked to fill frames at the maximal possible rate.
-% DB in the following, confusion between transition and crossing
+\TODO{DB in the following, confusion between transition and crossing}
 
 % </MOVED> DB 
 
@@ -525,8 +525,8 @@ Second and more importantly,
 our programming language makes it much simpler
 to compose operators; all the low level aspects are hidden
 from the user.
-% TODO nécessite plus de détails, mais je pense aux clocks, au sharing
-%   etc
+\TODO{nécessite plus de détails, mais je pense aux clocks, au sharing
+  etc}
 
 A last class of related tools is digital signal processing (DSP) languages.
 An interesting system in this category is Faust~\cite{faust},
@@ -549,9 +549,9 @@ the kind of streaming system that we are considering.
 
 
 TODO: has been used in research~\cite{baccigalupo2007case,baccigalupo2007sharing}
-%   on peut citer, je sais pas où, mais j'insisterais pas sur
-%   l'utilisation en recherche (c'est une utilisation comme une autre,
-% la recherche de claudio est indépendante de liq)
+\TODO{on peut citer, je sais pas où, mais j'insisterais pas sur
+  l'utilisation en recherche (c'est une utilisation comme une autre,
+la recherche de claudio est indépendante de liq)}
 
 In the following, we describe the streaming model used in liquidsoap.
 The richness of that model induces some non-trivial correctness conditions,
