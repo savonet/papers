@@ -168,13 +168,13 @@ The continuous flow of multimedia (audio or video) data is modeled as a
 \emph{stream}, which is a succession of \emph{tracks}. The tracks can be thought
 as individual songs on a musical radio show. Concretely, these streams consist
 of interleaved sequences of samples (for audio data), images (for video data),
-etc. (see Section~\ref{sec:content}). Tracks can also contain a very important
+etc. (see Section~\ref{sec:content}). Streams can also contain a very important
 other kind of information: \emph{metadata}.\TODO{SM est-ce ça va de considérer
   les end-of-tracks comme des metadata particulières ??? (pour la théorie)}
 These are punctual markers storing data, which can occur at any instant in the
 stream, and are constituted in practice of a pair of strings storing the name of
 the metadata and its value. They are used to store various information about the
-stream such as track-changes (the moment where a song ends and the next one
+stream such as track delimiters (the moment where a song ends and the next one
 starts in a radio for example), copyright information (title, artist, etc. of
 the current track), custom information about tracks (for example how loud it
 should be played); see Figure~\ref{fig:stream}.
@@ -184,17 +184,18 @@ should be played); see Figure~\ref{fig:stream}.
   or just a failure to produce by the source.
   I think it's the latter but I'm not sure.}
 
-Being potentially infinite objects, streams are not represented directly and
-entirely but actually generated on the fly.
-Anyway, they are meant to be produced interactively, depending on various
-external factors.
-In liquidsoap, a stream generator is called a \emph{source}.
-Some sources purely produce a stream, getting it from an external device
-(\eg\ file, sound card, network) or synthesizing it.
-Many other sources actually produce a stream based on input streams
-for other sources.
-This gives rise to a directed acylic graph whose vertices are sources
-and edges are dependencies.
+Being potentially infinite objects, streams are obviously not represented
+directly and entirely but actually generated on the fly. They are produced
+interactively by operators which are parametrized by various external factors
+(variables possibly modified by external interfaces and metadata in particular).
+In \liquidsoap{}, a stream generator is called a \emph{source}. Some sources
+purely produce a stream, getting it from an external device (such as a file, a
+sound card or network) or are synthesizing it. Many other sources are actually
+operators on the stream in the sense that they produce a stream based on input
+streams given by other sources. Abstractly, the program describing the
+generation of a stream can thus be represented by a directed acyclic graph,
+whose nodes are the sources and whose edges indicate dependencies between
+sources.
 
 % Given an acyclic graph describing a stream generator, the roots of the graph are the operator that create 
 % the initial streams, called \textit{sources}. Those sources can be created from a single file, a playlist, an HTTP input,
@@ -209,10 +210,10 @@ and edges are dependencies.
 \TODO{What exactly do we mean by operator? In practice we use it for any
   function building a source, whether it has source arguments or not.}
 
-A important type of source is \emph{active} ones,
-which not only compute a stream like any other source,
-but also perform some observable task, typically outputting its stream
-somewhere.
+Some sources have a particular status: not only they compute a stream like any
+other source, but they also perform some observable task, typically outputting its
+stream somewhere. These sources are called \emph{active} sources.
+\TODO{dire que les actives tirent le flux}
 Sources produce streams in small chunks called \emph{frames}.
 Streaming is performed top-down:
 only active sources actively attempt to produce their stream,
