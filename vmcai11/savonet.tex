@@ -7,8 +7,10 @@
 
 \newcommand{\liquidsoap}{Liquidsoap}
 \newcommand{\savonet}{Savonet}
-\newcommand{\eg}{{e.g.}}
-\newcommand{\ie}{{i.e.}}
+% DB je retrouve pas de source claire pour l'italique pour les abbrev latines,
+%   mais la virgule après i.e. et e.g. c'est clairement la règle
+\newcommand{\eg}{{e.g.,}}
+\newcommand{\ie}{{i.e.,}}
 \newcommand{\cf}{{cf.~}}
 \newcommand{\TODO}[1]{\marginpar{#1}}
 
@@ -18,14 +20,16 @@
 \usepackage{tikz}
 \usetikzlibrary{snakes}
 
-\title{\liquidsoap{}: a High-Level Programming Language for Multimedia Streaming}
+\title{\liquidsoap{}: \\
+  a High-Level Programming~Language \\
+  for Multimedia~Streaming}
 \author{David Baelde\inst{1} \and Romain Beauxis\inst{2} \and Samuel Mimram\inst{3}}
 \institute{
-  ???
+  University of Minnesota, USA
   \and
-  ???
+  Tulane University, USA
   \and
-  CEA LIST -- LMeASI
+  CEA LIST -- LMeASI, France
 }
 
 \hypersetup{
@@ -46,7 +50,7 @@ Programming languages offer natural and flexible ways to describe various
 systems. A good language makes it easy to describe simple configurations but,
 unlike other approaches based on configuration files or static graphical
 interfaces, it also allows the user to build complex and highly customized systems.
-We present Liquidsoap, a high-level functional programming
+We present \liquidsoap, a high-level functional programming
 language for generating, manipulating and broadcasting multimedia streams. We
 describe a model that supports a rich collection of operators (track scheduling,
 jingle insertion, mix, metadata updates, various transitions), and some aspects
@@ -60,7 +64,7 @@ of language design that make it adapted to the application domain.
 %   that this is necessary for the simplicity of use. With liquidsoap,
 %   we seek a better compromise, following Alan Kay's commandment:
 %   ``simple things should be simple, complex things should be possible''.
-The widespread adoption of broadband internet access in the last decades has
+The widespread adoption of broadband internet in the last decades has
 changed a lot our way of generating and transmitting information. Classical
 devices from the analog era, such as television or radio broadcasting devices
 have been rapidly adapted to the digital world in order to benefit from the new
@@ -105,16 +109,18 @@ Those examples, among many others, show the need for very flexible and modular
 solutions for creating and broadcasting multimedia data. Most of the currently
 available tools to broadcast multimedia data over the Internet (such as Darkice,
 Ezstream, VideoLAN, Rivendell or SAM Broadcaster) consist of straightforward
-adaptation of classical streaming technologies, whose paradigms are based on
+adaptation of classical streaming technologies, based on
 predefined interfaces, such as a virtual mixing console or static file-based
 setups. Those tools, although quite powerful, are usually very hard to adapt to
 a particular need and are more and more often perceived as limited by the very
+% DB "new" c'est abusé
 constrained design of the program. Here, we present a new methodology for
 achieving the task based on a dedicated \emph{programming language} called
 \emph{Liquidsoap}, which brings much more flexibility and has proved in practice
 to be adapted to the needs of a wide variety of users' requirements.
 
 Programming languages are a particularly important aspect of modern software
+% DB definition d'applicatif = fonctionel en gros, pas domain-specific
 technologies.  Whether general or applicative, programming languages are often
 the right tool to release creativity and flexibility for creating new software
 applications.  They have been used in various practical contexts to bring
@@ -135,8 +141,10 @@ programming language should follow three fundamental principles: it should be
   be data to stream).
 \end{enumerate}
 
-The motivation behind the language presented in this article was to bring the
-ideas and technologies of software engineering to the domain of multimedia
+% DB le paragraphe suivant est principalement redondant
+
+The motivation behind the language presented in this article was to bring
+ideas and technologies from programming languages to the domain of multimedia
 broadcasting. It originated after realizing that the existing tools for digital
 broadcasting where not expressive enough to fit the authors' needs. In order to
 overcome those shortcomings, an applied language was developed which
@@ -154,6 +162,10 @@ relatively easy to use, even by people not very familiar with programming.
 % be relatively easy to use, at least for building a basic stream.
 
 \section{\liquidsoap}
+
+\emph{Now that related works is with the conclusion, this section doesn't say 
+much and should be moved in other places (a little bit in the introduction,
+other bits in other places)}
 
 The tool \liquidsoap\ \cite{liquidsoap} is in two parts:
   a model of streams which allows the definition of enough
@@ -191,70 +203,31 @@ provides a good documentation and helpful error messages.
 Moreover, having our own language allowed us to design
 a few domain-specific type extensions.
 
-\subsection{Related works}
 
-\liquidsoap\ is obviously different from tools such as Ices or Darkice in
-that it offers the user the freedom to assemble a stream
-for a vast variety of operators, through a scripting
-language rather than more traditional configuration languages.
-
-Liquidsoap has similarities with multimedia streaming libraries.
-For example, GStreamer defines a model of stream, and its API
-can be used to define streaming systems in various programming
-languages (primarily coded in C, the library has also been
-ported to many other languages).
-There are two differences, however.
-First, the stream model that we use is more high-level than
-GStreamer. % TODO check
-Second and more importantly,
-our programming language makes it much simpler
-to compose operators; all the low level aspects are hidden
-from the user.
-% TODO nécessite plus de détails, mais je pense aux clocks, au sharing
-%   etc
-
-A last class of related tools is digital signal processing (DSP) languages.
-An interesting system in this category is Faust~\cite{faust},
-which provides a high-level functional programming language for
-describing stream processing devices,
-and compiles this language down to C++, which enables an integration
-with various other systems.
-Again, the traditional notion of stream in DSP is too weak for our
-purpose, but this is only a shallow difference.
-Liquidsoap does not build new operators but only assembles pre-defined
-operators. In contrast, Faust compiles a single new operator at each
-compilation, aggregating the basic operations used in the script
-and optimizing their combination.
-It would be very interesting to interface \liquidsoap\ with such a tool,
-or import some of their techniques. This could certainly be done with
-DSP operators, and would allow us to program them efficiently from
-the scripting language rather than in OCaml. Further, it should
-be studied whether such an approach can be undertaken in general with
-the kind of streaming system that we are considering.
-
-
-TODO: has been used in research~\cite{baccigalupo2007case,baccigalupo2007sharing}
-%   on peut citer, je sais pas où, mais j'insisterais pas sur
-%   l'utilisation en recherche (c'est une utilisation comme une autre,
-% la recherche de claudio est indépendante de liq)
-
-In the following, we describe the streaming model used in liquidsoap.
-The richness of that model induces some non-trivial correctness conditions,
-and we describe how the programming language helps to avoid such
-problems.
-We do not provide a full formal description of the language and its
-type system: this has been done to some extent in 
-\cite{baelde-mimram:webradio-lambda}, and we prefer to focus on the
-high-level functioning of \liquidsoap\ in this paper.
-
-
-\section{A model for describing streams}
+\section{Streaming model}
 \label{sec:model}
-\TODO{transitions (complications sur le partage)}
 
-A multimedia stream can be understood as a timed sequence of data. For instance, a sequence of songs with
-track marks and metadata information, or a live input, encoded real-time from the sound card.
+A stream can be understood as a timed sequence of data.
+In digital signal processing, it will simply be an infinite sequence of 
+samples | floating point values for audio, images for video.
+However, multimedia streaming also involves high-level notions such
+as metadata and tracks, and many useful operations rely on it.
 
+% use env{definition} ? of course, it's informal
+In liquidsoap, a \emph{stream} is a succession of \emph{tracks},
+which can be thought of as individual songs on a musical radio show.
+A track might be finite or infinite.
+It can contain any combination of audio, video and MIDI \emph{channels},
+which we discuss more in Section~\ref{sec:content}.
+Finally, any instant in a track can have metadata,
+consisting of a list of fields associated to (string) values.
+
+\TODO{Do we allow fallible streams or fallible sources?
+  Is there a hole of a certain duration between tracks in a stream,
+  or just a failure to produce by the source.
+  I think it's the latter but I'm not sure.}
+
+% TODO DB this drawing (by me) doesn't look very good and doesn't bring much
 \begin{figure}[htn]
  \begin{center}
 \includegraphics{stream}
@@ -263,40 +236,64 @@ track marks and metadata information, or a live input, encoded real-time from th
  % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{figure}
 
-The timing, or clock, associated to a multimedia stream can be real-time, if the stream is created 
-% DB scaled?
-or broadcasted live, or any scaled timing, for instance if the stream consists of files. \textit{A priori},
-describing and broadcasting a stream implies real-time output. As we see later, this is unfortunately 
-not sufficient for complex settings.
-Also, a stream can be finite or infinite. Infinite streams are particularly interesting for broadcasting
-because most of the time, we expect a radio, for instance, to be always online. However, this needs 
-a special care since it implies some assumption about the validity of the elements that build the stream.
+Being infinite objects,
+streams are not represented directly but generated on the fly.
+Anyway, they are meant to be produced interactively, depending on various
+external factors.
+In liquidsoap, a stream generator is called a \emph{source}.
+Some sources purely produce a stream, getting it from an external device
+(\eg\ file, sound card, network) or synthesizing it.
+Many other sources actually produce a stream based on input streams
+for other sources.
+This gives rise to a directed acylic graph whose vertices are sources
+and edges are dependencies.
 
-Because streams are infinite objects, they cannot be fully instantiated in memory. Hence, it is 
-more appropriate to think of a \textit{stream generator} than of a stream itself which is how
-a stream is created in \liquidsoap{}. A stream generator, in \liquidsoap{}, is described as 
-an acyclic oriented graph. The edge of the graphs represent the operators, used to create and modify
-a stream, while the vertices represent the connections between them.
+% Given an acyclic graph describing a stream generator, the roots of the graph are the operator that create 
+% the initial streams, called \textit{sources}. Those sources can be created from a single file, a playlist, an HTTP input,
+% the sound card, etc. The sources are then modified and composed with each other using 
+% \textit{operators} that, for instance, play a source if it is available or a second one otherwise, or modify
+% the metadata, mix the audio data of two sources, etc.
+% Finally, the leaves of the graph describe the \textit{outputs} of the stream. Those outputs consist, for instance,
+%% DB first occurrence of icecast, never introduced
+% of playing the stream on the local sound card, saving it to a file or sending it to and Icecast server. 
+% For this initial description, we suppose that the graph has only one output.
 
-\subsection*{Stream generation}
+\TODO{What exactly do we mean by operator? In practice we use it for any
+  function building a source, whether it has source arguments or not.}
 
-Given an acyclic graph describing a stream generator, the roots of the graph are the operator that create 
-the initial streams, called \textit{sources}. Those sources can be created from a single file, a playlist, an HTTP input,
-the sound card, etc. The sources are then modified and composed with each other using 
-\textit{operators} that, for instance, play a source if it is available or a second one otherwise, or modify
-the metadata, mix the audio data of two sources, etc.
-Finally, the leaves of the graph describe the \textit{outputs} of the stream. Those outputs consist, for instance,
-% DB first occurrence of icecast, never introduced
-of playing the stream on the local sound card, saving it to a file or sending it to and Icecast server. 
-For this initial description, we suppose that the graph has only one output.
+A important type of source is \emph{active} ones,
+which not only compute a stream like any other source,
+but also perform some observable task, typically outputting its stream
+somewhere.
+Sources produce streams in small chunks called \emph{frames}.
+Streaming is performed top-down:
+only active sources actively attempt to produce their stream,
+pulling data from their input sources as needed,
+which pull data from dependent sources, and so on.
+% DB en fait parler de frames est pe trop précis: on omet de dire
+% qu'on remplit un break à la fois, ce qui correspond au paragraphe
+% suivant
 
-As explained, the graph is a \textit{stream generator}. Hence, once the graph has been instantiated,
-it is used to generate the stream in the following way: a elementary chunk of data, called a frame, is given to be filled to the 
-output operator, the leave of the graph, assumed to be unique for now. 
-The output passes the frame to the underlying operators to fill it. Those operators, in turns, pass the frame to their 
-underlying operators, until the frame reaches a root node, \ie\ a source. 
-Then, the source fills the frame and sends it back to the operator above, which in turn performs
-the modifications it has to do, until a filled frame is returned to the output.
+Two important aspects of sources is that
+(1) they do not constantly stream:
+the stream corresponding to an unused stream is frozen in time,
+and
+(2) they are allow to fail, \ie\ deny streaming, at the end of a track.
+% DB faudrait se documenter mais je crois que c'est vraiment particulier:
+%   ça nous distingue du DSP mais pe aussi gstreamer
+
+This last ingredient is crucial to obtain the expected collection of operators.
+For example, a rotation operator will play alternatively several sources,
+but should only rotate at the end of tracks,
+and its unused sources should not keep going -- otherwise we might find them
+in the middle of a track when we come back to playing them.
+Also, we need to be able to insert a jingles in between two tracks of a 
+stream, which involves momentarily stopping it.
+
+% TODO DB J'ai pas parlé de cycles (clocks)
+%   mais on peut pe pas completement éviter
+%   qd je parle de stopper un flux c'est bien par rapport a une notion de 
+%   temps...
 
 \begin{figure}[htn]
  \begin{center}
@@ -309,26 +306,36 @@ the modifications it has to do, until a filled frame is returned to the output.
 }
 \]
 \end{center}
- \caption{A stream generator}
+ \caption{A stream generator} \label{fig:simple}
  % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{figure}
 
+Having introduced all the terminology, we can finally give an example of 
+\liquidsoap\ setup, in Figure~\ref{fig:simple}.
+Here, we have two elementary sources, respectively reading from an HTTP stream 
+and a playlist of files, composed in a fallback, filtered through a volume
+normalizer and sent to an Icecast server for broadcast. % TODO DB first occurrence of icecast
+Such a graph is the skeleton of the following \liquidsoap\ script:
+\begin{verbatim}
+output.icecast(%vorbis,"myradio",
+  normalize(fallback([input.http("http://other.net/radio"),
+                      playlist("listing.txt")])))
+\end{verbatim}
+The script provides several other details, such as the encoding format 
+(Vorbis) and the names of the Icecast radio, the input HTTP stream
+and the playlist file.
+
+\subsection{Sharing}
+
+\emph{The idea of this section\ldots
+having done the minimum to define the high-level terminology before,
+we now turn to more technical details?
+Efficiency issues, sharing.}
+
 Using this method, the stream can be described using a finite amount of memory. In fact, the frames used
-to generate the stream can be statically allocated and passed as memory pointers during the generation, which 
-avoids copying data in memory. Also, the stream generator can be used at any rate. For instance,
-for a live broadcast, the generator will be asked to fill frames at real rate, while 
-for a stream saved to a file, the generator will be asked to fill frames at the maximal possible rate.
-
-Finally, the information of whether or not a stream can be assumed to be infinite is also carried by the 
-graph. For instance, if a source is created from a single file, one can try to decode it before starting 
-streaming. If the file can be decoded, and one can assume that the file will not be deleted later, and then 
-the source can be considered infallible. Later on, if this source is used, for instance in an operator that plays 
-the first available source, then the source resulting of this operator is also infallible.
-By induction over the vertices of the graph, each node can be considered fallible or not. Eventually,
-an infallible output can be considered as describing an infinite stream, while a fallible
-output describes a stream that may not be infinite.
-
-\subsection*{Stream sharing}
+to generate the stream are statically allocated and passed as memory pointers during the generation, which 
+avoids copying data in memory.
+% TODO DB at this point the reader doesn't see why several frames are needed
 
 The description of a stream generator in the previous section is simple and 
 natural. Unfortunately, most of the time it is too limited. For instance, one 
@@ -349,7 +356,7 @@ transmit their frame to this operator to be filled, the operator should fill the
 }
 \]
 \end{center}
- \caption{A stream generator with caching}
+ \caption{A stream generator with sharing}
  % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{figure}
 
@@ -370,9 +377,64 @@ stream has moved to the next bunch and reset their cached values.
 Finally, the necessity for a node to cache its current frame is detected when instantiating the graph, thus
 copying data in memory only when it is necessary.
 
-\subsection*{Stream clocks}
+\subsection{...}
 
+Could be a good place to talk about how liquidsoap runs: parsing, type 
+checking, building sources, performing dynamic analysis (only fallibility for 
+now) and finally initializing them for streaming.
+
+% TODO DB "infallible", and introduce the phases, "static/dynamic analysis"
+Finally, the information of whether or not a stream can be assumed to be infinite is also carried by the 
+graph. For instance, if a source is created from a single file, one can try to decode it before starting 
+streaming. If the file can be decoded, and one can assume that the file will not be deleted later, and then 
+the source can be considered infallible. Later on, if this source is used, for instance in an operator that plays 
+the first available source, then the source resulting of this operator is also infallible.
+By induction over the vertices of the graph, each node can be considered fallible or not. Eventually,
+an infallible output can be considered as describing an infinite stream, while a fallible
+output describes a stream that may not be infinite.
+
+\subsection{Transitions}
+
+Now, the language penetrates the model, and functions are not syntactic sugar.
+
+Smooth add can be presented at this point,
+illustrating well how the langage can build non-trivial operators from
+our simple building blocks.
+
+\section{Heterogeneous stream contents} \label{sec:content}
+
+Motivate why we need it (it's not only about video and MIDI)
+and how we make sure it's consistent.
+
+Fixed/variable arity, content kind, type, non-parametricity, inference.
+
+\section{Clocks}
+
+\emph{Slogan: clocks are an abstraction of threads?
+  It's easier to manipulate, users can't make mistakes\ldots almost.
+  We currently don't say anything about the (high-level) implementation.
+  We can re-use most of the documentation on clocks here,
+  notably illustrating the use of internal and external clocks.}
+
+% <MOVED> DB The following has been moved from earlier sections
+
+The timing, or clock, associated to a multimedia stream can be real-time, if the stream is created 
+% DB scaled?
+or broadcasted live, or any scaled timing, for instance if the stream consists of files. \textit{A priori},
+describing and broadcasting a stream implies real-time output. As we see later, this is unfortunately 
+not sufficient for complex settings.
+% TODO DB infinite <> infallible
+Also, a stream can be finite or infinite. Infinite streams are particularly interesting for broadcasting
+because most of the time, we expect a radio, for instance, to be always online. However, this needs 
+a special care since it implies some assumption about the validity of the elements that build the stream.
+
+% TODO DB the following should move later
+Also, the stream generator can be used at any rate. For instance,
+for a live broadcast, the generator will be asked to fill frames at real rate, while 
+for a stream saved to a file, the generator will be asked to fill frames at the maximal possible rate.
 % DB in the following, confusion between transition and crossing
+
+% </MOVED> DB 
 
 Another limitation of the current model is the possibility to describe advanced transitions in 
 the stream. For instance, one may want to use a crossfade between two tracks 
@@ -444,39 +506,66 @@ Similarly, some sources do not support clocks whose rate is different than real 
 from the local sound card. In this case too, if the clock attached to the source is not real time, an error
 is raised.
 
+\section{Related works}
+
+\liquidsoap\ is obviously different from tools such as Ices or Darkice in
+that it offers the user the freedom to assemble a stream
+for a vast variety of operators, through a scripting
+language rather than more traditional configuration languages.
+
+Liquidsoap has similarities with multimedia streaming libraries.
+For example, GStreamer defines a model of stream, and its API
+can be used to define streaming systems in various programming
+languages (primarily coded in C, the library has also been
+ported to many other languages).
+There are two differences, however.
+First, the stream model that we use is more high-level than
+GStreamer. % TODO check
+Second and more importantly,
+our programming language makes it much simpler
+to compose operators; all the low level aspects are hidden
+from the user.
+% TODO nécessite plus de détails, mais je pense aux clocks, au sharing
+%   etc
+
+A last class of related tools is digital signal processing (DSP) languages.
+An interesting system in this category is Faust~\cite{faust},
+which provides a high-level functional programming language for
+describing stream processing devices,
+and compiles this language down to C++, which enables an integration
+with various other systems.
+Again, the traditional notion of stream in DSP is too weak for our
+purpose, but this is only a shallow difference.
+Liquidsoap does not build new operators but only assembles pre-defined
+operators. In contrast, Faust compiles a single new operator at each
+compilation, aggregating the basic operations used in the script
+and optimizing their combination.
+It would be very interesting to interface \liquidsoap\ with such a tool,
+or import some of their techniques. This could certainly be done with
+DSP operators, and would allow us to program them efficiently from
+the scripting language rather than in OCaml. Further, it should
+be studied whether such an approach can be undertaken in general with
+the kind of streaming system that we are considering.
 
 
-\section{The \liquidsoap{} language}
-\label{sec:lang}
+TODO: has been used in research~\cite{baccigalupo2007case,baccigalupo2007sharing}
+%   on peut citer, je sais pas où, mais j'insisterais pas sur
+%   l'utilisation en recherche (c'est une utilisation comme une autre,
+% la recherche de claudio est indépendante de liq)
 
-The \liquidsoap{} language is the formal tool developed to describe the graph of the
-stream generator of our model.
+In the following, we describe the streaming model used in liquidsoap.
+The richness of that model induces some non-trivial correctness conditions,
+and we describe how the programming language helps to avoid such
+problems.
+We do not provide a full formal description of the language and its
+type system: this has been done to some extent in 
+\cite{baelde-mimram:webradio-lambda}, and we prefer to focus on the
+high-level functioning of \liquidsoap\ in this paper.
 
-\subsection{Syntax}
-
-This part is independent of the target application, \ie\ streaming.
-We could use an extension of $\lambda$-calculus instead of our calculus with
-multi-application. This would save some space, simplify the operational 
-semantics and types.
-
-\subsection{Types}
-
-Types are specific to liquidsoap, starting with content kinds and types.
-
-Type inference, stream kinds and encoding formats.
-
-Theorems: easy if we stick to unary abstractions,
-transitivity and reflexivity of subtyping, subject reduction,
-even normalization\ldots the only trick is constraints.
-
-\subsection{Static analysis}
-
-\subsubsection{Infallibility}
-\subsubsection{Clock assignment}
-
-\subsection{Other remarks}
+\section{Conclusion}
 
 Documentation, errors, user friendliness.
+Requests.
 
 \bibliographystyle{abbrv}
 \bibliography{biblio}
