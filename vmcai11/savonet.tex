@@ -43,6 +43,8 @@
   urlcolor=black
 }
 
+\hyphenation{pa-ra-me-trized}
+
 \begin{document}
 \maketitle
 
@@ -108,7 +110,8 @@ predefined interfaces, such as a virtual mixing console or static file-based
 setups. Those tools, although quite powerful, are usually very hard to adapt to
 a particular need and are more and more often perceived as limited by the very
 \TODO{DB "new" c'est abusé}
-constrained design of the program. Here, we present a new methodology for
+\TODO{RB c ok avec innovative ?}
+constrained design of the program. Here, we present an innovative methodology for
 achieving the task based on a dedicated \emph{programming language} called
 \emph{Liquidsoap}, which brings much more flexibility and has proved in practice
 to be adapted to the needs of a wide variety of users' requirements.
@@ -164,34 +167,33 @@ provides in Section~2.
   \vspace{-4ex}
   % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{wrapfigure}
-The continuous flow of multimedia (audio or video) data is modeled as a
-\emph{stream}, which is a succession of \emph{tracks}. The tracks can be thought
-as individual songs on a musical radio show. Concretely, these streams consist
-of interleaved sequences of samples (for audio data), images (for video data),
-etc. (see Section~\ref{sec:content}). Streams can also contain a very important
-other kind of information: \emph{metadata}.\TODO{SM est-ce ça va de considérer
-  les end-of-tracks comme des metadata particulières ??? (pour la théorie)}
-These are punctual markers storing data, which can occur at any instant in the
-stream, and are constituted in practice of a pair of strings storing the name of
+A \emph{stream}, in \liquidsoap{}, is a succession of \emph{tracks} annotated
+with \textit{metadata}. The tracks can be thought
+as individual songs on a musical radio show. 
+Metadata are punctual markers storing data, which can occur at any instant in the
+stream, and are constituted of a pairs of strings storing the name of
 the metadata and its value. They are used to store various information about the
-stream such as track delimiters (the moment where a song ends and the next one
-starts in a radio for example), copyright information (title, artist, etc. of
-the current track), custom information about tracks (for example how loud it
-should be played); see Figure~\ref{fig:stream}.
+stream such as copyright information (title, artist, etc. of
+the current track) or custom information about tracks (for example how loud it
+should be played).
+Finally, tracks can contain data, which consists of interleaved sequences of samples 
+(for audio data), images (for video data), etc. (see Section~\ref{sec:content}). 
+Figure~\ref{fig:stream} represents an example of a stream in \liquidsoap{}.
 
 \TODO{Do we allow fallible streams or fallible sources?
   Is there a hole of a certain duration between tracks in a stream,
   or just a failure to produce by the source.
   I think it's the latter but I'm not sure.}
+\TODO{RB I think with 1.0.0. we allow holes in a stream
+but I do not think it is appropriate to go into 
+these details here..}
 
-Being potentially infinite objects, streams are obviously not represented
-directly and entirely but actually generated on the fly. They are produced
-interactively by operators which are parametrized by various external factors
-(variables possibly modified by external interfaces and metadata in particular).
+Streams are generated on the fly interactively by operators which are parametrized by various 
+external factors (variables possibly modified by external interfaces and metadata in particular).
 In \liquidsoap{}, a stream generator is called a \emph{source}. Some sources
 purely produce a stream, getting it from an external device (such as a file, a
 sound card or network) or are synthesizing it. Many other sources are actually
-operators on the stream in the sense that they produce a stream based on input
+operating on other sources in the sense that they produce a stream based on input
 streams given by other sources. Abstractly, the program describing the
 generation of a stream can thus be represented by a directed acyclic graph,
 whose nodes are the sources and whose edges indicate dependencies between
@@ -207,21 +209,20 @@ sources.
 % of playing the stream on the local sound card, saving it to a file or sending it to and Icecast server. 
 % For this initial description, we suppose that the graph has only one output.
 
-\TODO{What exactly do we mean by operator? In practice we use it for any
-  function building a source, whether it has source arguments or not.}
-
 Some sources have a particular status: not only they compute a stream like any
 other source, but they also perform some observable task, typically outputting its
 stream somewhere. These sources are called \emph{active} sources.
-\TODO{dire que les actives tirent le flux}
 Sources produce streams in small chunks called \emph{frames}.
-Streaming is performed top-down:
-only active sources actively attempt to produce their stream,
+Stream generation is performed top-down:
+active sources actively attempt to produce their stream,
 pulling data from their input sources as needed,
 which pull data from dependent sources, and so on.
 \TODO{DB en fait parler de frames est pe trop précis: on omet de dire
 qu'on remplit un break à la fois, ce qui correspond au paragraphe
 suivant}
+\TODO{RB je trouve ça ok, un frame est une notion commune, et présenté
+comme ça c'est suffisament simple. Par contre j'ai peur que pulling ici
+donne l'intuition qu'on fait de la copie...}
 
 Two important aspects of sources is that
 (1) they do not constantly stream:
@@ -231,10 +232,10 @@ and
 \TODO{DB faudrait se documenter mais je crois que c'est vraiment particulier:
   ça nous distingue du DSP mais pe aussi gstreamer}
 
-This last ingredient is crucial to obtain the expected collection of operators.
+This last ingredient is crucial to obtain the expected expressiveness.
 For example, a rotation operator will play alternatively several sources,
 but should only rotate at the end of tracks,
-and its unused sources should not keep going -- otherwise we might find them
+and its unused sources should not keep streaming -- otherwise we might find them
 in the middle of a track when we come back to playing them.
 Also, we need to be able to insert a jingles in between two tracks of a 
 stream, which involves momentarily stopping it.
@@ -243,16 +244,19 @@ stream, which involves momentarily stopping it.
   mais on peut pe pas completement éviter
   qd je parle de stopper un flux c'est bien par rapport a une notion de 
   temps...}
+\TODO{RB bof, ici on parle de concepts généraux, ça me semble
+suffisant..}
 
 \subsection{Concrete implementation}
 The \liquidsoap{} language is interpreted. The evaluation of a script or
 expression triggers the construction of a stream processing devices, built by
 composing various elementary blocks.
 
-Having introduced all the terminology, we can finally give an example of 
+Having introduced all the terminology, we can give an example of 
 \liquidsoap\ setup, in Figure~\ref{fig:simple}.
 \begin{figure}[t]
  \begin{center}
+\label{fig:simple}
 \[
 \xymatrix{
   *+[F]{\mathtt{input.http}}\ar[r]&*+[F]{\mathtt{fallback}}\ar[r]&
@@ -262,7 +266,7 @@ Having introduced all the terminology, we can finally give an example of
 }
 \]
 \end{center}
- \caption{A stream generator} \label{fig:simple}
+ \caption{A stream generator}
  % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{figure}
 Here, we have two elementary sources, respectively reading from an HTTP stream 
@@ -285,18 +289,25 @@ having done the minimum to define the high-level terminology before,
 we now turn to more technical details?
 Efficiency issues, sharing.}
 
-Using this method, the stream can be described using a finite amount of memory. In fact, the frames used
-to generate the stream are statically allocated and passed as memory pointers during the generation, which 
+An important aspect of the implementation is efficiency, and, specifically in \liquidsoap{},
+avoiding multiple copies of the stream's data. Thus, we use a
+call-by-reference mechanism based on frames, which represent a finite
+amount of data. An active source instanciates a frame and tries to fill it.
+To do this, it passes the frame to an underlying source, which either it fills the frame, 
+possibly by passing it again to an underlying source and so on\dots
+Using this method, streams can be generated using a finite amount of memory. The frames used
+to generate streams are passed as memory pointers, which 
 avoids copying data in memory.
 \TODO{DB at this point the reader doesn't see why several frames are needed}
+\TODO{RB I think it is ok now..}
 
-The description of a stream generator in the previous section is simple and 
-natural. Unfortunately, most of the time it is too limited. For instance, one 
-may want to have several outputs of the same 
-stream, \eg\ one to a local file for archiving purposes and another one to an Icecast server to be
-broadcasted.
-In this case, the two outputs in the graph are connected to the same operator. Hence, when those output
-transmit their frame to this operator to be filled, the operator should fill them with the same data.
+This description of a stream generator simple and natural. Unfortunately, it is too 
+limited. For instance, one may want to have several outputs of the same 
+stream, \eg\ one to a local file for archiving purposes and another one to an 
+Icecast server to be broadcasted.
+In this case, the two outputs in the graph are connected to the same source. 
+Hence, when those output transmit their frame to this source to be filled, the 
+operator should fill them with the same data.
 
 \begin{figure}[t]
  \begin{center}
@@ -313,22 +324,15 @@ transmit their frame to this operator to be filled, the operator should fill the
  % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{figure}
 
+For this reason, the first time that the source is asked to fill a frame, it 
+operates as described before. However, the second time, it should just fill the frame 
+with the data gathered during the first call, which implies \textit{caching} the data obtained 
+during the first call. 
+Once all the filling operations have been done, the sources are informed that the 
+stream has moved to the next frame and reset their cache. 
 
-For this reason, the first time that the operator is asked to fill the frame, it should pass it to its 
-underlying operators, as described before. However, the second time, it should just fill the frame 
-with the data gathered during the first call, which implies \textit{caching} the data obtained during the first call.
-
-Therefore, even though the initial stream generator model could avoid copying data in memory, there 
-are situations where it is not possible. In order to deal with these situations, the 
-model carries a notion of \textit{ticks}. Ticks represent an elementary unit of time
-for stream generation. Each frame contains a fixed number of ticks and the stream is split
-in bunches of ticks representing each frame. During the same bunch of ticks, when filling a frame, the nodes only 
-transmit their frame to their underlying nodes once and, for the successive calls, use a cache of this data. 
-Once all the filling operations have been done for a bunch of ticks, the nodes are informed that the 
-stream has moved to the next bunch and reset their cached values. 
-
-Finally, the necessity for a node to cache its current frame is detected when instantiating the graph, thus
-copying data in memory only when it is necessary.
+Finally, the necessity for a node to cache its current frame is detected when instantiating 
+the stream generator, thus copying data in memory only when it is necessary.
 
 \subsection{Performances}
 
