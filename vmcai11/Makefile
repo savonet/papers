@@ -1,7 +1,7 @@
 pdf: savonet.pdf
 
-savonet.pdf: savonet.tex
-	if [ -f /usr/bin/rubber ]; then rubber -d $^; else pdflatex $^; fi
+savonet.pdf: $(wildcard *tex)
+	if [ -f /usr/bin/rubber ]; then rubber -d savonet; else pdflatex savonet; fi
 
 clean:
 	rubber -d --clean savonet.tex

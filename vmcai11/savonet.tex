@@ -264,7 +264,7 @@ and a playlist of files, composed in a fallback, filtered through a volume
 normalizer and sent to an Icecast server for broadcast. % TODO DB first occurrence of icecast
 Such a graph is the skeleton of the following \liquidsoap\ script:
 \begin{verbatim}
-output.icecast(%vorbis,"myradio",
+output.icecast(%vorbis,mount="myradio",
   normalize(fallback([input.http("http://other.net/radio"),
                       playlist("listing.txt")])))
 \end{verbatim}
@@ -338,6 +338,32 @@ now) and finally initializing them for streaming.
 
 Now, the language penetrates the model, and functions are not syntactic sugar.
 
+We describe transitions used in switching operators, \ie\ transitions between
+different sources (usually, but not necessarily around track limits).
+They do not mess with time flows.
+
+\begin{figure}[t]
+ \begin{center}
+\begin{tikzpicture}[xscale=0.8,yscale=0.8]
+\draw[->] (0,0) -- (0,2.5);
+\draw (-0.1,2) -- (0.1,2);
+\draw (0,2) node[anchor=east]{100};
+\draw (0,0) node[anchor=east]{0};
+\draw[->] (0,0) -- (7.5,0);
+\foreach \x in {1,2,3,4,5,6,7} \draw (\x,-0.1) -- (\x,0.1);
+\draw (0,2.5) node[anchor=south]{volume (\%)};
+\draw (7.5,0) node[anchor=west]{time (sec)};
+\draw (0,2) -- (2,2) -- (5,0);
+\draw (3,0) -- (5,2) -- (7.5,2);
+\draw (1,2) node[anchor=south]{track $n$};
+\draw (6,2) node[anchor=south]{track $n+1$};
+\end{tikzpicture}
+\end{center}
+ \caption{A crossfade transition between two sources}
+ \label{cross-fig}
+ % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
+\end{figure}
+
 Smooth add can be presented at this point,
 illustrating well how the langage can build non-trivial operators from
 our simple building blocks.
@@ -385,11 +411,11 @@ vertices of the graph, each node can be considered fallible or not. Eventually,
 an infallible output can be considered as describing an infinite stream, while a
 fallible output describes a stream that may not be infinite.
 
-\subsection{Clocks}
+\section{Clocks}
 
 \input{clocks.tex}
 
-\section{Related works}
+\section{Related work}
 
 \liquidsoap\ is obviously different from tools such as Ices or Darkice in
 that it offers the user the freedom to assemble a stream

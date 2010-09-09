@@ -10,6 +10,8 @@ but it may also be different.
 For example, when producing a file, one might want the time rate
 to be as fast as the CPU allows.
 
+\subsection{Motivation}
+
 While having a global clock suffices in many situations,
 there are a couple of reasons why a streaming system might involve multiple
 clocks or time flows.
@@ -60,6 +62,8 @@ After ten tracks,
 with a crossing duration of six seconds, one more minute will have
 passed for the source compared to the time of the crossing operator.
 
+\subsection{Model}
+
 In order to avoid inconsistencies caused by time differences,
 while maintaining a simple and efficient execution model for
 its sources, liquidsoap works under the restriction that
@@ -67,10 +71,12 @@ one source belongs to a unique clock,
 fixed once for all when the source is created.
 Sources from different clocks cannot communicate using the normal
 streaming protocol, since it is organized around clock cycles.
+Each clock is responsible for animating its own active sources
+and has full control on how it does it.
 
 In the graphical representation of streaming systems,
 clocks induce a partition of sources represented by a notion of locality
-or box.
+or box, and clock dependencies are represented by nesting.
 For example, the graph shown in Figure~\ref{fig:boxes}
 corresponds to the stream generators built in the following
 script:
@@ -94,42 +100,64 @@ output.icecast(%vorbis,mount="myradio",
 }
 \]
 \end{center}
- \caption{A stream generator with different clocks}
+ \caption{A streaming system with two clocks}
  \label{fig:boxes}
  % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{figure}
 
-There, $\verb.clock._{\tiny{\verb.2.}}$ was created specifically for the crossfading
+There, $\verb.clock._{\tiny{\verb.2.}}$
+was created specifically for the crossfading
 operator; the rate of that clock is controlled by that operator,
 which can hence accelerate it around track changes without any
 risk of inconsistency.
 The other clock is simply a wallclock, so that the main stream
 is produced following the real (wallclock) time rate.
 
-Each clock is in charge of animating its own active sources.
-Some clocks may not run all the time. In the above example,
-the crossfading's clock is not ticking when the fallback
+A clock is said to be active if it ticks by itself,
+therefore running its sources constantly.
+It is the case of wallclocks or soundcard clocks.
+We say that a clock depends on another one
+if its animation (and thus time rate) depends on it.
+% DB: I wanted to write this since it holds geometrically for nesting
+%   "It is not possible for a clock to depend (directly) on several others."
+%   but it doesn't seem forced by anything,
+%   and in fact the implementation should allow it
+Active sources do not depend on other sources,
+and dependencies must be acyclic.
+In the above example, the ticking of
+$\verb.clock._{\tiny{\verb.2.}}$ is provoked by that of
+$\verb.clock._{\tiny{\verb.1.}}$, and freezes when the fallback
 is playing jingles.
-But most clocks do run their sources all the time.
-\TODO{DB: being active has nothing to do with clock nesting\ldots
-  but I don't know what nesting is about!}
-It is the case of wallclocks or clocks corresponding to
-soundcards.
-From an implementation viewpoint, each of those clocks launches
-its own thread.
+% a clock $c'$ might depend on $c$ if it ticks twice as fast;
+% such a clock will be used in the implementation of a speed doubling
+% operator.
+Although nothing forces it in the model, it makes more sense if
+each passive source depends (possibly indirectly) on an active one,
+and all sources without dependencies are active.
+Those assumptions are in fact guaranteed to hold for the systems
+built from the \liquidsoap\ language.
+% this is because the user only creates wallclocks
+% and the only dependent clocks are suitably nested (cross and stretch)
+
+From an implementation viewpoint, each active clock launches
+its own streaming thread.
 Hence, clocks provide a way to split the generation of one or
 several streams accross several threads,
-and hence multiple CPU cores\TODO{DB it's even true with OCaml}.
+and hence multiple CPU cores\footnote{
+  Although OCaml uses a global memory management lock that makes it
+  impossible for two OCaml threads to run concurrently, there is no
+  such constraint when a thread runs a foreign function.
+  This allows us to avoid the limitation since
+  most of the computation in \liquidsoap\ takes place in decoding
+  and encoding multimedia formats, which is done by C libraries.
+}.
 This powerful possibility is made available to the user
-through the abstract notion of clock.
+through the intuitive notion of clock.
 As we shall see in the next section,
 the script writer never needs to specify clocks unless he
 explicitly wants a particular setup,
 and \liquidsoap\ automatically checks that clock assignements
 are correct.
-\TODO{DB: by "correct" I mean that the user cannot break the
-  streaming protocol by assigning wrong clocks, and so does
-  not get unexpected behaviors (although this is only a fuzzy claim)}
 
 \TODO{DB: should we show the nice example from the doc where icecast
   does not interfere with a file backup and a sound card input?
@@ -145,12 +173,35 @@ from the user.
 Instead, clocks are assigned upon source creation.
 Some sources require to belong to a particular, definite clock,
 such as the wallclock, or the clock corresponding to a sound card.
-Other sources simply require that their clock is the same as their
+Most sources simply require that their clock is the same as their
 input sources.
 Since clocks often cannot be inferred bottom-up, we use a notion
 of clock variable that can be left undefined.
-After this phase, remaining unknown clocks are forcibly assigned
-to the default wallclock, and new sources are started by their
-respective clocks.
+Clock variables reflect the required clock dependencies,
+which are maintained during the inference process.
 
-Two errors: two different definite clocks, nested clocks
+Two errors can occur during this phase.
+Although they are runtime errors that could be raised
+in the middle of streaming when new sources are created
+(\eg\ by means of a transition),
+this usually only happens during the initial construction.
+The first error is raised when
+two different known clocks need to be unified.
+For example, in the following script, the ALSA input is
+required to belong to the ALSA clock and \verb.crossfade.'s internal clock
+at the same time:
+\begin{verbatim}
+output.file(%vorbis,"record.ogg",crossfade(input.alsa()))
+\end{verbatim}
+The other possible error happens when unifying two unknown clock variables
+if one depends on the other | in unification terminology, this is an occurs
+check failure. A simple example of that situation is
+the script \verb.add([s,crossfade(s)]). where the two mixed sources
+respectively have clocks $c$ and $X_c$ where $c$ is the clock created
+for the crossfading operator and $X_c$ is the variable representing
+the clock to which the crossfading belongs, on which $c$ depends.
+
+After this inference phase, it is possible that some clocks are still
+unknown. Remaining variables are thus forcibly assigned to the default
+wallclock, before that all new sources are prepared for streaming
+by their respective clocks.
