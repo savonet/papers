@@ -150,9 +150,9 @@ lot of time was spent to identify the needs of potential users, and to find the
 right constructions and operators to build streams. The description of these is
 one of the main interests of the paper: we both detail the abstract model for
 streams underlying our software, and describe the actual programming language
-Liquidsoap. Interestingly, we have been able to reuse and adapt classical
+\liquidsoap{}. Interestingly, we have been able to reuse and adapt classical
 techniques and tools for programming languages, which turn out to fit and be
-quite natural in this context: the language Liquidsoap is functional (which
+quite natural in this context: the language \liquidsoap{} is functional (which
 confers a lot of expressiveness to it) and strongly typed (which allows to have
 strong guarantees on the behavior the stream generation).
 
@@ -399,13 +399,74 @@ our simple building blocks.
 
 \subsection{Heterogeneous stream contents}
 \label{sec:content}
+In \liquidsoap{}, streams can contain data of various nature. The typical
+example is the case of video streams which usually contain both pictures and
+audio data. The architecture has been designed to be able to add easily some
+more kinds of contents to the streams: for example, support for MIDI data (which
+contain musical notes) has been added, which allows us to provide
+``synthesizer'' operators (which take a stream of notes as input and produce an
+audio stream). In addition, there can be multiple channels of data for each data
+kind: audio is usually stored in stereo (2 channels), but also sometimes in
+surround sound (5 channels), etc.
 
-Motivate why we need it (besides video and MIDI and good example
- is decoding a playlist of stereo AND mono audio)
-and how we make sure it's consistent.
+It is desirable to allow streams with different kinds of data within a script
+% (\eg some sources might produce sound and other only video and they are merged
+% afterward)
+and therefore a typing system is needed to ensure the consistency of the streams
+across the various operators, in order to avoid situations where a source
+receives data that it cannot handle. The type of a stream is given by a triple
+$(a,b,c)$ of natural integers which indicate the number of audio, video and midi
+channels respectively. The kind of streams manipulated in then indicated in the
+type of the operators: for example, the operator \texttt{swap}, which exchanges
+the two channels of a stereo audio stream has the type given in
+Fig.~\ref{fig:types} which means that it take a stream with exactly 2 audio
+channels, and produces a stream of the same type.
 
-Fixed/variable arity, content kind, types and type constraints,
-non-parametricity and type annotations, inference and encoding formats.
+\begin{figure}[t]
+  \centering
+  \texttt{
+    \begin{tabular}{r@{ : }l}
+    swap&(source(2,0,0)) -> source(2,0,0)\\
+    id&(source('a,'b,'c)) -> source('a,'b,'c)\\
+    video.greyscale&(source('a,'b+1,'c)) -> source('a,'b+1,'c)\\
+    echo&(?delay:float,source('\_a,'\_b,'\_c)) -> source('\_a,'\_b,'\_c)
+    \end{tabular}
+  }
+  \caption{Types for some operators}
+  \label{fig:types}
+\end{figure}
+
+The typing system would be really too limited if the kind of data manipulated
+had to be fixed for every operator. For example, the identity operator
+\texttt{id} (which leaves a stream untouched) can operate on any kind of
+stream. In order to be able to decently type this kind of operators,
+polymorphism have been added and the operator \texttt{id} has the type given in
+Fig.~\ref{fig:types} where \texttt{'a} is a type variable representing any
+number of audio channels, and so on. Limited support for addition of type
+variables has been added in order to gain in safety, while still keeping type
+unification and thus inference of types: the \texttt{video.greyscale} operator,
+which converts a color video into greyscale, has the type of
+Fig.~\ref{fig:types} which means that it operates on a stream with \emph{at
+  least one} video channel.
+
+In practice, the typing system is a bit more subtle than this for the following
+reason. The kind of data carried by a stream can vary over the time: for
+instance, the \texttt{playlist} operator, which produces sound from a given list
+of files, might decode heterogeneous files (say, mono and stereo audio files)
+and the kind of data contained in the produced stream will depend on the
+currently decoded file (it can have 1 or 2 audio channels). However, for
+implementation and performance reasons, some operators have to operate on
+streams with constant kind. This is the case for the \texttt{echo} operator,
+which produces echo on sound and has a fixed internal buffer for storing past
+sound. Its type (see Fig.~\ref{fig:types}) thus contains type variables of the
+form \texttt{'\_a} which means that it can be any integer which is \emph{fixed
+  over time}.
+\TODO{SM J'ai inventé la syntaxe \texttt{'\_a} à cause de la place. Ça vous va~?}
+
+\TODO{SM David, je suis pas sûr de ce que tu veux dire pour ces trucs...}
+TODO: types and type constraints, non-parametricity and type annotations,
+inference and encoding formats.
+
 
 \subsection{Fallibility}
 
@@ -438,7 +499,7 @@ that it offers the user the freedom to assemble a stream
 for a vast variety of operators, through a scripting
 language rather than more traditional configuration languages.
 
-Liquidsoap has similarities with multimedia streaming libraries.
+\liquidsoap{} has similarities with multimedia streaming libraries.
 For example, GStreamer defines a model of stream, and its API
 can be used to define streaming systems in various programming
 languages (primarily coded in C, the library has also been
@@ -459,7 +520,7 @@ and compiles this language down to C++, which enables an integration
 with various other systems.
 Again, the traditional notion of stream in DSP is too weak for our
 purpose, but this is only a shallow difference.
-Liquidsoap does not build new operators but only assembles pre-defined
+\liquidsoap{} does not build new operators but only assembles pre-defined
 operators. In contrast, Faust compiles a single new operator at each
 compilation, aggregating the basic operations used in the script
 and optimizing their combination.
