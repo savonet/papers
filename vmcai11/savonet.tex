@@ -210,19 +210,12 @@ sources.
 % For this initial description, we suppose that the graph has only one output.
 
 Some sources have a particular status: not only they compute a stream like any
-other source, but they also perform some observable task, typically outputting its
+other source, but they also perform some observable task, typically outputting their
 stream somewhere. These sources are called \emph{active} sources.
-Sources produce streams in small chunks called \emph{frames}.
 Stream generation is performed top-down:
 active sources actively attempt to produce their stream,
-pulling data from their input sources as needed,
-which pull data from dependent sources, and so on.
-\TODO{DB en fait parler de frames est pe trop précis: on omet de dire
-qu'on remplit un break à la fois, ce qui correspond au paragraphe
-suivant}
-\TODO{RB je trouve ça ok, un frame est une notion commune, et présenté
-comme ça c'est suffisament simple. Par contre j'ai peur que pulling ici
-donne l'intuition qu'on fait de la copie...}
+obtaining data from the input sources
+which obtain data from their dependent sources, and so on.
 
 Two important aspects of sources is that
 (1) they do not constantly stream:
@@ -261,12 +254,12 @@ Having introduced all the terminology, we can give an example of
 \xymatrix{
   *+[F]{\mathtt{input.http}}\ar[r]&*+[F]{\mathtt{fallback}}\ar[r]&
   *+[F]{\mathtt{normalize}}\ar[r]&
-  *+[F]{\mathtt{output.icecast}}\\
+  *+<10pt>[F=:<30pt>]{\mathtt{output.icecast}}\\
   *+[F]{\mathtt{playlist}}\ar[ur]&\\
 }
 \]
 \end{center}
- \caption{A stream generator}
+ \caption{A streaming system}
  % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{figure}
 Here, we have two elementary sources, respectively reading from an HTTP stream 
@@ -291,19 +284,18 @@ Efficiency issues, sharing.}
 
 An important aspect of the implementation is efficiency, and, specifically in \liquidsoap{},
 avoiding multiple copies of the stream's data. Thus, we use a
-call-by-reference mechanism based on frames, which represent a finite
-amount of data. An active source instanciates a frame and tries to fill it.
-To do this, it passes the frame to an underlying source, which either it fills the frame, 
-possibly by passing it again to an underlying source and so on\dots
+reference passing mechanism based on \textit{frames}. A frame is an elementary
+chunk of data that represents a small portion of the stream. 
+An active source instanciates a frame and tries to fill it by passing a reference
+to its frame to its underlying sources.
 Using this method, streams can be generated using a finite amount of memory. The frames used
 to generate streams are passed as memory pointers, which 
 avoids copying data in memory.
 \TODO{DB at this point the reader doesn't see why several frames are needed}
 \TODO{RB I think it is ok now..}
 
-This description of a stream generator simple and natural. Unfortunately, it is too 
-limited. For instance, one may want to have several outputs of the same 
-stream, \eg\ one to a local file for archiving purposes and another one to an 
+Unfortunately, it is not always possible to avoid copying data. For instance, one may want to have 
+several outputs of the same  stream, \eg\ one to a local file for archiving purposes and another one to an 
 Icecast server to be broadcasted.
 In this case, the two outputs in the graph are connected to the same source. 
 Hence, when those output transmit their frame to this source to be filled, the 
@@ -315,12 +307,12 @@ operator should fill them with the same data.
 \xymatrix{
   *+[F]{\mathtt{input.http}}\ar[r]&*+[F]{\mathtt{fallback}}\ar[r]&
   *+[F]{\mathtt{normalize}}\ar[r]\ar[dr]&
-  *+[F]{\mathtt{output.icecast}}\\
-  *+[F]{\mathtt{playlist}}\ar[ur]& & & *+[F]{\mathtt{output.file}}\\
+  *+<10pt>[F=:<30pt>]{\mathtt{output.icecast}}\\
+  *+[F]{\mathtt{playlist}}\ar[ur]& & & *+<10pt>[F=:<30pt>]{\mathtt{output.file}}\\
 }
 \]
 \end{center}
- \caption{A stream generator with sharing}
+ \caption{A streaming system with sharing}
  % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{figure}
 
