@@ -214,8 +214,8 @@ other source, but they also perform some observable task, typically outputting t
 stream somewhere. These sources are called \emph{active} sources.
 Stream generation is performed top-down:
 active sources actively attempt to produce their stream,
-obtaining data from the input sources
-which obtain data from their dependent sources, and so on.
+obtaining data from their input sources
+which in turn obtain data from their dependent sources, and so on.
 
 Two important aspects of sources is that
 (1) they do not constantly stream:
@@ -240,10 +240,7 @@ stream, which involves momentarily stopping it.
 \TODO{RB bof, ici on parle de concepts généraux, ça me semble
 suffisant..}
 
-\subsection{Concrete implementation}
-The \liquidsoap{} language is interpreted. The evaluation of a script or
-expression triggers the construction of a stream processing devices, built by
-composing various elementary blocks.
+%\subsection{Concrete implementation}
 
 Having introduced all the terminology, we can give an example of 
 \liquidsoap\ setup, in Figure~\ref{fig:simple}.
@@ -273,23 +270,26 @@ output.icecast(%vorbis,"myradio",
 \end{verbatim}
 The script provides several other details, such as the encoding format 
 (Vorbis) and the names of the Icecast radio, the input HTTP stream
-and the playlist file.
+and the playlist file. The \liquidsoap{} language is interpreted. The evaluation of a script or
+expression triggers the construction of a stream processing devices, built by
+composing various elementary blocks. The \liquidsoap{} language belongs to the 
+familly of ML languages. In this paper, we do not focus on language-specific details
+which have been explained extensively in \cite{baelde-mimram:webradio-lambda}.
 
-\subsection{Sharing streams}
-
-\emph{The idea of this section\ldots
-having done the minimum to define the high-level terminology before,
-we now turn to more technical details?
-Efficiency issues, sharing.}
+% \subsection{Sharing streams}
+% 
+% \emph{The idea of this section\ldots
+% having done the minimum to define the high-level terminology before,
+% we now turn to more technical details?
+% Efficiency issues, sharing.}
 
 An important aspect of the implementation is efficiency, and, specifically in \liquidsoap{},
 avoiding multiple copies of the stream's data. Thus, we use a
-reference passing mechanism based on \textit{frames}. A frame is an elementary
-chunk of data that represents a small portion of the stream. 
-An active source instanciates a frame and tries to fill it by passing a reference
+reference passing mechanism based on \textit{frames}. A frame is a
+chunk of data that represents a fixed portion of the stream. 
+An active source instantiates a frame and tries to fill it by passing a reference
 to its frame to its underlying sources.
-Using this method, streams can be generated using a finite amount of memory. The frames used
-to generate streams are passed as memory pointers, which 
+The frames used to generate streams are passed as memory pointers, thus
 avoids copying data in memory.
 \TODO{DB at this point the reader doesn't see why several frames are needed}
 \TODO{RB I think it is ok now..}
@@ -326,6 +326,8 @@ stream has moved to the next frame and reset their cache.
 Finally, the necessity for a node to cache its current frame is detected when instantiating 
 the stream generator, thus copying data in memory only when it is necessary.
 
+
+\section{Parties orphelines}
 \subsection{Performances}
 
 Could be a good place to talk about how liquidsoap runs: parsing, type 
@@ -433,15 +435,6 @@ TODO: has been used in research~\cite{baccigalupo2007case,baccigalupo2007sharing
 \TODO{on peut citer, je sais pas où, mais j'insisterais pas sur
   l'utilisation en recherche (c'est une utilisation comme une autre,
 la recherche de claudio est indépendante de liq)}
-
-In the following, we describe the streaming model used in liquidsoap.
-The richness of that model induces some non-trivial correctness conditions,
-and we describe how the programming language helps to avoid such
-problems.
-We do not provide a full formal description of the language and its
-type system: this has been done to some extent in 
-\cite{baelde-mimram:webradio-lambda}, and we prefer to focus on the
-high-level functioning of \liquidsoap\ in this paper.
 
 \section{Conclusion}
 
