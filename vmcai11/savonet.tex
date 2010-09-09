@@ -49,15 +49,21 @@
 \maketitle
 
 \begin{abstract}
-Programming languages offer natural and flexible ways to describe various
-systems. A good language makes it easy to describe simple configurations but,
-unlike other approaches based on configuration files or static graphical
-interfaces, it also allows the user to build complex and highly customized systems.
-We present \liquidsoap, a high-level functional programming
-language for generating, manipulating and broadcasting multimedia streams. We
-describe a model that supports a rich collection of operators (track scheduling,
-jingle insertion, mix, metadata updates, various transitions), and some aspects
-of language design that make it adapted to the application domain.
+  Generating multimedia streams, such as in a webradio, is a task which is
+  complex and difficult to adapt to every users' needs. We introduce a novel
+  approach in order to achieve it, based on a dedicated high-level functional
+  programming language, called \emph{\liquidsoap{}}, for generating,
+  manipulating and broadcasting multimedia streams. Unlike traditional
+  approaches, which are based on configuration files or static graphical
+  interfaces, it also allows the user to build complex and highly customized
+  systems. This language is based on a model for streams and contains operators
+  and constructions, which make it adapted to the generation of streams. The
+  interpreter of the language also ensures many properties concerning the good
+  execution of the stream generation.
+  % We describe a model that supports a rich collection of operators (track
+  % scheduling, jingle insertion, mix, metadata updates, various transitions), and
+  % some aspects of language design that make it adapted to the application
+  % domain.
 \end{abstract}
 
 The widespread adoption of broadband internet in the last decades has
@@ -166,7 +172,7 @@ provides in Section~2.
   \vspace{-4ex}
   % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{wrapfigure}
-A \emph{stream}, in \liquidsoap{}, is a succession of \emph{tracks} annotated
+A \emph{stream}, in \liquidsoap{}, is a succession of \emph{tracks}, annotated
 with \textit{metadata}. The tracks can be thought
 as individual songs on a musical radio show. 
 Metadata are punctual markers storing data, which can occur at any instant in the
