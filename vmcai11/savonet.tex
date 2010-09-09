@@ -10,8 +10,9 @@
 \newcommand{\savonet}{Savonet}
 % DB je retrouve pas de source claire pour l'italique pour les abbrev latines,
 %   mais la virgule après i.e. et e.g. c'est clairement la règle
-\newcommand{\eg}{{e.g.,}}
-\newcommand{\ie}{{i.e.,}}
+% SM c'est moche, je préfère sans, même si c'est la convention c'est très rarement appliqué
+\newcommand{\eg}{{e.g.}}
+\newcommand{\ie}{{i.e.}}
 \newcommand{\cf}{{cf.~}}
 \newcommand{\TODO}[1]{\marginpar{\tiny #1}}
 
@@ -163,12 +164,12 @@ provides in Section~2.
 \label{sec:model}
 \begin{wrapfigure}{r}{7.5cm}
   \vspace{-7.5ex}
-  \label{fig:stream}
   \begin{center}
     \includegraphics{stream}
   \end{center}
   \vspace{-3ex}
   \caption{A \liquidsoap{} stream}
+  \label{fig:stream}
   \vspace{-4ex}
   % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{wrapfigure}
@@ -202,7 +203,7 @@ operating on other sources in the sense that they produce a stream based on inpu
 streams given by other sources. Abstractly, the program describing the
 generation of a stream can thus be represented by a directed acyclic graph,
 whose nodes are the sources and whose edges indicate dependencies between
-sources.
+sources (an example is given in Figure~\ref{fig:simple}).
 
 % Given an acyclic graph describing a stream generator, the roots of the graph are the operator that create 
 % the initial streams, called \textit{sources}. Those sources can be created from a single file, a playlist, an HTTP input,
@@ -215,71 +216,62 @@ sources.
 % For this initial description, we suppose that the graph has only one output.
 
 Some sources have a particular status: not only they compute a stream like any
-other source, but they also perform some observable task, typically outputting their
-stream somewhere. These sources are called \emph{active} sources.
-Stream generation is performed top-down:
-active sources actively attempt to produce their stream,
-obtaining data from their input sources
-which in turn obtain data from their dependent sources, and so on.
+other source, but they also perform some observable task, typically outputting
+their stream somewhere. These are called \emph{active} sources. Stream
+generation is performed ``on demand'': active sources actively attempt to
+produce their stream, obtaining data from their input sources which in turn
+obtain data from their dependent sources, and so on. An important consequence of
+this is the fact that sources do not constantly stream: if a source would
+produce a stream which is not needed by any active source then it is actually
+frozen in time. This avoids useless computations but is also crucial to obtain
+the expected expressiveness. For example, a \texttt{rotation} operator will play
+alternatively several sources, but should only rotate at the end of tracks, and
+its unused sources should not keep streaming, otherwise we might find them in
+the middle of a track when we come back to playing them. Likewise, we need to be
+able to insert a jingles in between two tracks of a stream, which involves
+momentarily stopping it. Sources are also allowed themselves to \emph{fail},
+\ie{} refuse to stream at some point in the time at the end of a track (think
+for example of a \texttt{playlist} operator which has a limited number of files
+to play).
 
-Two important aspects of sources is that
-(1) they do not constantly stream:
-the stream corresponding to an unused stream is frozen in time,
-and
-(2) they are allow to fail, \ie\ deny streaming, at the end of a track.
-\TODO{DB faudrait se documenter mais je crois que c'est vraiment particulier:
-  ça nous distingue du DSP mais pe aussi gstreamer}
-
-This last ingredient is crucial to obtain the expected expressiveness.
-For example, a rotation operator will play alternatively several sources,
-but should only rotate at the end of tracks,
-and its unused sources should not keep streaming -- otherwise we might find them
-in the middle of a track when we come back to playing them.
-Also, we need to be able to insert a jingles in between two tracks of a 
-stream, which involves momentarily stopping it.
-
-\subsection{A language for building sources} % building streaming systems?
-
-In addition to defining a streaming model, \liquidsoap\ provides the user
+\subsection{A language for building streaming systems}
+Based on the streaming model presented above, \liquidsoap{} provides the user
 with a convenient high-level language for describing streaming systems.
-Although our language borrows from other functional
-programming languages, it is unique to our tool.
-The main reasons for having created our own language are the need for
-a static type discipline and a very user-friendly language,
-tighly integrated with our tool.
+Although our language borrows from other functional programming languages, it is
+has been designed from scratch in order to be able to have a dedicated static
+typing discipline together a very user-friendly language, tightly integrated
+with our tool.
 
-We felt that a statically typed language would be especially relevant
-in \liquidsoap, since a script describes a system that is intended to run
-for months with some parts rarely triggered, and it would be very 
+One of the main goal which has motivated the design of the \liquidsoap{}
+language is that it should be very accessible, even to non-programmers. It
+turned out that having a functional programming language is very natural (\cf
+Section~\ref{sec:transitions}). The built-in functions of the language often
+have a large number of parameters, many of which have reasonable default values:
+it would be very cumbersome to have to write them all each time, in the right
+order. In order to address this, we have designed a new extension of
+$\lambda$-calculus with labeled arguments and multi-abstractions which makes it
+comfortable to use the scripting
+API~\cite{baelde-mimram:webradio-lambda}. Having designed our own language also
+allowed us to integrate a few domain-specific extensions, and integrate it
+tightly with the tool\TODO{SM on comprend pas trop ce que c'est que le tool, on
+  peut pas juste dire que c'est l'interpréteur ou des libraries ?}, which offers
+a browsable documentation of its scripting API and helpful error messages. In
+practice, many of the users of \liquidsoap{} are motivated by creating a radio
+and not very familiar with programming, so it can considered that the design of
+the language was a reasonable success from this point of view.
+
+An other motivation was to ensure some safety properties of the stream
+generation. A script in \liquidsoap{} describes a system that is intended to run
+for months, some parts of whose rarely triggered, and it would be very
 disappointing to notice a typo or a basic type error only after a particular
-part of the code is used for an important event.
-Hence, we want to put as much static analysis as possible, as
-long as it doesn't put the burden on the user, \ie{} all types should be
-inferred. As we shall see, \liquidsoap\ also provides a few useful dynamic
-analysis.
-
-The second driving force behind the design of the \liquidsoap\ language
-is that it should be accessible to non-programmers.
-For that purpose, we have designed a new extension of $\lambda$-calculus
-with labeled arguments and multi-abstractions 
-\cite{baelde-mimram:webradio-lambda} which makes it comfortable to use
-the scripting API, whose built-in functions typically have dozens of
-arguments, many of which being optional.
-The liquidsoap language also features a few domain-specific extensions
-as described above.
-Finally, designing our own language allowed us to tightly integrate
-it with the tool, which offers a browsable documentation of its scripting
-API and helpful error messages.
-
-The current paper can be read without a prior understanding of
-the language and its type system, since we introduce the few notions
-that we discuss and remain informal concerning others.
-The interested reader is referred to \cite{baelde-mimram:webradio-lambda},
-in French.
+part of the code is used for an important event. In order to ensure essential
+safety properties, the language is statically strongly typed. We want to put as
+much static analysis as possible, as long as it doesn't put the burden on the
+user, \ie{} all types should be inferred. As we shall see, \liquidsoap{} also
+provides a few useful dynamic analysis.
 
 \begin{figure}[t]
  \begin{center}
-\label{fig:simple}
 \[
 \xymatrix{
   *+[F]{\mathtt{input.http}}\ar[r]&*+[F]{\mathtt{fallback}}\ar[r]&
@@ -290,16 +282,19 @@ in French.
 \]
 \end{center}
  \caption{A simple streaming system}
+ \label{fig:simple}
  % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{figure}
 
-The evaluation of a \liquidsoap\ script notably triggers the construction of
-various sources, built from various operators built into the language.
-For example, the following script defines two elementary sources,
-respectively reading from an HTTP stream and a playlist of files,
-composed in a fallback, filtered through a volume
-normalizer and sent to an Icecast server for broadcast:
-\TODO{DB define icecast}
+The current paper can be read without a prior understanding of the language and
+its typing system, the reader interested into a detailed presentation referred
+to~\cite{baelde-mimram:webradio-lambda}. We simply recall that the evaluation of
+a \liquidsoap{} script triggers the construction of various sources, built from
+various operators built into the language. For example, the following script
+defines two elementary sources, respectively reading from an HTTP stream and a
+playlist of files, composed in a fallback (\ie{} if the HTTP stream is ended or
+broken then the playlist is used), filtered through a volume normalizer and sent
+to an Icecast server which will broadcast the stream to the listeners:%\TODO{DB define icecast}
 \begin{verbatim}
 output.icecast(%vorbis,mount="myradio",
   normalize(fallback([input.http("http://other.net/radio"),
@@ -332,7 +327,7 @@ In this case, the two outputs in the graph are connected to the same source.
 Hence, when those output transmit their frame to this source to be filled, the 
 operator should fill them with the same data.
 
-\begin{figure}[t]
+\begin{figure}[b]
  \begin{center}
 \[
 \xymatrix{
@@ -361,8 +356,8 @@ the stream generator, thus copying data in memory only when it is necessary.
 \TODO{DB This paragraph doesn't say much; a little more could be said after
   transitions are evoked.}
 
-\section{Transitions}
-
+\subsection{Functional is useful: transitions}
+\label{sec:transitions}
 Now, the language penetrates the model, and functions are not syntactic sugar.
 
 We describe transitions used in switching operators, \ie\ transitions between
