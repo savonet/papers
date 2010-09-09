@@ -26,6 +26,7 @@ soundcard has its own clock, which will tick at a slightly different
 rate than the main clock of the computer.
 Since liquidsoap communicates with soundcards and remote computers,
 it has to take those mismatches into account.
+\TODO{SM est-ce qu'on parle aussi des pbs de ``time drifting'' ?}
 
 There are also some reasons that are purely internal to liquidsoap:
 in order to produce a stream at a given speed,
@@ -96,9 +97,9 @@ output.icecast(%vorbis,mount="myradio",
 \def\g{\save
 "2,4"."1,2"."1,5"!C*+<27pt>[F--]\frm{}\ar @{--} "1,1"\restore}%
 \xymatrix{
-   \mathtt{clock_1} & *+[F]{\mathtt{playlist}}\ar[r]\f&*+[F]{\mathtt{crossfade}}\ar[r]&  *+[F]{\mathtt{fallback}}\ar[r]&
+   {clock_1} & *+[F]{\mathtt{playlist}}\ar[r]\f&*+[F]{\mathtt{crossfade}}\ar[r]&  *+[F]{\mathtt{fallback}}\ar[r]&
   *+[F]{\mathtt{output.icecast}}\\
-   &\mathtt{clock_2} &  & *+[F]{\mathtt{jingles}}\ar[u]\g& 
+   &{clock_2} &  & *+[F]{\mathtt{jingles}}\ar[u]\g& 
 }
 \]
 \end{center}
@@ -107,7 +108,8 @@ output.icecast(%vorbis,mount="myradio",
  % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{figure}
 
-There, $\verb.clock._{\tiny{\verb.2.}}$
+\TODO{SM I removed the mathttt for clocks so we don't think that they are part of the language}
+There, $clock_2$
 was created specifically for the crossfading
 operator; the rate of that clock is controlled by that operator,
 which can hence accelerate it around track changes without any
@@ -127,8 +129,8 @@ if its animation (and thus time rate) depends on it.
 Active sources do not depend on other sources,
 and dependencies must be acyclic.
 In the above example, the ticking of
-$\verb.clock._{\tiny{\verb.2.}}$ is provoked by that of
-$\verb.clock._{\tiny{\verb.1.}}$, and freezes when the fallback
+$clock_2$ is provoked by that of
+$clock_1$, and freezes when the fallback
 is playing jingles.
 % a clock $c'$ might depend on $c$ if it ticks twice as fast;
 % such a clock will be used in the implementation of a speed doubling
@@ -153,6 +155,7 @@ and hence multiple CPU cores\footnote{
   most of the computation in \liquidsoap\ takes place in decoding
   and encoding multimedia formats, which is done by C libraries.
 }.
+\TODO{SM faudrait mentionner avant que c'est implémenté en OCaml}
 This powerful possibility is made available to the user
 through the intuitive notion of clock.
 As we shall see in the next section,
