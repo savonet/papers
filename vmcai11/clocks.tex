@@ -6,9 +6,9 @@ for all sources.
 %    other connotations
 By default, this rate corresponds to the wallclock time,
 which is appropriate for a live broadcast,
-but it may also be different.
-For example, when producing a file, one might want the time rate
-to be as fast as the CPU allows.
+but it does not need to be so.
+For example, when producing a file from other files,
+one might want the time rate to be as fast as the CPU allows.
 
 \subsection{Motivation}
 
@@ -33,6 +33,7 @@ a source might need to obtain data from another source at
 a different rate. This is obvious for an operator that speeds up or
 slows down audio, but is also needed in more subtle cases
 such as a crossfading operator.
+\TODO{SM on devrait déjà avoir expliqué le crossfading avant}
 Crossfading consists in fading the volume of a stream around tracks
 limits, which is not problematic, and more crucially combining a portion
 of the end of a track with the beginning of the next one\footnote{
@@ -42,6 +43,7 @@ of the end of a track with the beginning of the next one\footnote{
   takes a transition function as a parameter for describing how
   the two tracks are actually combined.
 }.
+\TODO{SM 1. c'est pas joli les notes 2. est ce que celle-ci n'est pas trop du détail ?}
 The result is close to what was represented in Figure~\ref{cross-fig}
 except that the two tracks originate from the same source.
 During the lapse of time where the operator combines
@@ -58,6 +60,7 @@ the crossing operator needs twice as much stream data\footnote{
   when the tracks are combined but when the sliding window
   is initially filled up.
 }.
+\TODO{SM pareil, c'est trop implém}
 After ten tracks,
 with a crossing duration of six seconds, one more minute will have
 passed for the source compared to the time of the crossing operator.
