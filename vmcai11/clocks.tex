@@ -82,11 +82,10 @@ corresponds to the stream generators built in the following
 script:
 \begin{verbatim}
 output.icecast(%vorbis,mount="myradio",
-  fallback([crossfade(playlist("some.txt")),
-            jingles]))
+  fallback([crossfade(playlist("some.txt")),jingles]))
 \end{verbatim}
 
-\begin{figure}[htpb]
+\begin{figure}[t]
  \begin{center}
 \[
 \def\f{\save
