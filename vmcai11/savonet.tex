@@ -60,7 +60,8 @@
   systems. This language is based on a model for streams and contains operators
   and constructions, which make it adapted to the generation of streams. The
   interpreter of the language also ensures many properties concerning the good
-  execution of the stream generation.
+  execution of the stream generation.\TODO{expliquer qu'on insiste sur typage
+    des streams + clocks}
   % We describe a model that supports a rich collection of operators (track
   % scheduling, jingle insertion, mix, metadata updates, various transitions), and
   % some aspects of language design that make it adapted to the application
@@ -157,7 +158,8 @@ strong guarantees on the behavior the stream generation).
 
 We first describe the language and its underlying model for streams in
 Section~1, and then detail the typing systems as well as the guarantees that it
-provides in Section~2.
+provides in Section~2.\TODO{indiquer le vrai plan : on insiste sur deux
+  nouveautés importantes (typage des streams + clocks)}
 
 \section{Liquidsoap}
 \subsection{Streaming model}
@@ -301,7 +303,7 @@ output.icecast(%vorbis,mount="myradio",
                       playlist("listing.txt")])))
 \end{verbatim}
 The graph underlying the system resulting from the execution of that
-script is shown in Figure~\ref{fig:simple}.
+script is shown in Figure~\ref{fig:simple}.\TODO{mount est un exemple de label}
 
 \subsection{Efficiency}
 
