@@ -152,10 +152,9 @@ We first describe the language and its underlying model for streams in
 Section~1, and then detail the typing systems as well as the guarantees that it
 provides in Section~2.
 
-\section{A language for generating streams}
-\subsection{A model of streams}
+\section{Liquidsoap}
+\subsection{Streaming model}
 \label{sec:model}
-\TODO{DB this drawing (by me) doesn't look very good and doesn't bring much}
 \begin{wrapfigure}{r}{7.5cm}
   \vspace{-7.5ex}
   \label{fig:stream}
@@ -233,17 +232,45 @@ in the middle of a track when we come back to playing them.
 Also, we need to be able to insert a jingles in between two tracks of a 
 stream, which involves momentarily stopping it.
 
-\TODO{DB J'ai pas parlé de cycles (clocks)
-  mais on peut pe pas completement éviter
-  qd je parle de stopper un flux c'est bien par rapport a une notion de 
-  temps...}
-\TODO{RB bof, ici on parle de concepts généraux, ça me semble
-suffisant..}
+\subsection{A language for building sources} % building streaming systems?
 
-%\subsection{Concrete implementation}
+In addition to defining a streaming model, \liquidsoap\ provides the user
+with a convenient high-level language for describing streaming systems.
+Although our language borrows from other functional
+programming languages, it is unique to our tool.
+The main reasons for having created our own language are the need for
+a static type discipline and a very user-friendly language,
+tighly integrated with our tool.
 
-Having introduced all the terminology, we can give an example of 
-\liquidsoap\ setup, in Figure~\ref{fig:simple}.
+We felt that a statically typed language would be especially relevant
+in \liquidsoap, since a script describes a system that is intended to run
+for months with some parts rarely triggered, and it would be very 
+disappointing to notice a typo or a basic type error only after a particular
+part of the code is used for an important event.
+Hence, we want to put as much static analysis as possible, as
+long as it doesn't put the burden on the user, \ie{} all types should be
+inferred. As we shall see, \liquidsoap\ also provides a few useful dynamic
+analysis.
+
+The second driving force behind the design of the \liquidsoap\ language
+is that it should be accessible to non-programmers.
+For that purpose, we have designed a new extension of $\lambda$-calculus
+with labeled arguments and multi-abstractions 
+\cite{baelde-mimram:webradio-lambda} which makes it comfortable to use
+the scripting API, whose built-in functions typically have dozens of
+arguments, many of which being optional.
+The liquidsoap language also features a few domain-specific extensions
+as described above.
+Finally, designing our own language allowed us to tightly integrate
+it with the tool, which offers a browsable documentation of its scripting
+API and helpful error messages.
+
+The current paper can be read without a prior understanding of
+the language and its type system, since we introduce the few notions
+that we discuss and remain informal concerning others.
+The interested reader is referred to \cite{baelde-mimram:webradio-lambda},
+in French.
+
 \begin{figure}[t]
  \begin{center}
 \label{fig:simple}
@@ -256,37 +283,35 @@ Having introduced all the terminology, we can give an example of
 }
 \]
 \end{center}
- \caption{A streaming system}
+ \caption{A simple streaming system}
  % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{figure}
-Here, we have two elementary sources, respectively reading from an HTTP stream 
-and a playlist of files, composed in a fallback, filtered through a volume
-normalizer and sent to an Icecast server for broadcast. % TODO DB first occurrence of icecast
-Such a graph is the skeleton of the following \liquidsoap\ script:
+
+The evaluation of a \liquidsoap\ script notably triggers the construction of
+various sources, built from various operators built into the language.
+For example, the following script defines two elementary sources,
+respectively reading from an HTTP stream and a playlist of files,
+composed in a fallback, filtered through a volume
+normalizer and sent to an Icecast server for broadcast:
+\TODO{DB define icecast}
 \begin{verbatim}
 output.icecast(%vorbis,mount="myradio",
   normalize(fallback([input.http("http://other.net/radio"),
                       playlist("listing.txt")])))
 \end{verbatim}
-The script provides several other details, such as the encoding format 
-(Vorbis) and the names of the Icecast radio, the input HTTP stream
-and the playlist file. The \liquidsoap{} language is interpreted. The evaluation of a script or
-expression triggers the construction of a stream processing devices, built by
-composing various elementary blocks. The \liquidsoap{} language belongs to the 
-familly of ML languages. In this paper, we do not focus on language-specific details
-which have been explained extensively in \cite{baelde-mimram:webradio-lambda}.
+The graph underlying the system resulting from the execution of that
+script is shown in Figure~\ref{fig:simple}.
 
-% \subsection{Sharing streams}
-% 
-% \emph{The idea of this section\ldots
-% having done the minimum to define the high-level terminology before,
-% we now turn to more technical details?
-% Efficiency issues, sharing.}
+\subsection{Efficiency}
+
+\TODO{DB In the JFLA paper we have a quick benchmark of the impact
+  of changing the frame size from 1 to 100 to 1000.
+  Also, can we still compete well with ices?}
 
 An important aspect of the implementation is efficiency, and, specifically in \liquidsoap{},
 avoiding multiple copies of the stream's data. Thus, we use a
 reference passing mechanism based on \textit{frames}. A frame is a
-chunk of data that represents a fixed portion of the stream. 
+chunk of data of fixed duration that represents a portion of the stream.
 An active source instantiates a frame and tries to fill it by passing a reference
 to its frame to its underlying sources.
 The frames used to generate streams are passed as memory pointers, thus
@@ -320,21 +345,17 @@ For this reason, the first time that the source is asked to fill a frame, it
 operates as described before. However, the second time, it should just fill the frame 
 with the data gathered during the first call, which implies \textit{caching} the data obtained 
 during the first call. 
+\TODO{DB: What about the third time, fourth? When does it stop?
+  We need to talk about clock cycles to avoid confusing the reader.}
 Once all the filling operations have been done, the sources are informed that the 
 stream has moved to the next frame and reset their cache. 
 
 Finally, the necessity for a node to cache its current frame is detected when instantiating 
 the stream generator, thus copying data in memory only when it is necessary.
+\TODO{DB This paragraph doesn't say much; a little more could be said after
+  transitions are evoked.}
 
-
-\section{Parties orphelines}
-\subsection{Performances}
-
-Could be a good place to talk about how liquidsoap runs: parsing, type 
-checking, building sources, performing dynamic analysis (only fallibility for 
-now) and finally initializing them for streaming.
-
-\subsection{Transitions}
+\section{Transitions}
 
 Now, the language penetrates the model, and functions are not syntactic sugar.
 
@@ -369,37 +390,29 @@ illustrating well how the langage can build non-trivial operators from
 our simple building blocks.
 
 \section{Typing the language}
-\subsection{Motivations}
-Although the language \liquidsoap{} borrows from other programming languages, it
-is unique to our tool.  There are several reasons for having created our own
-language.  First, we felt that a static type discipline would be useful: A
-script describes a system that is intended to run for days, even month, with
-some parts rarely triggered.  It would be very disappointing to notice a typo or
-basic type error only after two weeks of running, precisely at the time of a
-special show.  Hence, we want to put as much static analysis as possible, as
-long as it doesn't put the burden on the user, \ie{} all types should be
-inferred.  There is not so much choice of static languages than can be easily
-embedded and are user-friendly. Designing our own simple functional programming
-language, and tightly integrating with the rest of the tool, provides a good
-documentation and helpful error messages.  Moreover, having our own language
-allowed us to design a few domain-specific type extensions.
 
-\TODO{also mention labels to help users}
-
-\subsection{The typing system}
-\TODO{describe the typing system}
+\TODO{DB time/space/scope dictates that we don't describe the type system
+  except for a few general sentences}
 
 \subsection{Heterogeneous stream contents}
 \label{sec:content}
 
-Motivate why we need it (it's not only about video and MIDI)
+Motivate why we need it (besides video and MIDI and good example
+ is decoding a playlist of stereo AND mono audio)
 and how we make sure it's consistent.
 
-Fixed/variable arity, content kind, type, non-parametricity, inference.
+Fixed/variable arity, content kind, types and type constraints,
+non-parametricity and type annotations, inference and encoding formats.
 
-\subsection{Runtime checks}
+\subsection{Fallibility}
+
 \TODO{SM expliquer qu'on n'arrive pas à tout faire de façon statique}
-\TODO{DB "infallible", and introduce the phases, "static/dynamic analysis"}
+\TODO{DB Je le dis pour les clocks (qui est aussi une analyse dynamique
+  faite au meme moment que la fallibilité).
+  Sinon, je pense qu'on peut envisager
+  de virer cette mini section si elle ne s'intègre pas naturellement
+  ailleurs.}
+
 Finally, the information of whether or not a stream can be assumed to be
 infinite is also carried by the graph. For instance, if a source is created from
 a single file, one can try to decode it before starting streaming. If the file
@@ -434,8 +447,6 @@ Second and more importantly,
 our programming language makes it much simpler
 to compose operators; all the low level aspects are hidden
 from the user.
-\TODO{nécessite plus de détails, mais je pense aux clocks, au sharing
-  etc}
 
 A last class of related tools is digital signal processing (DSP) languages.
 An interesting system in this category is Faust~\cite{faust},
@@ -449,6 +460,7 @@ Liquidsoap does not build new operators but only assembles pre-defined
 operators. In contrast, Faust compiles a single new operator at each
 compilation, aggregating the basic operations used in the script
 and optimizing their combination.
+\TODO{DB unlike faust, liquidsoap is interpreted}
 It would be very interesting to interface \liquidsoap\ with such a tool,
 or import some of their techniques. This could certainly be done with
 DSP operators, and would allow us to program them efficiently from
