@@ -1,73 +1,86 @@
 
-\emph{Slogan: clocks are an abstraction of threads?
-  It's easier to manipulate, users can't make mistakes\ldots almost.
-  We currently don't say anything about the (high-level) implementation.
-  We can re-use most of the documentation on clocks here,
-  notably illustrating the use of internal and external clocks.}
+Until now, we have only described streaming systems where there is
+a unique, global clock. In such systems, time flows at the same rate
+for all sources.
+% DB I think "wallclock time" is better than "real time" which has 
+%    other connotations
+By default, this rate corresponds to the wallclock time,
+which is appropriate for a live broadcast,
+but it may also be different.
+For example, when producing a file, one might want the time rate
+to be as fast as the CPU allows.
 
-% <MOVED> DB The following has been moved from earlier sections
+While having a global clock suffices in many situations,
+there are a couple of reasons why a streaming system might involve multiple
+clocks or time flows.
+The first reason is external to liquidsoap: there is simply
+not a unique notion of time in the real world.
+A computer's internal clock indicates a slightly different time
+than your watch or another computer's clock.
+Moreover, when communicating with a remote computer, network
+latency causes a perceived time distortion.
+Even within a single computer there are several clocks: notably, each
+soundcard has its own clock, which will tick at a slightly different
+rate than the main clock of the computer.
+Since liquidsoap communicates with soundcards and remote computers,
+it has to take those mismatches into account.
 
-The timing, or clock, associated to a multimedia stream can be real-time, if the stream is created 
-\TODO{DB scaled?}
-or broadcasted live, or any scaled timing, for instance if the stream consists of files. \textit{A priori},
-describing and broadcasting a stream implies real-time output. As we see later, this is unfortunately 
-not sufficient for complex settings.
-\TODO{DB infinite <> infallible}
-Also, a stream can be finite or infinite. Infinite streams are particularly interesting for broadcasting
-because most of the time, we expect a radio, for instance, to be always online. However, this needs 
-a special care since it implies some assumption about the validity of the elements that build the stream.
+There are also some reasons that are purely internal to liquidsoap:
+in order to produce a stream at a given speed,
+a source might need to obtain data from another source at
+a different rate. This is obvious for an operator that speeds up or
+slows down audio, but is also needed in more subtle cases
+such as a crossfading operator.
+Crossfading consists in fading the volume of a stream around tracks
+limits, which is not problematic, and more crucially combining a portion
+of the end of a track with the beginning of the next one\footnote{
+  In \liquidsoap, crossfading derives from a simpler operator that
+  only takes care of crossing, \ie\ combining the end of a track
+  with the beginning of the next one. The \texttt{cross} operator
+  takes a transition function as a parameter for describing how
+  the two tracks are actually combined.
+}.
+The result is close to what was represented in Figure~\ref{cross-fig}
+except that the two tracks originate from the same source.
+During the lapse of time where the operator combines
+data from an end of track with the beginning of the other other,
+the crossing operator needs twice as much stream data\footnote{
+  % Note that there is no need to store the beginning of track
+  % (this is only done in smart_cross for computing its volume)
+  In the actual implementation, we have to
+  maintain a copy of a section of the past content
+  of the input stream until the end of a track,
+  generally using remaining time estimations to avoid maintaining
+  this sliding window all the time.
+  The time acceleration does not actually happen
+  when the tracks are combined but when the sliding window
+  is initially filled up.
+}.
+After ten tracks,
+with a crossing duration of six seconds, one more minute will have
+passed for the source compared to the time of the crossing operator.
 
-\TODO{DB the following should move later}
-Also, the stream generator can be used at any rate. For instance,
-for a live broadcast, the generator will be asked to fill frames at real rate, while 
-for a stream saved to a file, the generator will be asked to fill frames at the maximal possible rate.
-\TODO{DB in the following, confusion between transition and crossing}
+In order to avoid inconsistencies caused by time differences,
+while maintaining a simple and efficient execution model for
+its sources, liquidsoap works under the restriction that
+one source belongs to a unique clock,
+fixed once for all when the source is created.
+Sources from different clocks cannot communicate using the normal
+streaming protocol, since it is organized around clock cycles.
 
-% </MOVED> DB 
+In the graphical representation of streaming systems,
+clocks induce a partition of sources represented by a notion of locality
+or box.
+For example, the graph shown in Figure~\ref{fig:boxes}
+corresponds to the stream generators built in the following
+script:
+\begin{verbatim}
+output.icecast(%vorbis,mount="myradio",
+  fallback([crossfade(playlist("some.txt")),
+            jingles]))
+\end{verbatim}
 
-Another limitation of the current model is the possibility to describe advanced transitions in 
-the stream. For instance, one may want to use a crossfade between two tracks 
-of the stream, \ie{}
-fade out the volume of an ending track, fade in the volume of a starting track and merge this together.
-
-\begin{figure}[t]
- \begin{center}
-\begin{tikzpicture}[xscale=0.8,yscale=0.8]
-\draw[->] (0,0) -- (0,2.5);
-\draw (-0.1,2) -- (0.1,2);
-\draw (0,2) node[anchor=east]{100};
-\draw (0,0) node[anchor=east]{0};
-\draw[->] (0,0) -- (7.5,0);
-\foreach \x in {1,2,3,4,5,6,7} \draw (\x,-0.1) -- (\x,0.1);
-\draw (0,2.5) node[anchor=south]{volume (\%)};
-\draw (7.5,0) node[anchor=west]{time (sec)};
-\draw (0,2) -- (2,2) -- (5,0);
-\draw (3,0) -- (5,2) -- (7.5,2);
-\draw (1,2) node[anchor=south]{track $n$};
-\draw (6,2) node[anchor=south]{track $n+1$};
-\end{tikzpicture}
-\end{center}
- \caption{A crossfade transition between two tracks}
- \label{cross-fig}
- % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
-\end{figure}
-
-The initial source can be created, for instance, with a playlist of files. Then,
-a \texttt{crossfade} operator would take this source and return a source whose tracks are 
-crossfaded as shown in Figure \ref{cross-fig}. In order to do this, the operators has to 
-detect sufficiently in advance the end of the current track, collect the data of the
-end of the track, collect the data of the beginning of the next track, apply the respective
-fade out and fade in and add the two streams to create the transition.
-
-However, in this case we need to introduce a new notion in the model. Without transitions, the 
-source generator can be used with a uniform rate on all nodes: frames are filled
-at the same rate on every node. Unfortunately, the \texttt{crossfade} operator
-does not have this property: when it detects the end of a track, it will query many frames in advance 
-to the underlying source in order to compute the crossfade. This behaviour breaks the uniformity of 
-timing in the graph and requires to introduce \textit{multiple clocks}.
-
-
-\begin{figure}[b]
+\begin{figure}[htpb]
  \begin{center}
 \[
 \def\f{\save
@@ -82,16 +95,62 @@ timing in the graph and requires to introduce \textit{multiple clocks}.
 \]
 \end{center}
  \caption{A stream generator with different clocks}
+ \label{fig:boxes}
  % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{figure}
 
-Clocks are represented in the model by a notion of locality in the graph. The graph is then partitioned into 
-different sets, where each set shares the same clock.
-When instantiating the graph, each operator declares if it needs a custom clock for him or its sources. 
-Then, when initializing the graph of the stream generator, the clocks are attributed by a constraint 
-satisfaction algorithm. Because of caching, we do not want a source to be connected to two different operators with 
-two different clocks. In this case, this is detected when instantiating the graph and an error is raised.
-Similarly, some sources do not support clocks whose rate is different than real time, for instance input 
-from the local sound card. In this case too, if the clock attached to the source is not real time, an error
-is raised.
+There, $\verb.clock._{\tiny{\verb.2.}}$ was created specifically for the crossfading
+operator; the rate of that clock is controlled by that operator,
+which can hence accelerate it around track changes without any
+risk of inconsistency.
+The other clock is simply a wallclock, so that the main stream
+is produced following the real (wallclock) time rate.
 
+Each clock is in charge of animating its own active sources.
+Some clocks may not run all the time. In the above example,
+the crossfading's clock is not ticking when the fallback
+is playing jingles.
+But most clocks do run their sources all the time.
+\TODO{DB: being active has nothing to do with clock nesting\ldots
+  but I don't know what nesting is about!}
+It is the case of wallclocks or clocks corresponding to
+soundcards.
+From an implementation viewpoint, each of those clocks launches
+its own thread.
+Hence, clocks provide a way to split the generation of one or
+several streams accross several threads,
+and hence multiple CPU cores\TODO{DB it's even true with OCaml}.
+This powerful possibility is made available to the user
+through the abstract notion of clock.
+As we shall see in the next section,
+the script writer never needs to specify clocks unless he
+explicitly wants a particular setup,
+and \liquidsoap\ automatically checks that clock assignements
+are correct.
+\TODO{DB: by "correct" I mean that the user cannot break the
+  streaming protocol by assigning wrong clocks, and so does
+  not get unexpected behaviors (although this is only a fuzzy claim)}
+
+\TODO{DB: should we show the nice example from the doc where icecast
+  does not interfere with a file backup and a sound card input?
+  Perhaps just mention it above, but some code could be nice.}
+
+\subsection{Clock assignment}
+
+Clocks are not represented in the type of \liquidsoap\ sources.
+Although it would be nice to statically check clock assignment,
+type inference would not be possible without technical annotations
+from the user.
+
+Instead, clocks are assigned upon source creation.
+Some sources require to belong to a particular, definite clock,
+such as the wallclock, or the clock corresponding to a sound card.
+Other sources simply require that their clock is the same as their
+input sources.
+Since clocks often cannot be inferred bottom-up, we use a notion
+of clock variable that can be left undefined.
+After this phase, remaining unknown clocks are forcibly assigned
+to the default wallclock, and new sources are started by their
+respective clocks.
+
+Two errors: two different definite clocks, nested clocks
