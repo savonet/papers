@@ -58,7 +58,6 @@
 \TODO{abstract, automation/manual in intro}
 
 \begin{abstract}
-\TODO{DB: webradio should be web radio, internet radio or netradio (WP)}
   Generating multimedia streams, such as in a netradio, is a task which is
   complex and difficult to adapt to every users' needs. We introduce a novel
   approach in order to achieve it, based on a dedicated high-level functional
@@ -583,24 +582,32 @@ from the scripting language rather than in OCaml.
 
 \section{Conclusion} \label{sec:conclu}
 
-\liquidsoap{} is an established tool,
-used by many netradios worldwide as well as in some academic 
+We have presented the main ideas behind the design of \liquidsoap,
+a tool used by many netradios worldwide as well as in some academic 
 work~\cite{baccigalupo2007case}.
-% in order to study the social aspects of web radios.
-% DB \cite{baccigalupo2007sharing} is a short version of the other;
-%   both papers talk about liquidsoap (but no formal \cite{}) and have
-%   nice screenshots of the poolcasting website
-%   only the long version has a technical development
+We believe that \liquidsoap\ demonstrates the potential of
+building applications as domain-specific languages.
+It also shows that very rich type systems can be put to work
+usefully even in tools not designed for programmers:
+although most \liquidsoap\ users have a limited understanding of
+our type system, they are able to fix their mistakes
+when an error is reported | errors might be difficult to read but
+they have the merit of signaling real problems.
 
-Documentation, errors, user friendliness.
-Insist on all that important (but not publishable work) perhaps this should
-go together with LOC and stuff.
-
-Requests. Lots of operators, many providing unique features in themselevs.
-
-Typing sources as objects whose methods are (telnet) services.
-
-Graphical user interfaces
+Of course, there are many other reasons behind the success of \liquidsoap,
+including a wide variety of features plugged onto the basic organization
+described here. % requests, many formats, I/O and operators
+Some of the future work on \liquidsoap\ lies there:
+integration with other tools, graphical interfaces, documentation, etc.
+But we are also planning some improvements of the language:
+together with some new operators,
+the enrichment the language (notably with variants and recursion) will 
+make it possible to express more things directly in the script
+language, bringing more customizability.
+Also, \liquidsoap\ offers a server through which many sources
+offer various services. An interesting way to structure more this very useful
+system would be to consider sources as objects whose methods are services;
+this would call for an object-oriented extension of our type system.
 
 \bibliographystyle{abbrv}
 \bibliography{biblio}

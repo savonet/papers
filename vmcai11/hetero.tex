@@ -53,8 +53,7 @@ $K \sub K'$ expresses that $K$ is more permissive than $K'$,
 which implies that a source of content kind $K$ can safely be seen
 as one of content kind $K'$.
 
-\begin{figure}[t]
-\[
+\begin{figure}[htpb]\[
 % c'est possible de simplifier en mettant direct K<:K,
 % mais on ne peut pas dire K<:* sans vérifier que K est bien formé
    \infer{0\sub 0}{} \quad\quad
@@ -65,7 +64,7 @@ as one of content kind $K'$.
 \]\[
    \infer{(A,B,C) \sub (A',B',C')}{A \sub A' & B\sub B' & C\sub C'}
 \]
- \vspace{-0.3cm}\fcaption{Subtyping relation on arities}
+ \fcaption{Subtyping relation on arities}
  \label{fig:subtyping}
 \end{figure}
 
