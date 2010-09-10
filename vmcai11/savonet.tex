@@ -55,9 +55,11 @@
 
 % \vspace{-4ex}
 
+\TODO{abstract, automation/manual in intro}
+
 \begin{abstract}
 \TODO{DB: webradio should be web radio, internet radio or netradio (WP)}
-  Generating multimedia streams, such as in a webradio, is a task which is
+  Generating multimedia streams, such as in a netradio, is a task which is
   complex and difficult to adapt to every users' needs. We introduce a novel
   approach in order to achieve it, based on a dedicated high-level functional
   programming language, called \emph{\liquidsoap{}}, for generating,
@@ -116,7 +118,7 @@ are often required to obtain a satisfying design.
 % or PHP, dedicated to dynamic web page creation.
 
 In this paper,
-we are specifically interested here in the generation of multimedia streams,
+we are specifically interested in the generation of multimedia streams,
 notably containing audio and video.
 Our primary targets are netradios, which continuously broadcast
 audio streams to listeners over Internet.
@@ -219,41 +221,29 @@ in Section~\ref{sec:conclu}.
 A stream can be understood as a timed sequence of data.
 In digital signal processing, it will simply be an infinite sequence of 
 samples -- floating point values for audio, images for video.
-However, multimedia streaming also involves high-level notions.
+However, multimedia streaming also involves more high-level notions.
 A \emph{stream}, in \liquidsoap{}, is a succession of \emph{tracks}, annotated
-with \textit{metadata}. The tracks can be thought
-as individual songs on a musical radio show. 
-Metadata are punctual markers storing data, which can occur at any instant in the
-stream, and are constituted of a pair of strings consisting of the name of
-the metadata and its value. They are used to store various information about the
-stream such as copyright information (title or artist of
-the current track) or custom information about tracks (for example how loud it
-should be played).
-Finally, tracks contain data, which consist of float samples 
-(for audio data), images (for video data), etc. (see Section~\ref{sec:content}).
+with \textit{metadata}. Tracks may be finite or infinite, and can be thought
+of as individual songs on a musical radio show. 
+Metadata packets are punctual and can occur at any instant in the
+stream. They are used to store various information about the
+stream, such as the title or artist of the current track,
+how loud the track should be played,
+or any other custom information.
+Finally, tracks contain multimedia data (audio, video or MIDI),
+which we discuss in Section~\ref{sec:content}.
 %A schematic representation of a stream is given in Figure~\ref{fig:stream}.
-\TODO{DB Pour une prochaine version, il y a peut etre une remarque plus
-  profonde ici. Les autres outils sont des outil de traitement de flux;
-  chez eux une source produit un flux. Chez nous, il y a plus de sources
-  que de flux à cause du comportement interactive non trivial.
 
-  Par exemple, la fallibilité. C'est une propriété des sources, invisible
-  sur les flux. Si on essaie de réparer ça pour revenir à une vision
-  plus fonctionnelle, on met des trous dans la notion de flux. Mais ça ne
-  marche toujours pas: la taille du trou dans le flux d'une playlist
-  dépend de son contexte (avec quoi elle est mise en fallback).
-
-  Un truc marrant c'est qu'on encapsule ces aspects impératifs dans des
-  boites noires, pour n'offrir qu'une vision fonctionnelle à 
-  l'utilisateur\ldots}
-
-Streams are generated on the fly interactively by operators which are parametrized by various 
-external factors (variables possibly modified by external interfaces and metadata in particular).
-In \liquidsoap{}, a stream generator is called a \emph{source}. Some sources
+Streams are generated on the fly and interactively by \emph{sources}.
+The behavior of sources may be affected by various parameters,
+internal (\eg\ metadata) or external (\eg\ execution of commands
+made available via a server).
+Some sources
 purely produce a stream, getting it from an external device (such as a file, a
-sound card or network) or are synthesizing it. Many other sources are actually
-operating on other sources in the sense that they produce a stream based on input
-streams given by other sources. Abstractly, the program describing the
+sound card or network) or are synthesizing it.
+Many other sources are actually operating on other sources in the sense that
+they produce a stream based on input streams given by other sources.
+Abstractly, the program describing the
 generation of a stream can thus be represented by a directed acyclic graph,
 whose nodes are the sources and whose edges indicate dependencies between
 sources (an example is given in Figure~\ref{fig:sharing}).
@@ -283,12 +273,21 @@ This avoids useless computations, but is also crucial to obtain
 the expected expressiveness. For example, a \texttt{rotation} operator will play
 alternatively several sources, but should only rotate at the end of tracks, and
 its unused sources should not keep streaming, otherwise we might find them in
-the middle of a track when we come back to playing them. Likewise, we need to be
-able to insert a jingle in between two tracks of a stream, which involves
-momentarily stopping it. \emph{Sources are also allowed to fail},
-\ie{} refuse to stream at some point in the time at the end of a track (think
-for example of a queue of user requests which might often be empty,
-or a playlist which takes too long to prepare a file for streaming).
+the middle of a track when we come back to playing them.
+% DB prochaine phrase superflue, je préfère donner de l'importance a la 
+%    derniere
+% Likewise, we need to be
+% able to insert a jingle in between two tracks of a stream, which involves
+% momentarily stopping it.
+\emph{Sources are also allowed to fail} after the
+end of a track,
+\ie{} refuse to stream, momentarily or not.
+This is needed, for example,
+for a queue of user requests which might often be empty,
+or a playlist which may take too long to prepare a file for streaming.
+Failure is handled by various operators, the most common being
+the \emph{fallback}, which takes a list of sources and replays the
+stream of the first available source, failing when all of them failed.
 
 \subsection{A language for building streaming systems}
 
@@ -313,7 +312,7 @@ allowed us to integrate a few domain-specific extensions, to display helpful
 error messages and to generate a browsable documentation of the scripting API. In
 practice, many of the users of \liquidsoap{} are motivated by creating a radio
 and not very familiar with programming, so it can be considered that the design of
-the language was a reasonable success from this point of view.
+the language was a success from this point of view.
 
 An other motivation was to ensure some safety properties of the stream
 generation. A script in \liquidsoap{} describes a system that is intended to run
@@ -360,14 +359,12 @@ provides a few useful dynamic analysis.
 
 The current paper can be read without a prior understanding of the language and
 its typing system, a detailed presentation can however be found
-in~\cite{baelde-mimram:webradio-lambda}. We simply recall that the evaluation of
-a \liquidsoap{} script triggers the construction of various sources, built from
-various operators built into the language.
-\TODO{DB moche, et "built into" c'est pas builtin\ldots préciser}
+in~\cite{baelde-mimram:webradio-lambda}.
+A basic knowledge of programming languages should be enough to understand
+the few examples presented in this paper,
+which construct sources using built-in operators of our language.
 For example, the following script defines two elementary sources, respectively 
-reading from an HTTP stream and a playlist of files, composed in a fallback 
-(\ie{} the playlist is used when the HTTP stream is unavailable or
-  interrupted), 
+reading from an HTTP stream and a playlist of files, composed in a fallback
 and filtered through a volume normalizer.
 The resulting stream is sent to an Icecast server which 
 broadcasts the stream to listeners,
@@ -379,7 +376,14 @@ output.icecast(%vorbis,mount="myradio",s)
 output.file(%vorbis,"backup.mp3",s)
 \end{verbatim}
 The graph underlying the system resulting from the execution of that script is
-shown in Figure~\ref{fig:sharing}. A few remarks on the syntax: the notation
+shown in Figure~\ref{fig:sharing}.
+Note that the two output functions build a new source:
+these sources generate the same stream as \verb.s.,
+but are active and have the side effect of encoding and sending
+the stream, respectively to an Icecast server and a file.
+% Hence, it would have been equivalent to write
+% \verb_output.file(...,output.icecast(...,s))_.
+A few remarks on the syntax: the notation
 \hbox{\texttt{[}\ldots\texttt{]}} denotes a list, \texttt{mount}
 is a label (the name of an argument of the function \texttt{output.icecast}) and
 \texttt{\%vorbis} is an encoding format parameter whose meaning is explained in
@@ -471,39 +475,51 @@ as in the previous example.
 %   margin. It is available online at this address: \url{http://bit.ly/aHE0G0}}
 
 \subsection{Efficient implementation}
-\TODO{DB Benchmark}
 
 An important aspect of the implementation is efficiency concerning both CPU and
 memory usage. The streams manipulated can have high data rates (a typical video
-stream needs 30Mo/s) and avoiding multiple copies of the data of the streams is
-crucial. This is why we use a reference passing mechanism based on frames. A
-\emph{frame} is a buffer of data of fixed duration that represents a portion of
-\TODO{DB NON Justement on les crée une seule fois}
-the stream. In order to compute a stream, the active sources constantly create
-frames and have them filled by passing references to them to their predecessor
-sources, which in turn pass the references to their predecessors, and so on.
-This passing by reference avoiding copies of data in memory.
-% \TODO{DB at this point the reader doesn't see why several frames are needed}
-% \TODO{RB I think it is ok now..}
+stream needs 30Mo/s) and avoiding multiple copies of stream data is
+crucial.
 
-This mechanism is refined in \liquidsoap{} in order to avoid computing twice the
-same frame. For instance, one may want to have several outputs of the same
-stream, \eg{} one to a server for broadcasting the stream and another one to a
-local file for archiving purposes (the circled nodes in
-Figure~\ref{fig:sharing}). In this case, the two outputs in the graph are
-connected to the same source, and when those outputs transmit their frames to
-this source to be filled, the operator should fill them with the same data. In
-order to avoid computing the data twice, the first time that the source is asked
-to fill a frame, it operates as described before. However, on the second time it
-simply fills the frame with the data computed during the first call: computed
-frames are \emph{cached} if necessary.
+In \liquidsoap, streams are computed using \emph{frames},
+which are data buffers representing a portion of stream portion of fixed
+duration.
+Abstractly, sources produce a stream by producing a sequence of frames.
+However, in the implementation a source is \emph{passed} a frame
+that it has to fill.
+Thus, we avoid unnecessary copies and memory allocations.
+% DB un truc comme add() va avoir une frame interne pour son bricolage
+%   mais c'est une autre histoire et ça reste borné
+%   le seul truc qui est "lourd" c'est les generators pour bufferiser
+Active sources, which are the initiators of streaming,
+initially allocate one frame, and keep re-using it to get stream data
+from their input source.
+Then, most sources do not need to allocate their own frame,
+they simply pass frames along and modify their content in place.
+However, this simple mechanism does not work when a source is \emph{shared},
+\ie\ it is the input source of several sources.
+This is the case of the \verb.normalize. node in the graph of
+Figure~\ref{fig:sharing} (which happens to be shared by active sources).
+In that case, we use a \emph{caching} mechanism:
+the source will have its own \emph{cache} frame
+for storing its current output.
+The first time that the source is asked to fill a frame,
+it fills its internal cache and copies the data from it;
+in subsequent calls it simply fills the frame with the data computed
+during the first call.
 Once all the filling operations have been done, the
 sources are informed that the stream has moved on to the next frame and can
-forget their cache. The necessity for a source to cache its current frame is
-detected when instantiating the stream generator.
-% thus copying data in memory only when it is necessary.
-\TODO{DB This paragraph doesn't say much; a little more could be said after
-  transitions are evoked.}
+forget their cache.
+
+With this system, frames are created once for all, one for each active source
+plus one for each source that is shared and should thus perform caching |
+of course, some sources might also need another frame
+depending on their behavior.
+Sharing is detected automatically when the source is initialized for
+streaming. We do not detail this analysis, but note that the dynamic
+reconfigurations of the streaming system (notably caused by transitions)
+make it non-trivial to anticipate all possible sharing situations without
+over-approximating too much.
 
 %% ===========================================================================
 
@@ -568,7 +584,7 @@ from the scripting language rather than in OCaml.
 \section{Conclusion} \label{sec:conclu}
 
 \liquidsoap{} is an established tool,
-used by many webradios worldwide as well as in some academic 
+used by many netradios worldwide as well as in some academic 
 work~\cite{baccigalupo2007case}.
 % in order to study the social aspects of web radios.
 % DB \cite{baccigalupo2007sharing} is a short version of the other;
