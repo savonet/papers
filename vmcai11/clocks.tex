@@ -196,7 +196,7 @@ output.file(%vorbis,"record.ogg",crossfade(input.alsa()))
 \end{verbatim}
 The other possible error happens when unifying two unknown clock variables
 if one depends on the other -- in unification terminology, this is an
-occurs-check failure. A simple example of that situation is
+\emph{occurs-check} failure. A simple example of that situation is
 the script \verb.add([s,crossfade(s)]). where the two mixed sources
 respectively have clocks $c$ and $X_c$ where $c$ is the clock created
 for the crossfading operator and $X_c$ is the variable representing

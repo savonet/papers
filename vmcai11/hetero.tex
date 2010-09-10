@@ -164,7 +164,8 @@ We illustrate various content kinds in the examples of Figure~\ref{fig:types}:
   \verb$output.file(%vorbis,"stereo.ogg",s)$ requires that
   \verb.s. has type \verb.source(2,0,0). because vorbis files are stereo by
   default, but \verb$output.file(%vorbis(channels=1),"mono.ogg",s)$
-  requires that there is only one audio channel.
+  requires that there is only one audio channel (recall that vorbis is a
+  compressed format for audio data similar to mp3).
 \end{itemize}
 
 These advanced features of the type system are statically inferred, which means

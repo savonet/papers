@@ -72,8 +72,7 @@
   systems. This language is based on a model for streams and contains operators
   and constructions, which make it adapted to the generation of streams. The
   interpreter of the language also ensures many properties concerning the good
-  execution of the stream generation.\TODO{expliquer qu'on insiste sur typage
-    des streams + clocks}
+  execution of the stream generation.
   % We describe a model that supports a rich collection of operators (track
   % scheduling, jingle insertion, mix, metadata updates, various transitions), and
   % some aspects of language design that make it adapted to the application
@@ -273,6 +272,9 @@ through external bindings, most of them also developed within the
 \savonet{} project. The code contains approximatively $20$K lines of
 OCaml code and $10$K lines of C code and runs on all major operating systems.
 % , including Linux, Mac OSX and Windows.
+The software along its documentation is freely
+available\footnote{\url{http://savonet.sourceforge.net}} under an open-source
+license.
 
 One of the main goal which has motivated the design of the \liquidsoap{}
 language is that it should be very accessible, even to non-programmers. It
@@ -335,7 +337,8 @@ The graph underlying the system resulting from the execution of that script is
 shown in Figure~\ref{fig:simple}. A few remarks on the syntax: the notation
 \hbox{\texttt{[}\ldots\texttt{,}\ldots\texttt{]}} denotes a list, \texttt{mount}
 is a label (the name of an argument of the function \texttt{output.icecast}) and
-the meaning of \texttt{\%vorbis} is explained in Section~\ref{sec:typing-ex}.
+\texttt{\%vorbis} is a format parameter whose meaning is explained in
+Section~\ref{sec:typing-ex}.
 
 % \subsection{Fallibility}
 % 
@@ -414,8 +417,8 @@ interesting application of this is the case of \textit{transitions} between
 tracks, \ie{} how two consecutive tracks of a source should be chained: do we
 want to mix a bit the two tracks in order to have a smooth transition? do we
 want to add a jingle during the transition? etc. For example, a \emph{crossfade}
-consists in mixing the first track whose volume is faded out with the second one
-whose volume is faded up (see Figure~\ref{fig:cross}).
+consists in mixing the end first track whose volume is faded out with the
+beginning of second one whose volume is faded up (see Figure~\ref{fig:cross}).
 \vspace{-5ex}
 \begin{figure}[h]
  \begin{center}
@@ -493,7 +496,7 @@ that it offers the user the freedom to assemble a stream
 for a variety of operators, through a scripting
 language rather than traditional configuration files.
 
-\liquidsoap{} has similarities with multimedia streaming libraries.
+\liquidsoap{} has more similarities with multimedia streaming libraries.
 For example, GStreamer~\cite{gstreamer} defines a model of stream, and its API
 can be used to define streaming systems in various programming
 languages (primarily coded in C, the library has also been
