@@ -104,7 +104,7 @@ sound.
     swap&:&(source(2,0,0)) -> source(2,0,0)\\
     on\_metadata&:&(handler, source('a,'b,'c)) -> source('a,'b,'c)\\
     % id&(source('a,'b,'c)) -> source('a,'b,'c)\\
-    echo&:&(?delay:float,source('a,'b,'c)) -> source('a,'b,'c)\\
+    echo&:&(delay:float, source('a,'b,'c)) -> source('a,'b,'c)\\
         & & where 'a, 'b, 'c are fixed \\
     % DB vire le prefixe "video." pour faire de la place a gauche
     greyscale&:&(source('a,'b+1,'c)) -> source('a,'b+1,'c)\\
@@ -149,7 +149,7 @@ We illustrate various content kinds in the examples of Figure~\ref{fig:types}:
   time.\TODO{DB We never constrain type variables to be arities, as it will never
     happen in scripts using our well-formed API\ldots however, using type
     annotations can trigger an assert failure!}
-\item The case of the \texttt{video.greyscale} operator, which converts a color
+\item The case of the \texttt{greyscale} operator, which converts a color
   video into greyscale, shows how we can require at least one video channel in
   types.  Here, \verb.'b+1. is simply a notation for \verb.S('b)..
 \item Finally, the case of \verb#output.file# (as well as several other outputs

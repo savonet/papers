@@ -9,15 +9,9 @@
 
 \newcommand{\liquidsoap}{Liquidsoap}
 \newcommand{\savonet}{Savonet}
-% DB je retrouve pas de source claire pour l'italique pour les abbrev latines,
-%   mais la virgule après i.e. et e.g. c'est clairement la règle
-% SM c'est moche, je préfère sans, même si c'est la convention c'est très rarement appliqué
-% DB bah moi je préfère avec :)
-%    je t'ai déja passé l'italique (qui se justifie pourtant vu que c'est
-%    du latin)
-% SM juste pour la blague, je les re-vire
-\newcommand{\eg}{{e.g.}}
-\newcommand{\ie}{{i.e.}}
+% Il ne s'est rien passé ici...
+\newcommand{\eg}{\emph{e.g.},}
+\newcommand{\ie}{\emph{i.e.},}
 \newcommand{\cf}{{cf.~}}
 \newcommand{\TODO}[1]{\marginpar{\tiny #1}}
 \newcommand{\ignore}[1]{}
@@ -211,14 +205,20 @@ should be played).
 Finally, tracks contain data, which consist of float samples 
 (for audio data), images (for video data), etc. (see Section~\ref{sec:content}).
 A schematic representation of a stream is given in Figure~\ref{fig:stream}.
+\TODO{DB Pour une prochaine version, il y a peut etre une remarque plus
+  profonde ici. Les autres outils sont des outil de traitement de flux;
+  chez eux une source produit un flux. Chez nous, il y a plus de sources
+  que de flux à cause du comportement interactive non trivial.
 
-\TODO{Do we allow fallible streams or fallible sources?
-  Is there a hole of a certain duration between tracks in a stream,
-  or just a failure to produce by the source.
-  I think it's the latter but I'm not sure.}
-\TODO{RB I think with 1.0.0. we allow holes in a stream
-but I do not think it is appropriate to go into 
-these details here..}
+  Par exemple, la fallibilité. C'est une propriété des sources, invisible
+  sur les flux. Si on essaie de réparer ça pour revenir à une vision
+  plus fonctionnelle, on met des trous dans la notion de flux. Mais ça ne
+  marche toujours pas: la taille du trou dans le flux d'une playlist
+  dépend de son contexte (avec quoi elle est mise en fallback).
+
+  Un truc marrant c'est qu'on encapsule ces aspects impératifs dans des
+  boites noires, pour n'offrir qu'une vision fonctionnelle à 
+  l'utilisateur\ldots}
 
 Streams are generated on the fly interactively by operators which are parametrized by various 
 external factors (variables possibly modified by external interfaces and metadata in particular).
@@ -247,18 +247,22 @@ their stream somewhere. These are called \emph{active} sources. Stream
 generation is performed ``on demand'': active sources actively attempt to
 produce their stream, obtaining data from their input sources which in turn
 obtain data from their dependent sources, and so on. An important consequence of
-this is the fact that sources do not constantly stream: if a source would
+\TODO{DB NON Justement on les crée une seule fois}
+this is the fact that \emph{sources do not constantly stream}: if a source would
 produce a stream which is not needed by any active source then it is actually
-frozen in time. This avoids useless computations, but is also crucial to obtain
+frozen in time.
+% DB Technical remark: the source can notice that time still ticks while
+%   it is not streaming, but only a few sources use it.
+This avoids useless computations, but is also crucial to obtain
 the expected expressiveness. For example, a \texttt{rotation} operator will play
 alternatively several sources, but should only rotate at the end of tracks, and
 its unused sources should not keep streaming, otherwise we might find them in
 the middle of a track when we come back to playing them. Likewise, we need to be
 able to insert a jingle in between two tracks of a stream, which involves
-momentarily stopping it. Sources are also allowed themselves to \emph{fail},
+momentarily stopping it. \emph{Sources are also allowed to fail},
 \ie{} refuse to stream at some point in the time at the end of a track (think
-for example of a \texttt{playlist} operator which has a limited number of files
-to play).
+for example of a queue of user requests which might often be empty,
+or a playlist which takes too long to prepare a file for streaming).
 
 \subsection{A language for building streaming systems}
 
@@ -267,22 +271,24 @@ with a convenient high-level language for describing streaming systems.
 Although our language borrows from other functional programming languages, it is
 has been designed from scratch in order to be able to have a dedicated static
 typing discipline together a very user-friendly language. 
+\TODO{DB find a better place for technical data?}
 It is implemented in OCaml and uses several C libraries 
 through external bindings, most of them also developed within the 
 \savonet{} project. The code contains approximatively $20$K lines of
 OCaml code and $10$K lines of C code and runs on all major operating systems.
 % , including Linux, Mac OSX and Windows.
-The software along its documentation is freely
+The software along with its documentation is freely
 available\footnote{\url{http://savonet.sourceforge.net}} under an open-source
 license.
 
-One of the main goal which has motivated the design of the \liquidsoap{}
+One of the main goals which has motivated the design of the \liquidsoap{}
 language is that it should be very accessible, even to non-programmers. It
 turned out that having a functional programming language is very natural (\cf
 Section~\ref{sec:transitions}). The built-in functions of the language often
-have a large number of parameters, many of which have reasonable default values:
-it would be very cumbersome to have to write them all each time, in the right
-order. In order to address this, we have designed a new extension of
+have a large number of parameters, many of which have reasonable default 
+values, and  it would be very cumbersome to have to write them all each time,
+in the right order.
+In order to address this, we have designed a new extension of
 $\lambda$-calculus with labeled arguments and multi-abstractions which makes it
 comfortable to use the scripting
 API~\cite{baelde-mimram:webradio-lambda}. Having designed our own language also
@@ -297,7 +303,8 @@ generation. A script in \liquidsoap{} describes a system that is intended to run
 for months, some parts of whose rarely triggered, and it would be very
 disappointing to notice a typo or a basic type error only after a particular
 part of the code is used for an important event. In order to ensure essential
-safety properties, the language is statically strongly typed. We want to put as
+safety properties, the language is statically and strongly typed.
+We want to put as
 much static analysis as possible, as long as it doesn't put the burden on the
 user, \ie{} all types should be inferred. As we shall see, \liquidsoap{} also
 provides a few useful dynamic analysis.
@@ -323,11 +330,13 @@ its typing system, a detailed presentation can however be found
 in~\cite{baelde-mimram:webradio-lambda}. We simply recall that the evaluation of
 a \liquidsoap{} script triggers the construction of various sources, built from
 various operators built into the language.
+\TODO{DB moche, et "built into" c'est pas builtin\ldots préciser}
 For example, the following script defines two elementary sources, respectively 
 reading from an HTTP stream and a playlist of files, composed in a fallback 
-(\ie{} if the HTTP stream is ended or broken then the playlist is used), 
+(\ie{} the playlist is used when the HTTP stream is unavailable or
+  interrupted), 
 filtered through a volume normalizer, and sent to an Icecast server which 
-broadcasts the stream to the listeners:%\TODO{DB define icecast}
+broadcasts the stream to listeners:
 \begin{verbatim}
 output.icecast(%vorbis,mount="myradio",
   normalize(fallback([input.http("http://other.net/radio"),
@@ -335,9 +344,9 @@ output.icecast(%vorbis,mount="myradio",
 \end{verbatim}
 The graph underlying the system resulting from the execution of that script is
 shown in Figure~\ref{fig:simple}. A few remarks on the syntax: the notation
-\hbox{\texttt{[}\ldots\texttt{,}\ldots\texttt{]}} denotes a list, \texttt{mount}
+\hbox{\texttt{[}\ldots\texttt{]}} denotes a list, \texttt{mount}
 is a label (the name of an argument of the function \texttt{output.icecast}) and
-\texttt{\%vorbis} is a format parameter whose meaning is explained in
+\texttt{\%vorbis} is an encoding format parameter whose meaning is explained in
 Section~\ref{sec:typing-ex}.
 
 % \subsection{Fallibility}
@@ -357,9 +366,7 @@ Section~\ref{sec:typing-ex}.
 % fallible output describes a stream that may not be infinite.
 
 \subsection{Efficient frames}
-\TODO{DB In the JFLA paper we have a quick benchmark of the impact
-  of changing the frame size from 1 to 100 to 1000.
-  Also, can we still compete well with ices?}
+\TODO{DB Benchmark}
 
 An important aspect of the implementation is efficiency concerning both CPU and
 memory usage. The streams manipulated can have high data rates (a typical video
