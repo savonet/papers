@@ -242,12 +242,17 @@ for example of a \texttt{playlist} operator which has a limited number of files
 to play).
 
 \subsection{A language for building streaming systems}
+
 Based on the streaming model presented above, \liquidsoap{} provides the user
 with a convenient high-level language for describing streaming systems.
 Although our language borrows from other functional programming languages, it is
 has been designed from scratch in order to be able to have a dedicated static
 typing discipline together a very user-friendly language, tightly integrated
-with our tool.
+with our tool. It is implemented in OCaml and uses several C libraries 
+through external bindings, most of them also developed within the 
+\savonet{} project. The code contains approximatively $20$K lines of
+OCaml code and $10$K lines of C code and runs on all major systems, including
+Linux, Mac OSX and Windows.
 
 One of the main goal which has motivated the design of the \liquidsoap{}
 language is that it should be very accessible, even to non-programmers. It
