@@ -277,7 +277,7 @@ through external bindings, most of them also developed within the
 OCaml code and $10$K lines of C code and runs on all major operating systems.
 % , including Linux, Mac OSX and Windows.
 The software along with its documentation is freely
-available\footnote{\url{http://savonet.sourceforge.net}} under an open-source
+available \cite{liquidsoap} under an open-source
 license.
 
 One of the main goals which has motivated the design of the \liquidsoap{}
@@ -525,19 +525,19 @@ such as GStreamer~\cite{gstreamer} and digital signal processing (DSP) languages
 such as Faust~\cite{faust}.
 GStreamer defines a model of stream, and its API
 can be used to define streaming systems in various programming
-languages (primarily coded in C, the library has also been
+languages (primarily coded in C, but the library has also been
 ported to many other languages).
 Faust~\cite{faust} provides a high-level functional programming language for
 describing stream processing devices,
 and compiles this language down to C++, which enables an integration
 with various other systems.
-It is also worth mentioning Chuck~\cite{chuck}, a dynamic language with similar 
-views as Faust.
+It is also worth mentioning Chuck~\cite{chuck}, a DSP programming
+language with an emphasis on live coding (dynamic code update).
 By provinding a higher-level API, \liquidsoap{} differs
-from this tools in the following ways: (1) Its operators are simple and 
+from these tools in the following ways: (1) Its operators are simple and 
 hide most of the technicalities. (2) The streams created by
 \liquidsoap{} contain additional notions, namely tracks and 
-metadata. (3) Streams in \liquidsoap are meant for interactive
+metadata. (3) Streams in \liquidsoap{} are meant for interactive
 streaming. In particular, they can be stoped temporarily
 or created and destroyed dynamically.
 \TODO{DB unlike faust, liquidsoap is interpreted}
@@ -545,24 +545,26 @@ It would be very interesting to interface \liquidsoap{} with such tools,
 or import some of their techniques.
 This could certainly be done with DSP operators, and would allow us to program them efficiently 
 from the scripting language rather than in OCaml.
-Finally, \liquidsoap{} has been used in research~\cite{baccigalupo2007case,baccigalupo2007sharing},
-in order to study the social aspects of web radios.
-
-
-\TODO{has been used in research~\cite{baccigalupo2007case,baccigalupo2007sharing}}
-\TODO{on peut citer, je sais pas où, mais j'insisterais pas sur
-  l'utilisation en recherche (c'est une utilisation comme une autre,
-la recherche de claudio est indépendante de liq)}
-\TODO{RB En même temps ça vaut quand même le coup de le mentioner. Par exemple
-dans related work..}
 
 \section{Conclusion}
 
+\liquidsoap{} is an established tool,
+used by many webradios worldwide as well as in some academic 
+work\cite{baccigalupo2007case}.
+% in order to study the social aspects of web radios.
+% DB \cite{baccigalupo2007sharing} is a short version of the other;
+%   both papers talk about liquidsoap (but no formal \cite{}) and have
+%   nice screenshots of the poolcasting website
+%   only the long version has a technical development
+
 Documentation, errors, user friendliness.
-Requests.
+Insist on all that important (but not publishable work) perhaps this should
+go together with LOC and stuff.
+
+Requests. Lots of operators, many providing unique features in themselevs.
+
 Typing sources as objects whose methods are (telnet) services.
 
-\TODO{SM 4 papiers ça fait vraiment très léger comme biblio, faudrait en rajouter}
 \bibliographystyle{abbrv}
 \bibliography{biblio}
 \end{document}
