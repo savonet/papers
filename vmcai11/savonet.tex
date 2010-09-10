@@ -229,7 +229,7 @@ operating on other sources in the sense that they produce a stream based on inpu
 streams given by other sources. Abstractly, the program describing the
 generation of a stream can thus be represented by a directed acyclic graph,
 whose nodes are the sources and whose edges indicate dependencies between
-sources (an example is given in Figure~\ref{fig:simple}).
+sources (an example is given in Figure~\ref{fig:sharing}).
 
 % Given an acyclic graph describing a stream generator, the roots of the graph are the operator that create 
 % the initial streams, called \textit{sources}. Those sources can be created from a single file, a playlist, an HTTP input,
@@ -247,7 +247,6 @@ their stream somewhere. These are called \emph{active} sources. Stream
 generation is performed ``on demand'': active sources actively attempt to
 produce their stream, obtaining data from their input sources which in turn
 obtain data from their dependent sources, and so on. An important consequence of
-\TODO{DB NON Justement on les crée une seule fois}
 this is the fact that \emph{sources do not constantly stream}: if a source would
 produce a stream which is not needed by any active source then it is actually
 frozen in time.
@@ -309,19 +308,35 @@ much static analysis as possible, as long as it doesn't put the burden on the
 user, \ie{} all types should be inferred. As we shall see, \liquidsoap{} also
 provides a few useful dynamic analysis.
 
+% \begin{figure}[t]
+%  \begin{center}
+% \[
+% \xymatrix{
+%   *+[F]{\mathtt{input.http}}\ar[r]&*+[F]{\mathtt{fallback}}\ar[r]&
+%   *+[F]{\mathtt{normalize}}\ar[r]&
+%   *+<10pt>[F=:<30pt>]{\mathtt{output.icecast}}\\
+%   *+[F]{\mathtt{playlist}}\ar[ur]&\\
+% }
+% \]
+% \end{center}
+%  \fcaption{A simple streaming system}
+%  \label{fig:simple}
+%  % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
+% \end{figure}
+
 \begin{figure}[t]
  \begin{center}
 \[
 \xymatrix{
   *+[F]{\mathtt{input.http}}\ar[r]&*+[F]{\mathtt{fallback}}\ar[r]&
-  *+[F]{\mathtt{normalize}}\ar[r]&
+  *+[F]{\mathtt{normalize}}\ar[r]\ar[dr]&
   *+<10pt>[F=:<30pt>]{\mathtt{output.icecast}}\\
-  *+[F]{\mathtt{playlist}}\ar[ur]&\\
+  *+[F]{\mathtt{playlist}}\ar[ur]& & & *+<10pt>[F=:<30pt>]{\mathtt{output.file}}\\
 }
 \]
 \end{center}
- \fcaption{A simple streaming system}
- \label{fig:simple}
+\fcaption{A streaming system with sharing}
+\label{fig:sharing}
  % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{figure}
 
@@ -335,15 +350,18 @@ For example, the following script defines two elementary sources, respectively
 reading from an HTTP stream and a playlist of files, composed in a fallback 
 (\ie{} the playlist is used when the HTTP stream is unavailable or
   interrupted), 
-filtered through a volume normalizer, and sent to an Icecast server which 
-broadcasts the stream to listeners:
+and filtered through a volume normalizer.
+The resulting stream is sent to an Icecast server which 
+broadcasts the stream to listeners,
+and saved in a local backup file:
 \begin{verbatim}
-output.icecast(%vorbis,mount="myradio",
-  normalize(fallback([input.http("http://other.net/radio"),
-                      playlist("listing.txt")])))
+s = normalize(fallback([input.http("http://other.net/radio"),
+                        playlist("listing.txt")])))
+output.icecast(%vorbis,mount="myradio",s)
+output.file(%vorbis,"backup.mp3",s)
 \end{verbatim}
 The graph underlying the system resulting from the execution of that script is
-shown in Figure~\ref{fig:simple}. A few remarks on the syntax: the notation
+shown in Figure~\ref{fig:sharing}. A few remarks on the syntax: the notation
 \hbox{\texttt{[}\ldots\texttt{]}} denotes a list, \texttt{mount}
 is a label (the name of an argument of the function \texttt{output.icecast}) and
 \texttt{\%vorbis} is an encoding format parameter whose meaning is explained in
@@ -365,7 +383,75 @@ Section~\ref{sec:typing-ex}.
 % an infallible output can be considered as describing an infinite stream, while a
 % fallible output describes a stream that may not be infinite.
 
-\subsection{Efficient frames}
+\subsection{Functional transitions}
+\label{sec:transitions}
+
+\liquidsoap{} is a \emph{functional} programming language and a particularly
+interesting application of this is the case of \textit{transitions}.
+Instead of simply sequencing tracks, one may want a smoother transition.
+For example, a \emph{crossfade} consists in mixing the end of the old source,
+whose volume is faded out, with the
+beginning of the new one, whose volume is faded up (see Figure~\ref{fig:cross}).
+But there is a wide variety of other possible transitions:
+a delay might be added, jingles may be inserted, etc.
+
+\begin{figure}[h]
+ \begin{center}
+\begin{tikzpicture}[xscale=0.8,yscale=0.8]
+\draw[->] (0,0) -- (0,2.5);
+\draw (-0.1,2) -- (0.1,2);
+\draw (0,2) node[anchor=east]{100};
+\draw (0,0) node[anchor=east]{0};
+\draw[->] (0,0) -- (7.5,0);
+\foreach \x in {1,2,3,4,5,6,7} \draw (\x,-0.1) -- (\x,0.1);
+\draw (0,2.5) node[anchor=south]{volume (\%)};
+\draw (7.5,0) node[anchor=west]{time (sec)};
+\draw (0,2) -- (2,2) -- (5,0);
+\draw (2,0) -- (4,2) -- (7.5,2);
+\draw (1,2) node[anchor=south]{old};
+\draw (6,2) node[anchor=south]{new};
+\end{tikzpicture}
+\end{center}
+ \fcaption{A crossfade transition between two tracks}
+ \label{fig:cross}
+ % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
+\end{figure}
+
+A solution that is both simple and flexible is to allow the user
+to specify a transition as a function that combines two sources
+representing the old and new tracks.
+%
+We illustrate this feature on an example involving transitions
+used when switching from one source to another in a \verb.fallback..
+% DB fallback has been described already
+This is particularly useful when the fallback is track insensitive,
+\ie\ performs switching as soon as possible,
+  without waiting for the end of a track.
+The following code defines a fallback source which performs a crossfade when
+switching from one source to another:
+\begin{verbatim}
+def crossfade(old,new) =
+  add([fade.initial(duration=2.,new),fade.final(duration=3.,old)])
+end
+t = [crossfade,crossfade]
+f = fallback(track_sensitive=false,transitions=t,[r,s])
+\end{verbatim}
+
+Because any function can be used to define a transition, the possibilities
+are numerous. A striking example from the standard library of \liquidsoap{}
+scripts is the operator \texttt{smooth\_add}, which takes as
+argument a main source (\eg\ musical tracks) and a special interruption
+source (\eg\ news items).
+When a new jingle is available, \texttt{smooth\_add} gradually
+reduces the volume of the main source to put it in the background,
+and superposes the interruption. The reverse is performed at the
+end of the interruption.
+This very appreciated effect is programmed using the same building blocks
+as in the previous example.
+% \footnote{Unfortunately, the code of this function would not fit in the
+%   margin. It is available online at this address: \url{http://bit.ly/aHE0G0}}
+
+\subsection{Efficient implementation}
 \TODO{DB Benchmark}
 
 An important aspect of the implementation is efficiency concerning both CPU and
@@ -373,6 +459,7 @@ memory usage. The streams manipulated can have high data rates (a typical video
 stream needs 30Mo/s) and avoiding multiple copies of the data of the streams is
 crucial. This is why we use a reference passing mechanism based on frames. A
 \emph{frame} is a buffer of data of fixed duration that represents a portion of
+\TODO{DB NON Justement on les crée une seule fois}
 the stream. In order to compute a stream, the active sources constantly create
 frames and have them filled by passing references to them to their predecessor
 sources, which in turn pass the references to their predecessors, and so on.
@@ -400,82 +487,7 @@ detected when instantiating the stream generator.
 \TODO{DB This paragraph doesn't say much; a little more could be said after
   transitions are evoked.}
 
-\begin{figure}[t]
- \begin{center}
-\[
-\xymatrix{
-  *+[F]{\mathtt{input.http}}\ar[r]&*+[F]{\mathtt{fallback}}\ar[r]&
-  *+[F]{\mathtt{normalize}}\ar[r]\ar[dr]&
-  *+<10pt>[F=:<30pt>]{\mathtt{output.icecast}}\\
-  *+[F]{\mathtt{playlist}}\ar[ur]& & & *+<10pt>[F=:<30pt>]{\mathtt{output.file}}\\
-}
-\]
-\end{center}
-\fcaption{A streaming system with sharing}
-\label{fig:sharing}
- % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
-\end{figure}
-
-\subsection{Functional transitions}
-\label{sec:transitions}
-
-\liquidsoap{} is a \emph{functional} programming language and a particularly
-interesting application of this is the case of \textit{transitions}, 
-\eg{} how two switch from one source to another: do we
-want to mix a bit the two sources in order to have a smooth transition? do we
-want to add a jingle during the transition? etc. For example, a \emph{crossfade}
-consists in mixing the end of the old source, whose volume is faded out, with the
-beginning of the new one, whose volume is faded up (see Figure~\ref{fig:cross}).
-\vspace{-5ex}
-\begin{figure}[h]
- \begin{center}
-\begin{tikzpicture}[xscale=0.8,yscale=0.8]
-\draw[->] (0,0) -- (0,2.5);
-\draw (-0.1,2) -- (0.1,2);
-\draw (0,2) node[anchor=east]{100};
-\draw (0,0) node[anchor=east]{0};
-\draw[->] (0,0) -- (7.5,0);
-\foreach \x in {1,2,3,4,5,6,7} \draw (\x,-0.1) -- (\x,0.1);
-\draw (0,2.5) node[anchor=south]{volume (\%)};
-\draw (7.5,0) node[anchor=west]{time (sec)};
-\draw (0,2) -- (2,2) -- (5,0);
-\draw (3,0) -- (5,2) -- (7.5,2);
-\draw (1,2) node[anchor=south]{old};
-\draw (6,2) node[anchor=south]{new};
-\end{tikzpicture}
-\end{center}
- \fcaption{A crossfade transition between two tracks}
- \label{fig:cross}
- % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
-\end{figure}
-
-For instance, in \liquidsoap{} the construction \texttt{fallback([$r$,$s$])} interactively
-selects between two sources: it fills its frame using the source \texttt{$r$} if
-it is available, or the source \texttt{$s$} otherwise.  When switching from
-one source to another, it is possible to specify a transition, which is given by
-a function whose type is \hbox{\texttt{(source*source)->source}}, \ie{} a
-function that takes the two sources as argument, the old and new source, and
-return a new source, which gives the transition between them. Thus, the
-following code defines a fallback source which performs a crossfade when
-switching from one source to another:
-\begin{verbatim}
- def crossfade(old,new) =
-   add([fade.in(new), fade.out(old)])
- end
- f = fallback(transitions=[crossfade, crossfade], [r, s])
-\end{verbatim}
-
-Because any function can be used to define a transition, the possibilities
-offered are numerous. For instance, the standard library (programmed in
-\liquidsoap{}) defines the operator \texttt{smooth\_add}, which takes as
-argument a main source (the tracks of a radio for instance) and a source of
-jingles. When a new jingle is available, \texttt{smooth\_add} reduces the volume
-of the main source, superposes the jingle to the current track, and increases
-the volume of the main track back when the jingle is finished, producing a
-dynamic jingle incrustation very easy to use and quite appreciated by
-users.
-% \footnote{Unfortunately, the code of this function would not fit in the
-%   margin. It is available online at this address: \url{http://bit.ly/aHE0G0}}
+%% ===========================================================================
 
 \section{Heterogeneous stream contents}
 \label{sec:content}
