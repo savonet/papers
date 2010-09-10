@@ -24,11 +24,6 @@ soundcard has its own clock, which will tick at a slightly different
 rate than the main clock of the computer.
 Since liquidsoap communicates with soundcards and remote computers,
 it has to take those mismatches into account.
-\TODO{SM est-ce qu'on parle aussi des pbs de ``time drifting'' ? \\
-  DB c'est couvert, après si tu veux mettre le mot clé ça me va\ldots
-   sauf que je sais pas de quoi tu veux parler: si c'est le fait qu'une clock
-   se dérègle petit à petit, ça me parait déja dit; si c'est le fait que
-   les lags réseaux provoquent un glissement, c'est dit aussi.}
 
 There are also some reasons that are purely internal to liquidsoap:
 in order to produce a stream at a given speed,
@@ -145,6 +140,11 @@ built in the \liquidsoap{} language.
 % this is because the user only creates wallclocks
 % and the only dependent clocks are suitably nested (cross and stretch)
 
+\TODO{SM est-ce qu'on parle aussi des pbs de ``time drifting'' ? \\
+  DB c'est couvert, après si tu veux mettre le mot clé ça me va\ldots
+   sauf que je sais pas de quoi tu veux parler: si c'est le fait qu'une clock
+   se dérègle petit à petit, ça me parait déja dit; si c'est le fait que
+   les lags réseaux provoquent un glissement, c'est dit aussi.}
 From an implementation viewpoint, each active clock launches
 its own streaming thread.
 Hence, clocks provide a way to split the generation of one or

@@ -56,6 +56,7 @@
 % \vspace{-4ex}
 
 \begin{abstract}
+\TODO{DB: webradio should be web radio, internet radio or netradio (WP)}
   Generating multimedia streams, such as in a webradio, is a task which is
   complex and difficult to adapt to every users' needs. We introduce a novel
   approach in order to achieve it, based on a dedicated high-level functional
@@ -74,107 +75,133 @@
 \end{abstract}
 
 The widespread adoption of broadband internet in the last decades has
-changed a lot our way of generating and transmitting information. Classical
+changed a lot our way of producing and consuming information. Classical
 devices from the analog era, such as television or radio broadcasting devices
 have been rapidly adapted to the digital world in order to benefit from the new
-technologies available. Whilst analog devices were mostly based on hardware
-implementations, their digital counterpart often consists in software
+technologies available. While analog devices were mostly based on hardware
+implementations, their digital counterparts often consist in software
 implementations,
-% , \eg{} hardware
-% PBX for phone communications being replaced by software like Asterisk and IP
-% phones.
 which potentially offers much more flexibility and modularity in their design.
-% and allow updates, both for bugfix and new features, at virtually no cost.
-% In this context of improvements, updates and enhancements of old technologies,
-% we are here specifically interested in adapting audio and video broadcasting
-% techniques to the digital world.
-% So, creating and broadcasting a stream of multimedia data with recent computers
-% has become technically very easy.
-However, we believe that the current software technologies to perform such tasks
-have not yet fully brought the new ideas which are necessary in order to really
-benefit from the new possibilities offered by modern computing devices.
+However, there is still much progress to be done to unleash this
+potential in many areas where software implementations remain pretty much as
+hard-wired as their digital counterparts.
 
-We are specifically interested here in the generation of multimedia streams
-(containing audio or video). For example, many webradios are continuously
-broadcasting audio data streams, and people can connect to these in order to
-listen to the radios. At first, generating the streams might seem really simple:
-it is just a bunch of concatenated audio files. However, in practice the needs
-of real-world radio makers are much higher than this, and designing a generator
-for multimedia streams needs a lot of flexibility in order to be able to cope
-with most of the expectations and requirements of users. For instance, a radio
-stream may have jingles announcing next coming shows or commercials. It may also
-play those jingles at a regular interval of time, between songs or on top of
-them. Also, a radio program may be composed of automatic playlist for a certain
-period, \eg{} during the night, and live shows during the day. Similarly, one
-may want to control and process the data before broadcasting it to the public,
-performing tasks like volume normalization, cross-fading between tracks
-(possibly parameterized by the respective volumes of the old and new tracks or
-predefined settings), blanks removal (nobody wants to listen to silence),
-etc. Moreover, the generation of the stream should be rock-solid: most webradios
-are broadcasting automatically 24/7 and don't want to have to manually restart
-the generator if it crashes after a few hours or a few days.
+The design of domain specific languages is a powerful way of addressing
+that challenge. It consists in identifying (or designing) relevant
+domain-specific abstractions (construct well-behaved objects equipped
+with enough operations) and make them available through a programming
+language.
+The possibility to manipulate rich high-level abstractions
+by means of a flexible language
+can often release creativity in unexpected ways.
+To achieve this, a domain-specific language
+should follow three fundamental principles. It should be
+\begin{enumerate}
+\item \emph{adapted}: users should be able to perform the required
+  tasks in the domain of application of the language;
+\item \emph{simple}: users should be able to perform the tasks in a simple way
+  (this means that the language should be reasonably concise, but also
+   understandable by users who might not be programming language experts);
+\item \emph{safe}: the language should perform automatic checks
+  to prevent as many errors as possible, using static analysis when
+  possible.
+\end{enumerate}
+Balancing those requirements can be very difficult. This is perhaps
+the reason why domain specific languages are not seen more often.
+Another reason is that advanced concepts from the theory of
+programming language and type systems
+are often required to obtain a satisfying design.
+% One may, for instance,
+% think of Perl, a langage tailored for text processing,
+% or PHP, dedicated to dynamic web page creation.
 
+In this paper,
+we are specifically interested here in the generation of multimedia streams,
+notably containing audio and video.
+Our primary targets are netradios, which continuously broadcast
+audio streams to listeners over Internet.
+At first, generating such a stream might seem to simply consist
+in concatenating audio files. In practice, the needs of radio makers
+are much higher than this.
+For instance, a radio stream will often contain
+commercial or informative jingles, which may be scheduled at regular
+intervals, sometimes in between songs and sometimes mixed on top of them.
+Also, a radio program may be composed of various automatic playlists
+depending on the time of the day. Many radios also have live shows,
+based on a pre-established schedule or not; a good radio software is also
+expected to interrupt a live show when it becomes silent.
+Most radios want to control and process the data before broadcasting
+it to the public, performing tasks like volume normalization,
+compression, etc.
+% DB j'ai pas repris le crossfading pcq c bizarre de pas expliquer ce que
+%   c'est alors qu'on l'explique dans le corps de l'article,
+%   et puis ça commence a faire long
+% DB je vire aussi la safety, je pense qu'on a compris qu'il faut qu'il
+%   y ait une automatisation...
+%   le paragraphe évoquait peut etre le restart, mais c'est anecdotique IMO
+% Moreover, the generation of the stream should be rock-solid: most webradios
+% are broadcasting automatically 24/7 and don't want to have to manually restart
+% the generator if it crashes after a few hours or a few days.
 Those examples, among many others, show the need for very flexible and modular
 solutions for creating and broadcasting multimedia data. Most of the currently
 available tools to broadcast multimedia data over the Internet (such as Darkice,
 Ezstream, VideoLAN, Rivendell or SAM Broadcaster) consist of straightforward
 adaptation of classical streaming technologies, based on
 predefined interfaces, such as a virtual mixing console or static file-based
-setups. Those tools, although quite powerful, are usually very hard to adapt to
-a particular need and are more and more often perceived as limited by the very
-\TODO{DB "new" c'est abusé}
-\TODO{RB c ok avec innovative ?}
-constrained design of the program. Here, we present an innovative methodology for
-achieving the task based on a dedicated \emph{programming language} called
-\emph{Liquidsoap}, which brings much more flexibility and has proved in practice
-to be adapted to the needs of a wide variety of users' requirements.
+setups. Those tools perform very well a predefined task, but offer little
+flexibility and are hard to adapt to new situations.
 
-Programming languages are a particularly important aspect of modern software
-technologies.  Whether general or domain-specific, programming languages are
-often the right tool to release creativity and flexibility for creating new
-applications. They have been used in various practical contexts to bring
-flexibility and overcome static pre-defined paradigms. One may, for instance,
-think of Perl, invented to allow powerful and flexible word-based treatments, or
-PHP, which allows to easily create dynamic web pages. We believe that a good
-programming language should follow three fundamental principles: it should be
-\begin{enumerate}
-\item \emph{adapted}: users should be able to perform, most of the tasks in the
-  domain of application of the language (generating multimedia streams in our
-  case);
-\item \emph{simple}: users should be able to perform the tasks in a simple way
-  (this means that it should be reasonably concise, but also reasonably
-  understandable -- keep in mind that people willing to generate webradios are
-  far from being all good programmers);
-\item \emph{safe}: the compiler should perform checks to avoid as many bugs as
-  possible (a stream generator has for example to ensure that there will always
-  be data to stream).
-\end{enumerate}
-Designing a programming language that fulfills these requirements is not an easy task.
-Since the concept is quite new for the generation of streams, a
-lot of time was spent to identify the needs of potential users, and to find the
-right constructions and operators to build streams. The description of these is
-one of the main interests of the paper: we both detail the abstract model for
-streams underlying our software, and describe the actual programming language
-\liquidsoap{}. Interestingly, we have been able to reuse and adapt classical
-techniques and tools for programming languages, which turn out to fit and be
-quite natural in this context: the language \liquidsoap{} is functional (which
-confers a lot of expressiveness to it) and strongly typed (which allows to have
-strong guarantees on the behavior the stream generation).
+In this paper, we present \liquidsoap, a domain-specific language for
+multimedia streaming.
+%
+\liquidsoap\ has established itself as one of
+the major tools for audio stream generation.
+The language approach has proved successful:
+beyond the obvious goal of allowing the flexible combination of
+common features, unsuspected possibilities have often been revealed
+through clever scripts.
+Finally, the modular design of \liquidsoap\ has helped its development and
+maintenance, enabling the introduction of several exclusive features
+over time.
+%
+\liquidsoap\ has been developed since 2004
+as part of the \savonet\ project~\cite{liquidsoap}.
+It is implemented in OCaml,
+and we have thus also worked on interfacing many C libraries for OCaml.
+The code contains approximatively $20$K lines of OCaml code
+and $10$K lines of C code and runs on all major operating systems.
+The software along with its documentation is freely
+available~\cite{liquidsoap} under an open-source license.
+% unique features, flexibility, beyond expectations
+% success in bringing academic shit to the crowds
+% DB the next paragraph is redundant with section 1, I'll try without
+% Interestingly, we have been able to reuse and adapt classical
+% techniques and tools for programming languages, which turn out to fit and be
+% quite natural in this context: the language \liquidsoap{} is functional (which
+% confers a lot of expressiveness to it) and strongly typed (which allows to have
+% strong guarantees on the behavior the stream generation).
+%
 
-The aim of the article is to present not only the programming language
-\liquidsoap{}, but also the solutions that had to be found for problems which
-are specifically raised by to our domain of application. We first give a broad
-overview of the language and its underlying model of streams in
-Section~\ref{sec:liq}. We then illustrate the typing system and the need for
-dedicated constructions in order to type multimedia streams in
-Section~\ref{sec:content}. Finally, we describe in Section~\ref{sec:clocks} the
-problems raised by the possibly multiple sources of time in our programming
-language and how we handle it.
-
-% We first describe the language and its underlying model for streams in
-% Section~1, and then detail the typing systems as well as the guarantees that it
-% provides in Section~2.\TODO{indiquer le vrai plan : on insiste sur deux
- % nouveautés importantes (typage des streams + clocks)}
+Instead of concentrating on detailing fully the abstractions
+manipulated in \liquidsoap\ (streams and sources)
+or formally presenting the language and its type system,
+this paper provides an overview of the two, focus on some
+key aspects of their integration.
+% PLAN
+We first give a broad
+overview of the language and its underlying model in
+Section~\ref{sec:liq}.
+We then describe two recent extensions of that basic setup.
+In Section~\ref{sec:content} we illustrate how various type system
+features are combined to control the combination of stream
+of various content types.
+Section~\ref{sec:clocks} motivates
+the interest of having multiple time flows (clocks)
+in a streaming system, and presents how this feature is
+integrated in \liquidsoap.
+After presenting those aspects, we finally compare \liquidsoap\ to
+related systems in Section~\ref{sec:related} before concluding
+in Section~\ref{sec:conclu}.
 
 \section{Liquidsoap}
 \label{sec:liq}
@@ -270,15 +297,6 @@ with a convenient high-level language for describing streaming systems.
 Although our language borrows from other functional programming languages, it is
 has been designed from scratch in order to be able to have a dedicated static
 typing discipline together a very user-friendly language. 
-\TODO{DB find a better place for technical data?}
-It is implemented in OCaml and uses several C libraries 
-through external bindings, most of them also developed within the 
-\savonet{} project. The code contains approximatively $20$K lines of
-OCaml code and $10$K lines of C code and runs on all major operating systems.
-% , including Linux, Mac OSX and Windows.
-The software along with its documentation is freely
-available \cite{liquidsoap} under an open-source
-license.
 
 One of the main goals which has motivated the design of the \liquidsoap{}
 language is that it should be very accessible, even to non-programmers. It
@@ -478,9 +496,8 @@ this source to be filled, the operator should fill them with the same data. In
 order to avoid computing the data twice, the first time that the source is asked
 to fill a frame, it operates as described before. However, on the second time it
 simply fills the frame with the data computed during the first call: computed
-frames are \emph{cached} if necessary. \TODO{DB: What about the third time,
-  fourth? When does it stop?  We need to talk about clock cycles to avoid
-  confusing the reader.}  Once all the filling operations have been done, the
+frames are \emph{cached} if necessary.
+Once all the filling operations have been done, the
 sources are informed that the stream has moved on to the next frame and can
 forget their cache. The necessity for a source to cache its current frame is
 detected when instantiating the stream generator.
@@ -512,7 +529,7 @@ section.
 \label{sec:clocks}
 \input{clocks.tex}
 
-\section{Related work}
+\section{Related work} \label{sec:related}
 
 \liquidsoap{} is obviously different from classical tools
 such as Ices or Darkice in
@@ -537,8 +554,10 @@ By provinding a higher-level API, \liquidsoap{} differs
 from these tools in the following ways: (1) Its operators are simple and 
 hide most of the technicalities. (2) The streams created by
 \liquidsoap{} contain additional notions, namely tracks and 
-metadata. (3) Streams in \liquidsoap{} are meant for interactive
-streaming. In particular, they can be stoped temporarily
+metadata.
+\TODO{DB streams or sources}
+(3) Streams in \liquidsoap{} are meant for interactive
+streaming. In particular, they can be stopped temporarily
 or created and destroyed dynamically.
 \TODO{DB unlike faust, liquidsoap is interpreted}
 It would be very interesting to interface \liquidsoap{} with such tools,
@@ -546,11 +565,11 @@ or import some of their techniques.
 This could certainly be done with DSP operators, and would allow us to program them efficiently 
 from the scripting language rather than in OCaml.
 
-\section{Conclusion}
+\section{Conclusion} \label{sec:conclu}
 
 \liquidsoap{} is an established tool,
 used by many webradios worldwide as well as in some academic 
-work\cite{baccigalupo2007case}.
+work~\cite{baccigalupo2007case}.
 % in order to study the social aspects of web radios.
 % DB \cite{baccigalupo2007sharing} is a short version of the other;
 %   both papers talk about liquidsoap (but no formal \cite{}) and have
@@ -564,6 +583,8 @@ go together with LOC and stuff.
 Requests. Lots of operators, many providing unique features in themselevs.
 
 Typing sources as objects whose methods are (telnet) services.
+
+Graphical user interfaces
 
 \bibliographystyle{abbrv}
 \bibliography{biblio}
