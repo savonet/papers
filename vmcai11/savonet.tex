@@ -180,15 +180,15 @@ language and how we handle it.
 \label{sec:liq}
 \subsection{Streaming model}
 \label{sec:model}
-\begin{wrapfigure}{r}{7.5cm}
-  \vspace{-7.5ex}
-  \begin{center}
-    \includegraphics{stream}
-  \end{center}
-  \fcaption{A \liquidsoap{} stream}
-  \label{fig:stream}
-  % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
-\end{wrapfigure}
+% \begin{wrapfigure}{r}{7.5cm}
+%   \vspace{-7.5ex}
+%   \begin{center}
+%     \includegraphics{stream}
+%   \end{center}
+%   \fcaption{A \liquidsoap{} stream}
+%   \label{fig:stream}
+%   % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
+% \end{wrapfigure}
 A stream can be understood as a timed sequence of data.
 In digital signal processing, it will simply be an infinite sequence of 
 samples -- floating point values for audio, images for video.
@@ -204,7 +204,7 @@ the current track) or custom information about tracks (for example how loud it
 should be played).
 Finally, tracks contain data, which consist of float samples 
 (for audio data), images (for video data), etc. (see Section~\ref{sec:content}).
-A schematic representation of a stream is given in Figure~\ref{fig:stream}.
+%A schematic representation of a stream is given in Figure~\ref{fig:stream}.
 \TODO{DB Pour une prochaine version, il y a peut etre une remarque plus
   profonde ici. Les autres outils sont des outil de traitement de flux;
   chez eux une source produit un flux. Chez nous, il y a plus de sources
@@ -365,7 +365,8 @@ shown in Figure~\ref{fig:sharing}. A few remarks on the syntax: the notation
 \hbox{\texttt{[}\ldots\texttt{]}} denotes a list, \texttt{mount}
 is a label (the name of an argument of the function \texttt{output.icecast}) and
 \texttt{\%vorbis} is an encoding format parameter whose meaning is explained in
-Section~\ref{sec:typing-ex}.
+Section~\ref{sec:typing-ex}
+(recall that Vorbis is a compressed format for audio, similar to MP3).
 
 % \subsection{Fallibility}
 % 
@@ -494,12 +495,16 @@ detected when instantiating the stream generator.
 
 \input{hetero.tex}
 
+~
+
 Ideally, we would like to add some more properties to be statically checked by
-typing. But it is sometimes difficult to adapt the type system while keeping
-nice properties (type inference, principal types, etc.). For example,
+typing. But it is sometimes difficult to enrich the type system while keeping
+a natural syntax and the ability to infer types.
+For example,
 \liquidsoap{} checks that active sources are \emph{infallible}, \ie{} always
 have data available in their input stream, and this check is currently done by a
-flow analysis and not typing. Another example is clocks which are described next
+flow analysis on instantiated sources and not typing.
+Another example is clocks which are described next
 section.
 
 
