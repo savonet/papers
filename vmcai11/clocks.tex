@@ -80,7 +80,7 @@ In the graphical representation of streaming systems,
 clocks induce a partition of sources represented by a notion of locality
 or box, and clock dependencies are represented by nesting.
 For example, the graph shown in Figure~\ref{fig:boxes}
-corresponds to the stream generators built in the following
+corresponds to the stream generators built by the following
 script:
 \begin{verbatim}
 output.icecast(%vorbis,mount="myradio",
@@ -111,7 +111,7 @@ was created specifically for the crossfading
 operator; the rate of that clock is controlled by that operator,
 which can hence accelerate it around track changes without any
 risk of inconsistency.
-The other clock is simply a wallclock, so that the main stream
+$clock_1$ is simply a wallclock, so that the main stream
 is produced following the real time rate.
 
 A clock is \emph{active} if it ticks by itself,
@@ -136,7 +136,7 @@ Although nothing forces it in the model, it makes more sense if
 each passive source depends (possibly indirectly) on an active one,
 and all sources without dependencies are active.
 Those assumptions are in fact guaranteed to hold for the systems
-built in the \liquidsoap{} language.
+built using the \liquidsoap{} language.
 % this is because the user only creates wallclocks
 % and the only dependent clocks are suitably nested (cross and stretch)
 
@@ -149,16 +149,17 @@ From an implementation viewpoint, each active clock launches
 its own streaming thread.
 Hence, clocks provide a way to split the generation of one or
 several streams accross several threads,
-and hence multiple CPU cores.
+and hence multiple CPU cores.\footnote{Although OCaml uses a global
+  memory management lock that makes it
+  impossible for two OCaml threads to run concurrently, there is no
+  such constraint when a thread runs a foreign function.
+  This allows us to avoid the limitation since
+  most of the computation in \liquidsoap\ takes place in decoding
+  and encoding multimedia formats, which is done by C libraries.
+}
 \TODO{SM virage de remarque technique qui prend de la place}
-% \footnote{Although OCaml uses a global
-  % memory management lock that makes it
-  % impossible for two OCaml threads to run concurrently, there is no
-  % such constraint when a thread runs a foreign function.
-  % This allows us to avoid the limitation since
-  % most of the computation in \liquidsoap\ takes place in decoding
-  % and encoding multimedia formats, which is done by C libraries.
-% }.
+\TODO{RB Hop, je remet, il parrait qu'on a de la place maintenant.
+Aussi multicore ça buzz :)}
 This powerful possibility is made available to the user
 through the intuitive notion of clock.
 As we shall see in the next section,

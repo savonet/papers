@@ -440,7 +440,7 @@ A solution that is both simple and flexible is to allow the user
 to specify a transition as a function that combines two sources
 representing the old and new tracks.
 %
-We illustrate this feature on an example involving transitions
+We illustrate this feature with an example involving transitions
 used when switching from one source to another in a \verb.fallback..
 % DB fallback has been described already
 This is particularly useful when the fallback is track insensitive,
@@ -461,7 +461,7 @@ are numerous. A striking example from the standard library of \liquidsoap{}
 scripts is the operator \texttt{smooth\_add}, which takes as
 argument a main source (\eg\ musical tracks) and a special interruption
 source (\eg\ news items).
-When a new jingle is available, \texttt{smooth\_add} gradually
+When a new interruption is available, \texttt{smooth\_add} gradually
 reduces the volume of the main source to put it in the background,
 and superposes the interruption. The reverse is performed at the
 end of the interruption.
