@@ -503,37 +503,33 @@ that it offers the user the freedom to assemble a stream
 for a variety of operators, through a scripting
 language rather than traditional configuration files.
 
-\liquidsoap{} has more similarities with multimedia streaming libraries.
-For example, GStreamer~\cite{gstreamer} defines a model of stream, and its API
+\liquidsoap{} has more similarities with multimedia streaming libraries
+such as GStreamer~\cite{gstreamer} and digital signal processing (DSP) languages
+such as Faust~\cite{faust}.
+GStreamer defines a model of stream, and its API
 can be used to define streaming systems in various programming
 languages (primarily coded in C, the library has also been
 ported to many other languages).
-There are two differences, however:
-the stream model that we use is more high-level than
-GStreamer making it much simpler to compose operators, and moreover
-our typing system brings many safety guarantees.
-
-A last class of related tools is digital signal processing (DSP) languages.
-An interesting system in this category is Faust~\cite{faust},
-which provides a high-level functional programming language for
+Faust~\cite{faust} provides a high-level functional programming language for
 describing stream processing devices,
 and compiles this language down to C++, which enables an integration
 with various other systems.
-Again, the traditional notion of stream in DSP is too weak for our
-purpose, but this is only a shallow difference.
-\liquidsoap{} does not build new operators but only assembles pre-defined
-operators. In contrast, Faust compiles a single new operator at each
-compilation, aggregating the basic operations used in the script
-and optimizing their combination. It is also worth mentioning
-Chuck~\cite{chuck}, a dynamic language with similar views.
+It is also worth mentioning Chuck~\cite{chuck}, a dynamic language with similar 
+views as Faust.
+By provinding a higher-level API, \liquidsoap{} differs
+from this tools in the following ways: (1) Its operators are simple and 
+hide most of the technicalities. (2) The streams created by
+\liquidsoap{} contain additional notions, namely tracks and 
+metadata. (3) Streams in \liquidsoap are meant for interactive
+streaming. In particular, they can be stoped temporarily
+or created and destroyed dynamically.
 \TODO{DB unlike faust, liquidsoap is interpreted}
 It would be very interesting to interface \liquidsoap{} with such tools,
 or import some of their techniques.
-This could certainly be done with
-DSP operators, and would allow us to program them efficiently from
-the scripting language rather than in OCaml. Further, it should
-be studied whether such an approach can be undertaken in general with
-the kind of streaming system that we are considering.
+This could certainly be done with DSP operators, and would allow us to program them efficiently 
+from the scripting language rather than in OCaml.
+Finally, \liquidsoap{} has been used in research~\cite{baccigalupo2007case,baccigalupo2007sharing},
+in order to study the social aspects of web radios.
 
 
 \TODO{has been used in research~\cite{baccigalupo2007case,baccigalupo2007sharing}}
