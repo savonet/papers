@@ -78,7 +78,7 @@ than that of their input source.
   la fixité a un sens, comme ALSA.}
 Also, for implementation and performance reasons, some sources have
 to operate on input streams that have a fixed kind |
-a kind is said to be fixed when all of its components is fixed.
+a kind is said to be fixed when all of its components are fixed.
 Passing the expected content kind is important because some sources
 behave differently depending on their kind.
 This is the case
@@ -89,9 +89,8 @@ This is the case
 %   de couteux comme du mono->stereo)
 of sound card inputs and outputs which have to initialize the sound card
 for the requested number of channels.
-
 \TODO{DB: nice example, echo}
-This is the case for the \texttt{echo} operator,
+This is also the case for the \texttt{echo} operator,
 which produces echo on sound and has a fixed internal buffer for storing past
 sound.
 
@@ -159,7 +158,7 @@ We illustrate other techniques on the examples of Figure~\ref{fig:types}.
   require at least one video channel in types.
   Here, \verb.'b+1. is simply a shortcut for \verb.S('b)..
 \item
-  Finally, the case of \verb.output.file. (as well as several other outputs
+  Finally, the case of \verb#output.file# (as well as several other outputs
   which encode their data before sending it to various media) is quite
   interesting.
   Here, the expected content kind depends on the encoding format.
@@ -172,14 +171,14 @@ We illustrate other techniques on the examples of Figure~\ref{fig:types}.
   Instead they are funny constants with a normal-looking syntax.
   Example: \verb$output.file(%vorbis,"stereo.ogg",s)$ requires that
   \verb.s. has type \verb.source(2,0,0). but
-  \verb$output.file(%vorbis(channels=1),"mono.ogg",s)$ requires
-  that there is only one channel.
+\TODO{RB: I don't know what to do about this line spacing...}
+  \verb$output.file(%vorbis(channels=1),"mono.ogg",s)$
+  requires that there is only one channel.
 \end{itemize}
 
 All these features of type systems, as well as their support in
 type inference, are as usual.
 This means that there is no burden on users.
-
 As said above, content kinds have an influence on the behavior
 of sources and must thus be passed. This non-parametricity
 means that our static types must be maintained throughout
