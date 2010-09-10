@@ -4,24 +4,27 @@
 %   se passe au niveau des sources, pour bien montrer que ce qu'on fait
 %   dans le typage correspond précisemment aux contraintes imposées
 %   par le modele
-\subsection{Model}
+% \subsection{Model}
 
 % Meme si ya le mot sous-typage, cette relation est vraiment utilisée
 % dans le modele indépendamment du langage, d'ailleur c'est
 % Frame.kind_sub_kind. Après on copie tout ça au niveau du langage.
 
 In \liquidsoap{}, streams can contain data of various nature. The typical
-example is the case of video streams which usually contain both pictures and
-audio data. The architecture has been designed to be able to add easily some
-more kinds of contents to the streams: for example, support for MIDI data (which
-contain musical notes) has been added, which allows us to provide
-``synthesizer'' operators (which take a stream of notes as input and produce an
-audio stream). In addition, there can be multiple channels of data for each data
-kind: audio is usually stored in stereo (2~channels), but also sometimes in
-surround sound (5~channels), etc. It is desirable to allow sources of different
-content kinds within a streaming system, which makes it necessary to introduce a
-dedicated typing system in order to ensure the consistency of stream contents
-across sources.
+example is the case of video streams which usually contain both images and
+audio samples. We also support MIDI streams (which contain musical notes)
+and it would be easy to add other kinds of content.
+% which allows us to provide
+% ``synthesizer'' operators
+% (which take a stream of notes as input and produce an
+% audio stream).
+% In addition, there can be multiple channels of data for each data
+% kind: audio is usually stored in stereo (2~channels), but also sometimes in
+% surround sound (5~channels), etc.
+It is desirable to allow sources of different
+content kinds within a streaming system, which makes it necessary to
+introduce a typing discipline in order to ensure 
+the consistency of stream contents across sources.
 % (\eg some sources might produce sound and other only video and they are merged
 % afterward)
 
@@ -45,7 +48,7 @@ least one video channel and any number of MIDI channels''.
 %            "T is more permissive than S"
 This is formalized through the subtyping relation defined in
 Figure~\ref{fig:subtyping}: $T\sub K$ means
-that the content kind $T$ is accepted by $K$. More generally,
+that the content kind $T$ is allowed by $K$. More generally,
 $K \sub K'$ expresses that $K$ is more permissive than $K'$,
 which implies that a source of content kind $K$ can safely be seen
 as one of content kind $K'$.
@@ -62,7 +65,7 @@ as one of content kind $K'$.
 \]\[
    \infer{(A,B,C) \sub (A',B',C')}{A \sub A' & B\sub B' & C\sub C'}
 \]
- \fcaption{Subtyping relation on arities}
+ \vspace{-0.3cm}\fcaption{Subtyping relation on arities}
  \label{fig:subtyping}
 \end{figure}
 
@@ -72,55 +75,39 @@ For example,
 a pure audio source cannot accept a content kind which requires video 
 channels, and many operators cannot produce a stream of an other kind
 than that of their input source.
-\TODO{En fait la perf c'est pas un super argument: si tu permets variable
-  les perfs sont aussi bonnes sauf au moment où c'est effectivement variable.
-  C'est plutôt que ce serait super chiant de re-implémenter en supportant
-  la variabilité\ldots
-  On devrait détourner l'attention sur les opérateurs pour lesquels
-  la fixité a un sens, comme ALSA.\\\\
-SM Je pense qu'on va laisser comme ça pour cette fois}
-Also, for implementation and performance reasons, some sources have
-to operate on input streams that have a fixed kind --
+Also, some sources have to operate on input streams that have a fixed kind --
 a kind is said to be fixed when all of its components are.
-Passing the expected content kind is important because some sources
-behave differently depending on their kind.
-This is the case
-% DB "of operators based on file decoding, or"
-%   trop touffu, le kind ici est utilisé pour controler qu'on ne sort
-%   pas nimp du fichier, et plus subtilement le decodeur peut dropper
-%   des canaux pour s'adapter au type (par contre on ne fait rien
-%   de couteux comme du mono->stereo)
-of sound card inputs and outputs which have to initialize the sound card for the
-requested number of channels, or for operators such as \texttt{echo} operator,
-which produces echo on sound and has a fixed internal buffer for storing past
-sound.
+This is the case of the \texttt{echo} operator which produces echo on sound
+and has a internal buffer of a fixed format for storing past sound,
+or sound card inputs/outputs which have to initialize the sound card for
+a specific number of channels.
+Also note that passing the expected content kind
+is important because some sources behave differently depending on their kind,
+as shown with the previous example.
 
-\subsection{Integration in the language}
 \label{sec:typing-ex}
 \begin{figure}[b]
   \centering
   \texttt{
     \begin{tabular}{rcl}
     swap&:&(source(2,0,0)) -> source(2,0,0)\\
-    on\_metadata&:&(handler, source('a,'b,'c)) -> source('a,'b,'c)\\
+    on\_metadata&:&(handler,source('*a,'*b,'*c)) -> source('*a,'*b,'*c)\\
     % id&(source('a,'b,'c)) -> source('a,'b,'c)\\
-    echo&:&(delay:float, source('a,'b,'c)) -> source('a,'b,'c)\\
-        & & where 'a, 'b, 'c are fixed \\
+    echo&:&(delay:float,source('\#a,0,0)) -> source('\#a,0,0)\\
     % DB vire le prefixe "video." pour faire de la place a gauche
-    greyscale&:&(source('a,'b+1,'c)) -> source('a,'b+1,'c)\\
+    %  en vrai greyscale veut du fixed arity, pcq son implem est pas
+    %  assez générale
+    greyscale&:&(source('*a,'*b+1,'*c)) -> source('*a,'*b+1,'*c)\\
     output.file &:& 
-       (format('a,'b,'c),string,source('a,'b,'c))->source('a,'b,'c)
+       (format('*a,'*b,'*c),string,source('*a,'*b,'*c))->\\
+     & & source('*a,'*b,'*c)
     \end{tabular}
   }
   \fcaption{Types for some operators}
   \label{fig:types}
 \end{figure}
-\TODO{SM J'ai inventé la syntaxe \texttt{'\_a} à cause de la place.
-   Ça vous va~? \\
-   DB ça me va pas car la confusion avec ML est incorrecte,
-      mais je suis pour inventer des notations surtout que je pense
-      vouloir des contraintes pour les 'a aussi, cf TODO suivant.}
 
+\paragraph{Integration in the language.}
 To ensure that streaming systems built from user scripts will never
 encounter situations where a source receives data that it cannot handle,
 we leverage various features of our type system.
@@ -137,21 +124,23 @@ We illustrate various content kinds in the examples of Figure~\ref{fig:types}:
   stream. Its type is quite straightforward: it operates on streams with exactly
   two audio channels.
 \item
-  We use type polymorphism to allow arbitrary arities.
+  \liquidsoap\ supports polymorphism \emph{à la} ML.
+  We use it in combination with constraints to allow arbitrary arities.
+  The notation \verb.'*a. stands for a universal variable (denoted
+  by \verb.'a.) to which a type constraint is attached, expressing that
+  it should only be instantiated with arities.
   For example, the operator \verb.on_metadata. does not rely
   at all on the content of the stream, since it is simply in
   charge of calling a handler on each of its metadata packets --
   in the figure, \verb.handler. is a shortcut for
   \verb.([string*string]) -> unit..
 \item When an operator, such as \verb.echo., requires a fixed content type, we
-  use type constraints to express that a type variable can only be instantiated
-  with fixed arities: the type of the contents of the stream cannot change over
-  time.\TODO{DB We never constrain type variables to be arities, as it will never
-    happen in scripts using our well-formed API\ldots however, using type
-    annotations can trigger an assert failure!}
+  use another type constraint. The resulting constrained universal
+  variable is denoted by \verb.'#a. and can only be instantiated with
+  fixed arities.
 \item The case of the \texttt{greyscale} operator, which converts a color
   video into greyscale, shows how we can require at least one video channel in
-  types.  Here, \verb.'b+1. is simply a notation for \verb.S('b)..
+  types.  Here, \verb.'*b+1. is simply a notation for \verb.S('*b)..
 \item Finally, the case of \verb#output.file# (as well as several other outputs
   which encode their data before sending it to various media) is quite
   interesting. Here, the expected content kind depends on the format the stream
@@ -159,25 +148,28 @@ We illustrate various content kinds in the examples of Figure~\ref{fig:types}:
   typing the functions generating formats would require dependent types (the
   number of channels would be given as argument) and break type inference, we
   have introduced particular constants for type formats with syntactic sugar for
-  them to behave like functions -- similar ideas are for example used to type
+  them to appear like functions -- similar ideas are for example used to type
   the \texttt{printf} function in OCaml. For example,
   \verb$output.file(%vorbis,"stereo.ogg",s)$ requires that
-  \verb.s. has type \verb.source(2,0,0). because vorbis files are stereo by
-  default, but \verb$output.file(%vorbis(channels=1),"mono.ogg",s)$
-  requires that there is only one audio channel (recall that vorbis is a
-  compressed format for audio data similar to mp3).
+  \verb.s. has type \verb.source(2,0,0). because \verb.%vorbis. alone
+  has type \verb.format(2,0,0).,
+  but \verb$output.file(%vorbis(channels=1),"mono.ogg",s)$
+  requires that there is only one audio channel;
+  we also have video formats such as \verb.%theora..
 \end{itemize}
 
 These advanced features of the type system are statically inferred, which means
-that we gain in safety without adding burden on users. As said above, content
-kinds have an influence on the behavior of sources: the behavior of some
-operators depends on their type, otherwise said polymorphism in the language is
-\emph{non-parametric}. In practice, this means that static types must be
-maintained throughout the execution of a script. This rather unusual aspect also
+that the gain in safety does not add any burden on users. As said above, content
+kinds have an influence on the behavior of sources |
+polymorphism is said to be \emph{non-parametric}.
+In practice, this means that static types must be
+maintained throughout the execution of a script. This rather unusual aspect
 serves us as an overloading mechanism: the only way to remove content kinds from
 execution would be to duplicate our current collection of operators with a
-different one for each possible type instantiation.\TODO{SM c'est pas très clair
-  cette dernière phrase}
+different one for each possible type instantiation.
+\TODO{SM c'est pas très clair cette dernière phrase \\
+  DB ouais, c'est techniquement dense, j'arrive pas à faire mieux
+   mais je vais laisser pour contrer les puristes du parametric polymorphism}
 
 %% SM c'est du détail et on a pas bcp de place
 % Type inference leaves unknown types, they are forced using the default
