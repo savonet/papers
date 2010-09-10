@@ -1,4 +1,4 @@
-\subsection{Motivation}
+
 Up to now, we have only described streaming systems where there is
 a unique global clock. In such systems, time flows at the same rate
 for all sources.
@@ -7,7 +7,12 @@ which is appropriate for a live broadcast,
 but it does not need to be so.
 For example, when producing a file from other files,
 one might want the time rate to be as fast as the CPU allows.
-Moreover, while having one global clock suffices in many situations,
+
+% DB ici les sous-sections prennent bcp de place mais découpent
+%  agréablement le texte... peut etre des \paragraph{} a la place?
+\subsection{Motivation}
+
+While having a global clock suffices in many situations,
 there are a couple of reasons why a streaming system might involve multiple
 clocks or time flows.
 The first reason is external to liquidsoap: there is simply
@@ -112,10 +117,10 @@ operator; the rate of that clock is controlled by that operator,
 which can hence accelerate it around track changes without any
 risk of inconsistency.
 The other clock is simply a wallclock, so that the main stream
-is produced following the realtime rate.
+is produced following the real time rate.
 
 A clock is \emph{active} if it ticks by itself,
-therefore running its sources constantly, this
+therefore running its sources constantly; this
 is the case of wallclocks or soundcard clocks.
 We say that a clock depends on another one
 if its animation (and thus time rate) depends on it.
