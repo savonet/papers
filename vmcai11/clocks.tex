@@ -1,18 +1,13 @@
-
-Until now, we have only described streaming systems where there is
-a unique, global clock. In such systems, time flows at the same rate
+\subsection{Motivation}
+Up to now, we have only described streaming systems where there is
+a unique global clock. In such systems, time flows at the same rate
 for all sources.
-% DB I think "wallclock time" is better than "real time" which has 
-%    other connotations
 By default, this rate corresponds to the wallclock time,
 which is appropriate for a live broadcast,
 but it does not need to be so.
 For example, when producing a file from other files,
 one might want the time rate to be as fast as the CPU allows.
-
-\subsection{Motivation}
-
-While having a global clock suffices in many situations,
+Moreover, while having one global clock suffices in many situations,
 there are a couple of reasons why a streaming system might involve multiple
 clocks or time flows.
 The first reason is external to liquidsoap: there is simply
@@ -37,35 +32,34 @@ in order to produce a stream at a given speed,
 a source might need to obtain data from another source at
 a different rate. This is obvious for an operator that speeds up or
 slows down audio, but is also needed in more subtle cases
-such as a crossfading operator.
-\TODO{SM on devrait déjà avoir expliqué le crossfading avant}
-Crossfading consists in fading the volume of a stream around tracks
-limits, which is not problematic, and more crucially combining a portion
+such as a crossfading operator. A variant of the operator described
+in Section~\ref{sec:transitions} might combine a portion
 % DB following sam's advice I removed the next two footnotes which
 %    are pretty technical
-of the end of a track with the beginning of the next one\ignore{\footnote{
-  In \liquidsoap, crossfading derives from a simpler operator that
-  only takes care of crossing, \ie\ combining the end of a track
-  with the beginning of the next one. The \texttt{cross} operator
-  takes a transition function as a parameter for describing how
-  the two tracks are actually combined.
-}}.
-The result is close to what was represented in Figure~\ref{fig:cross}
-except that the two tracks originate from the same source.
-During the lapse of time where the operator combines
-data from an end of track with the beginning of the other other,
-the crossing operator needs twice as much stream data\ignore{\footnote{
-  % Note that there is no need to store the beginning of track
-  % (this is only done in smart_cross for computing its volume)
-  In the actual implementation, we have to
-  maintain a copy of a section of the past content
-  of the input stream until the end of a track,
-  generally using remaining time estimations to avoid maintaining
-  this sliding window all the time.
-  The time acceleration does not actually happen
-  when the tracks are combined but when the sliding window
-  is initially filled up.
-}}.
+of the end of a track with the beginning of the next track
+\emph{of the same source} to create a transition between tracks.
+% \ignore{\footnote{
+  % In \liquidsoap, crossfading derives from a simpler operator that
+  % only takes care of crossing, \ie\ combining the end of a track
+  % with the beginning of the next one. The \texttt{cross} operator
+  % takes a transition function as a parameter for describing how
+  % the two tracks are actually combined.
+% }}.
+% The result is close to what was represented in Figure~\ref{fig:cross}
+% except that the two tracks originate from the same source.
+During the lapse of time where the operator combines data from an end of track
+with the beginning of the other other, the crossing operator needs to read both
+the stream data of the current track and the data of the next track, thus
+reading twice as much stream data as in normal time.
+% \ignore{\footnote{
+% %     Note that there is no need to store the beginning of track
+% %     (this is only done in smart_cross for computing its volume)
+%     In the actual implementation, we have to maintain a copy of a section of
+%     the past content of the input stream until the end of a track, generally
+%     using remaining time estimations to avoid maintaining this sliding window
+%     all the time.  The time acceleration does not actually happen when the
+%     tracks are combined but when the sliding window is initially filled up.
+%   }}.
 After ten tracks,
 with a crossing duration of six seconds, one more minute will have
 passed for the source compared to the time of the crossing operator.
@@ -78,8 +72,8 @@ its sources, liquidsoap works under the restriction that
 one source belongs to a unique clock,
 fixed once for all when the source is created.
 Sources from different clocks cannot communicate using the normal
-streaming protocol, since it is organized around clock cycles.
-Each clock is responsible for animating its own active sources
+streaming protocol, since it is organized around clock cycles:
+each clock is responsible for animating its own active sources
 and has full control on how it does it.
 
 In the graphical representation of streaming systems,
@@ -118,11 +112,11 @@ operator; the rate of that clock is controlled by that operator,
 which can hence accelerate it around track changes without any
 risk of inconsistency.
 The other clock is simply a wallclock, so that the main stream
-is produced following the real (wallclock) time rate.
+is produced following the realtime rate.
 
-A clock is said to be active if it ticks by itself,
-therefore running its sources constantly.
-It is the case of wallclocks or soundcard clocks.
+A clock is \emph{active} if it ticks by itself,
+therefore running its sources constantly, this
+is the case of wallclocks or soundcard clocks.
 We say that a clock depends on another one
 if its animation (and thus time rate) depends on it.
 % DB: I wanted to write this since it holds geometrically for nesting
@@ -142,7 +136,7 @@ Although nothing forces it in the model, it makes more sense if
 each passive source depends (possibly indirectly) on an active one,
 and all sources without dependencies are active.
 Those assumptions are in fact guaranteed to hold for the systems
-built from the \liquidsoap\ language.
+built in the \liquidsoap{} language.
 % this is because the user only creates wallclocks
 % and the only dependent clocks are suitably nested (cross and stretch)
 
@@ -150,14 +144,16 @@ From an implementation viewpoint, each active clock launches
 its own streaming thread.
 Hence, clocks provide a way to split the generation of one or
 several streams accross several threads,
-and hence multiple CPU cores\footnote{
-  Although OCaml uses a global memory management lock that makes it
-  impossible for two OCaml threads to run concurrently, there is no
-  such constraint when a thread runs a foreign function.
-  This allows us to avoid the limitation since
-  most of the computation in \liquidsoap\ takes place in decoding
-  and encoding multimedia formats, which is done by C libraries.
-}.
+and hence multiple CPU cores.
+\TODO{SM virage de remarque technique qui prend de la place}
+% \footnote{Although OCaml uses a global
+  % memory management lock that makes it
+  % impossible for two OCaml threads to run concurrently, there is no
+  % such constraint when a thread runs a foreign function.
+  % This allows us to avoid the limitation since
+  % most of the computation in \liquidsoap\ takes place in decoding
+  % and encoding multimedia formats, which is done by C libraries.
+% }.
 This powerful possibility is made available to the user
 through the intuitive notion of clock.
 As we shall see in the next section,
@@ -175,9 +171,7 @@ are correct.
 Clocks are not represented in the type of \liquidsoap\ sources.
 Although it would be nice to statically check clock assignment,
 type inference would not be possible without technical annotations
-from the user.
-
-Instead, clocks are assigned upon source creation.
+from the user. Instead, clocks are assigned upon source creation.
 Some sources require to belong to a particular, definite clock,
 such as the wallclock, or the clock corresponding to a sound card.
 Most sources simply require that their clock is the same as their
@@ -190,7 +184,7 @@ which are maintained during the inference process.
 Two errors can occur during this phase.
 Although they are runtime errors that could be raised
 in the middle of streaming when new sources are created
-(\eg\ by means of a transition),
+(\eg{} by means of a transition),
 this usually only happens during the initial construction.
 The first error is raised when
 two different known clocks need to be unified.

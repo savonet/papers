@@ -4,7 +4,7 @@
 %   se passe au niveau des sources, pour bien montrer que ce qu'on fait
 %   dans le typage correspond précisemment aux contraintes imposées
 %   par le modele
-\subsection{Model}
+\subsection{Typing stream contents}
 
 % Meme si ya le mot sous-typage, cette relation est vraiment utilisée
 % dans le modele indépendamment du langage, d'ailleur c'est
@@ -95,13 +95,8 @@ requested number of channels, or for operators such as \texttt{echo} operator,
 which produces echo on sound and has a fixed internal buffer for storing past
 sound.
 
-\subsection{Language}
+\subsection{Examples of types}
 \label{sec:typing-ex}
-To ensure that streaming systems built from user scripts will never
-encounter situations where a source receives data that it cannot handle,
-we leverage various features of our type system.
-By doing so, we guarantee statically that content type mismatches never happen.
-
 \begin{figure}[b]
   \centering
   \texttt{
@@ -126,6 +121,10 @@ By doing so, we guarantee statically that content type mismatches never happen.
       mais je suis pour inventer des notations surtout que je pense
       vouloir des contraintes pour les 'a aussi, cf TODO suivant.}
 
+To ensure that streaming systems built from user scripts will never
+encounter situations where a source receives data that it cannot handle,
+we leverage various features of our type system.
+By doing so, we guarantee statically that content type mismatches never happen.
 The content kinds are reflected into types,
 and used as parameters of the \texttt{source} type.
 In order to express the types of our various operators,
@@ -168,19 +167,19 @@ We illustrate various content kinds in the examples of Figure~\ref{fig:types}:
   requires that there is only one audio channel.
 \end{itemize}
 
-All these features of type systems, as well as their support in
-type inference, are as usual.
-This means that there is no burden on users.
-As said above, content kinds have an influence on the behavior
-of sources and must thus be passed. This non-parametricity
-means that our static types must be maintained throughout
-the execution of a script. This rather unusual aspect serves
-us as an overloading mechanism: the only way to remove
-content kinds from execution would be to duplicate our current
-collection of operators with a different one for each possible
-type instantiation.
+These advanced features of the type system are statically inferred, which means
+that we gain in safety without adding burden on users. As said above, content
+kinds have an influence on the behavior of sources: the behavior of some
+operators depends on their type, otherwise said polymorphism in the language is
+\emph{non-parametric}. In practice, this means that static types must be
+maintained throughout the execution of a script. This rather unusual aspect also
+serves us as an overloading mechanism: the only way to remove content kinds from
+execution would be to duplicate our current collection of operators with a
+different one for each possible type instantiation.\TODO{SM c'est pas très clair
+  cette dernière phrase}
 
-Type inference leaves unknown types, they are forced using the default
-number of channels, and users can write type annotations.
-But in most cases, type inference works pretty well, since most
-outputs dictate content kinds.
+%% SM c'est du détail et on a pas bcp de place
+% Type inference leaves unknown types, they are forced using the default
+% number of channels, and users can write type annotations.
+% But in most cases, type inference works pretty well, since most
+% outputs dictate content kinds.
