@@ -50,7 +50,7 @@ of the end of a track with the beginning of the next one\ignore{\footnote{
   takes a transition function as a parameter for describing how
   the two tracks are actually combined.
 }}.
-The result is close to what was represented in Figure~\ref{cross-fig}
+The result is close to what was represented in Figure~\ref{fig:cross}
 except that the two tracks originate from the same source.
 During the lapse of time where the operator combines
 data from an end of track with the beginning of the other other,
@@ -107,7 +107,7 @@ output.icecast(%vorbis,mount="myradio",
 }
 \]
 \end{center}
- \caption{A streaming system with two clocks}
+ \fcaption{A streaming system with two clocks}
  \label{fig:boxes}
  % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{figure}
@@ -158,7 +158,6 @@ and hence multiple CPU cores\footnote{
   most of the computation in \liquidsoap\ takes place in decoding
   and encoding multimedia formats, which is done by C libraries.
 }.
-\TODO{SM faudrait mentionner avant que c'est implémenté en OCaml}
 This powerful possibility is made available to the user
 through the intuitive notion of clock.
 As we shall see in the next section,
@@ -202,8 +201,8 @@ at the same time:
 output.file(%vorbis,"record.ogg",crossfade(input.alsa()))
 \end{verbatim}
 The other possible error happens when unifying two unknown clock variables
-if one depends on the other | in unification terminology, this is an occurs
-check failure. A simple example of that situation is
+if one depends on the other -- in unification terminology, this is an
+occurs-check failure. A simple example of that situation is
 the script \verb.add([s,crossfade(s)]). where the two mixed sources
 respectively have clocks $c$ and $X_c$ where $c$ is the clock created
 for the crossfading operator and $X_c$ is the variable representing

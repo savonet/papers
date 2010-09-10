@@ -15,16 +15,19 @@
 % DB bah moi je préfère avec :)
 %    je t'ai déja passé l'italique (qui se justifie pourtant vu que c'est
 %    du latin)
-\newcommand{\eg}{{e.g.},}
-\newcommand{\ie}{{i.e.},}
+% SM juste pour la blague, je les re-vire
+\newcommand{\eg}{{e.g.}}
+\newcommand{\ie}{{i.e.}}
 \newcommand{\cf}{{cf.~}}
 \newcommand{\TODO}[1]{\marginpar{\tiny #1}}
 \newcommand{\ignore}[1]{}
+% useless space around captions
+\newcommand{\fcaption}[1]{\vspace{-3ex}\caption{#1}\vspace{-4ex}}
 
 \newcommand{\sub}{<:}
 
 \usepackage{graphicx}
-\usepackage{xypic}
+\usepackage[matrix,arrow,frame]{xy}
 
 \usepackage{tikz}
 \usetikzlibrary{snakes}
@@ -55,6 +58,8 @@
 
 \begin{document}
 \maketitle
+
+% \vspace{-4ex}
 
 \begin{abstract}
   Generating multimedia streams, such as in a webradio, is a task which is
@@ -151,7 +156,7 @@ programming language should follow three fundamental principles: it should be
   possible (a stream generator has for example to ensure that there will always
   be data to stream).
 \end{enumerate}
-Designing a programming language that fulfills these requirements is not an easy task. 
+Designing a programming language that fulfills these requirements is not an easy task.
 Since the concept is quite new for the generation of streams, a
 lot of time was spent to identify the needs of potential users, and to find the
 right constructions and operators to build streams. The description of these is
@@ -163,12 +168,23 @@ quite natural in this context: the language \liquidsoap{} is functional (which
 confers a lot of expressiveness to it) and strongly typed (which allows to have
 strong guarantees on the behavior the stream generation).
 
-We first describe the language and its underlying model for streams in
-Section~1, and then detail the typing systems as well as the guarantees that it
-provides in Section~2.\TODO{indiquer le vrai plan : on insiste sur deux
-  nouveautés importantes (typage des streams + clocks)}
+The aim of the article is to present not only the programming language
+\liquidsoap{}, but also the solutions that had to be found for problems which
+are specifically raised by to our domain of application. We first give a broad
+overview of the language and its underlying model of streams in
+Section~\ref{sec:liq}. We then illustrate the typing system and the need for
+dedicated constructions in order to type multimedia streams in
+Section~\ref{sec:content}. Finally, we describe in Section~\ref{sec:clocks} the
+problems raised by the possibly multiple sources of time in our programming
+language and how we handle it.
+
+% We first describe the language and its underlying model for streams in
+% Section~1, and then detail the typing systems as well as the guarantees that it
+% provides in Section~2.\TODO{indiquer le vrai plan : on insiste sur deux
+ % nouveautés importantes (typage des streams + clocks)}
 
 \section{Liquidsoap}
+\label{sec:liq}
 \subsection{Streaming model}
 \label{sec:model}
 \begin{wrapfigure}{r}{7.5cm}
@@ -176,28 +192,26 @@ provides in Section~2.\TODO{indiquer le vrai plan : on insiste sur deux
   \begin{center}
     \includegraphics{stream}
   \end{center}
-  \vspace{-3ex}
-  \caption{A \liquidsoap{} stream}
+  \fcaption{A \liquidsoap{} stream}
   \label{fig:stream}
-  \vspace{-4ex}
   % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{wrapfigure}
 A stream can be understood as a timed sequence of data.
 In digital signal processing, it will simply be an infinite sequence of 
-samples | floating point values for audio, images for video.
+samples -- floating point values for audio, images for video.
 However, multimedia streaming also involves high-level notions.
 A \emph{stream}, in \liquidsoap{}, is a succession of \emph{tracks}, annotated
 with \textit{metadata}. The tracks can be thought
 as individual songs on a musical radio show. 
 Metadata are punctual markers storing data, which can occur at any instant in the
-stream, and are constituted of a pairs of strings storing the name of
+stream, and are constituted of a pair of strings consisting of the name of
 the metadata and its value. They are used to store various information about the
-stream such as copyright information (title, artist, etc. of
+stream such as copyright information (title or artist of
 the current track) or custom information about tracks (for example how loud it
 should be played).
-Finally, tracks contain data, which consists of float samples 
-(for audio data), images (for video data), etc. (see Section~\ref{sec:content}). 
-Figure~\ref{fig:stream} represents an example of a stream in \liquidsoap{}.
+Finally, tracks contain data, which consist of float samples 
+(for audio data), images (for video data), etc. (see Section~\ref{sec:content}).
+A schematic representation of a stream is given in Figure~\ref{fig:stream}.
 
 \TODO{Do we allow fallible streams or fallible sources?
   Is there a hole of a certain duration between tracks in a stream,
@@ -236,7 +250,7 @@ produce their stream, obtaining data from their input sources which in turn
 obtain data from their dependent sources, and so on. An important consequence of
 this is the fact that sources do not constantly stream: if a source would
 produce a stream which is not needed by any active source then it is actually
-frozen in time. This avoids useless computations but is also crucial to obtain
+frozen in time. This avoids useless computations, but is also crucial to obtain
 the expected expressiveness. For example, a \texttt{rotation} operator will play
 alternatively several sources, but should only rotate at the end of tracks, and
 its unused sources should not keep streaming, otherwise we might find them in
@@ -257,8 +271,8 @@ typing discipline together a very user-friendly language.
 It is implemented in OCaml and uses several C libraries 
 through external bindings, most of them also developed within the 
 \savonet{} project. The code contains approximatively $20$K lines of
-OCaml code and $10$K lines of C code and runs on all major systems, including
-Linux, Mac OSX and Windows.
+OCaml code and $10$K lines of C code and runs on all major operating systems.
+% , including Linux, Mac OSX and Windows.
 
 One of the main goal which has motivated the design of the \liquidsoap{}
 language is that it should be very accessible, even to non-programmers. It
@@ -270,8 +284,8 @@ order. In order to address this, we have designed a new extension of
 $\lambda$-calculus with labeled arguments and multi-abstractions which makes it
 comfortable to use the scripting
 API~\cite{baelde-mimram:webradio-lambda}. Having designed our own language also
-allowed us to integrate a few domain-specific extensions, in particular
-a browsable documentation of the scripting API and helpful error messages. In
+allowed us to integrate a few domain-specific extensions, to display helpful
+error messages and to generate a browsable documentation of the scripting API. In
 practice, many of the users of \liquidsoap{} are motivated by creating a radio
 and not very familiar with programming, so it can be considered that the design of
 the language was a reasonable success from this point of view.
@@ -297,29 +311,31 @@ provides a few useful dynamic analysis.
 }
 \]
 \end{center}
- \caption{A simple streaming system}
+ \fcaption{A simple streaming system}
  \label{fig:simple}
  % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{figure}
 
 The current paper can be read without a prior understanding of the language and
-its typing system, the reader interested into a detailed presentation is referred
-to~\cite{baelde-mimram:webradio-lambda}. We simply recall that the evaluation of
+its typing system, a detailed presentation can however be found
+in~\cite{baelde-mimram:webradio-lambda}. We simply recall that the evaluation of
 a \liquidsoap{} script triggers the construction of various sources, built from
-various operators built into the language. It also performs some sanity checks
-such as checking that a source is infallible \ie{} always has data available. 
+various operators built into the language.
 For example, the following script defines two elementary sources, respectively 
 reading from an HTTP stream and a playlist of files, composed in a fallback 
 (\ie{} if the HTTP stream is ended or broken then the playlist is used), 
-filtered through a volume normalizer and sent to an Icecast server which 
+filtered through a volume normalizer, and sent to an Icecast server which 
 broadcasts the stream to the listeners:%\TODO{DB define icecast}
 \begin{verbatim}
 output.icecast(%vorbis,mount="myradio",
   normalize(fallback([input.http("http://other.net/radio"),
                       playlist("listing.txt")])))
 \end{verbatim}
-The graph underlying the system resulting from the execution of that
-script is shown in Figure~\ref{fig:simple}.\TODO{mount est un exemple de label}
+The graph underlying the system resulting from the execution of that script is
+shown in Figure~\ref{fig:simple}. A few remarks on the syntax: the notation
+\hbox{\texttt{[}\ldots\texttt{,}\ldots\texttt{]}} denotes a list, \texttt{mount}
+is a label (the name of an argument of the function \texttt{output.icecast}) and
+the meaning of \texttt{\%vorbis} is explained in Section~\ref{sec:typing-ex}.
 
 % \subsection{Fallibility}
 % 
@@ -337,31 +353,44 @@ script is shown in Figure~\ref{fig:simple}.\TODO{mount est un exemple de label}
 % an infallible output can be considered as describing an infinite stream, while a
 % fallible output describes a stream that may not be infinite.
 
-\subsection{Efficiency}
-
+\subsection{Efficient frames}
 \TODO{DB In the JFLA paper we have a quick benchmark of the impact
   of changing the frame size from 1 to 100 to 1000.
   Also, can we still compete well with ices?}
 
-An important aspect of the implementation is efficiency, and, specifically in \liquidsoap{},
-avoiding multiple copies of the stream's data. Thus, we use a
-reference passing mechanism based on \textit{frames}. A frame is a
-chunk of data of fixed duration that represents a portion of the stream.
-An active source instantiates a frame and tries to fill it by passing a reference
-to that frame to its underlying sources.
-The frames used to generate streams are passed as memory pointers, thus
-avoids copying data in memory.
-\TODO{DB at this point the reader doesn't see why several frames are needed}
-\TODO{RB I think it is ok now..}
+An important aspect of the implementation is efficiency concerning both CPU and
+memory usage. The streams manipulated can have high data rates (a typical video
+stream needs 30Mo/s) and avoiding multiple copies of the data of the streams is
+crucial. This is why we use a reference passing mechanism based on frames. A
+\emph{frame} is a buffer of data of fixed duration that represents a portion of
+the stream. In order to compute a stream, the active sources constantly create
+frames and have them filled by passing references to them to their predecessor
+sources, which in turn pass the references to their predecessors, and so on.
+This passing by reference avoiding copies of data in memory.
+% \TODO{DB at this point the reader doesn't see why several frames are needed}
+% \TODO{RB I think it is ok now..}
 
-Unfortunately, it is not always possible to avoid copying data. For instance, one may want to have 
-several outputs of the same  stream, \eg\ one to a local file for archiving purposes and another one to an 
-Icecast server to be broadcasted.
-In this case, the two outputs in the graph are connected to the same source. 
-Hence, when those output transmit their frame to this source to be filled, the 
-operator should fill them with the same data.
+This mechanism is refined in \liquidsoap{} in order to avoid computing twice the
+same frame. For instance, one may want to have several outputs of the same
+stream, \eg{} one to a server for broadcasting the stream and another one to a
+local file for archiving purposes (the circled nodes in
+Figure~\ref{fig:sharing}). In this case, the two outputs in the graph are
+connected to the same source, and when those outputs transmit their frames to
+this source to be filled, the operator should fill them with the same data. In
+order to avoid computing the data twice, the first time that the source is asked
+to fill a frame, it operates as described before. However, on the second time it
+simply fills the frame with the data computed during the first call: computed
+frames are \emph{cached} if necessary. \TODO{DB: What about the third time,
+  fourth? When does it stop?  We need to talk about clock cycles to avoid
+  confusing the reader.}  Once all the filling operations have been done, the
+sources are informed that the stream has moved on to the next frame and can
+forget their cache. The necessity for a source to cache its current frame is
+detected when instantiating the stream generator.
+% thus copying data in memory only when it is necessary.
+\TODO{DB This paragraph doesn't say much; a little more could be said after
+  transitions are evoked.}
 
-\begin{figure}[h]
+\begin{figure}[t]
  \begin{center}
 \[
 \xymatrix{
@@ -372,48 +401,22 @@ operator should fill them with the same data.
 }
 \]
 \end{center}
- \caption{A streaming system with sharing}
+\fcaption{A streaming system with sharing}
+\label{fig:sharing}
  % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{figure}
-
-For this reason, the first time that the source is asked to fill a frame, it 
-operates as described before. However, the second time, it should just fill the frame 
-with the data gathered during the first call, which implies \textit{caching} the data obtained 
-during the first call. 
-\TODO{DB: What about the third time, fourth? When does it stop?
-  We need to talk about clock cycles to avoid confusing the reader.}
-Once all the filling operations have been done, the sources are informed that the 
-stream has moved to the next frame and reset their cache. 
-
-Finally, the necessity for a node to cache its current frame is detected when instantiating 
-the stream generator, thus copying data in memory only when it is necessary.
-\TODO{DB This paragraph doesn't say much; a little more could be said after
-  transitions are evoked.}
 
 \subsection{Functional transitions}
 \label{sec:transitions}
 
-A particularly interesting application of functional programming in \liquidsoap{} 
-is the case of \textit{transitions}. In \liquidsoap{}, some source can interactively
-select between several sources. For instance the source defined by 
-\texttt{fallback([s, r])} fills its frame using source \texttt{s} if it is available
-or source \texttt{r} otherwise. When switching from one source to another, it is 
-possible to specify a transition, which is given as a function of type:
-\texttt{(source * source) $\rightarrow$ source}, \ie{} a function that takes
-the two sources, the old and new sources, and return a new source, which
-gives the transition between them.
-
-For instance, the following code defines a fallback source which performs
-a crossfade when switching from one source to another:
-\begin{verbatim}
- def crossfade(old,new) = 
-   add([fade.in(new), fade.out(old)])
- end
- f = fallback(transitions=[crossfade, crossfade],
-              [s, r])
-\end{verbatim}
-Figure~\ref{cross-fig} illustrates the result of this transition.
-
+\liquidsoap{} is a \emph{functional} programming language and a particularly
+interesting application of this is the case of \textit{transitions} between
+tracks, \ie{} how two consecutive tracks of a source should be chained: do we
+want to mix a bit the two tracks in order to have a smooth transition? do we
+want to add a jingle during the transition? etc. For example, a \emph{crossfade}
+consists in mixing the first track whose volume is faded out with the second one
+whose volume is faded up (see Figure~\ref{fig:cross}).
+\vspace{-5ex}
 \begin{figure}[h]
  \begin{center}
 \begin{tikzpicture}[xscale=0.8,yscale=0.8]
@@ -431,30 +434,54 @@ Figure~\ref{cross-fig} illustrates the result of this transition.
 \draw (6,2) node[anchor=south]{new};
 \end{tikzpicture}
 \end{center}
- \caption{A crossfade transition between two sources}
- \label{cross-fig}
+ \fcaption{A crossfade transition between two tracks}
+ \label{fig:cross}
  % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{figure}
 
-Because any function can be used to define the transitions, the 
-possibilities offered are very important. For instance, it is possible
-to define \texttt{smooth\_add}, a source composed of a main source, 
-the tracks of a radio program for instance, and a source of jingles. 
-When a new jingle is available, \texttt{smooth\_add} reduces the volume of 
-the main source, supperposes the jingle to the current track, and 
-increases the volume of the main track back when the jingle is finished,
-producing a dynamic jingle incrustation very easy to use and quite appreciated
-by some users.\footnote{Unfortunately, the code of this function would not 
-fit in the margin. It is available online at this address: 
-\url{http://bit.ly/aHE0G0}}
+In \liquidsoap{} the construction \texttt{fallback([$r$,$s$])} interactively
+selects between two sources: it fills its frame using the source \texttt{$r$} if
+it is available, or from the source \texttt{$s$} otherwise.  When switching from
+one source to another, it is possible to specify a transition, which is given by
+a function whose type is \hbox{\texttt{(source*source)->source}}, \ie{} a
+function that takes the two sources as argument, the old and new source, and
+return a new source, which gives the transition between them. Thus, the
+following code defines a fallback source which performs a crossfade when
+switching from one source to another:
+\begin{verbatim}
+ def crossfade(old,new) =
+   add([fade.in(new), fade.out(old)])
+ end
+ f = fallback(transitions=[crossfade, crossfade], [r, s])
+\end{verbatim}
+
+Because any function can be used to define a transition, the possibilities
+offered are numerous. For instance, the standard library (programmed in
+\liquidsoap{}) defines the operator \texttt{smooth\_add}, which takes as
+argument a main source (the tracks of a radio for instance) and a source of
+jingles. When a new jingle is available, \texttt{smooth\_add} reduces the volume
+of the main source, superposes the jingle to the current track, and increases
+the volume of the main track back when the jingle is finished, producing a
+dynamic jingle incrustation very easy to use and quite appreciated by
+users.
+% \footnote{Unfortunately, the code of this function would not fit in the
+%   margin. It is available online at this address: \url{http://bit.ly/aHE0G0}}
 
 \section{Heterogeneous stream contents}
 \label{sec:content}
 
 \input{hetero.tex}
 
-\section{Clocks}
+TODO: not everything can be typed
 
+ It also performs some sanity checks
+such as checking that a source is \emph{infallible},
+\TODO{SM je mettrais infaillible après, c'est chelou de mettre un détail avant le
+  premier ex et en plus on dirait que \emph{toutes} les sources doivent toujours streamer}
+\ie{} always has data available.
+
+\section{Clocks}
+\label{sec:clocks}
 \input{clocks.tex}
 
 \section{Related work}
@@ -511,6 +538,7 @@ Documentation, errors, user friendliness.
 Requests.
 Typing sources as objects whose methods are (telnet) services.
 
+\TODO{SM 4 papiers ça fait vraiment très léger comme biblio, faudrait en rajouter}
 \bibliographystyle{abbrv}
 \bibliography{biblio}
 \end{document}

@@ -7,7 +7,7 @@
 \subsection{Model}
 
 % Meme si ya le mot sous-typage, cette relation est vraiment utilisée
-% dans le modele indépendamment du langage, d'ailleur c'est 
+% dans le modele indépendamment du langage, d'ailleur c'est
 % Frame.kind_sub_kind. Après on copie tout ça au niveau du langage.
 
 In \liquidsoap{}, streams can contain data of various nature. The typical
@@ -17,38 +17,40 @@ more kinds of contents to the streams: for example, support for MIDI data (which
 contain musical notes) has been added, which allows us to provide
 ``synthesizer'' operators (which take a stream of notes as input and produce an
 audio stream). In addition, there can be multiple channels of data for each data
-kind: audio is usually stored in stereo (2 channels), but also sometimes in
-surround sound (5 channels), etc.
-
-It is desirable to allow sources of different content kinds within a 
-streaming system.
+kind: audio is usually stored in stereo (2~channels), but also sometimes in
+surround sound (5~channels), etc. It is desirable to allow sources of different
+content kinds within a streaming system, which makes it necessary to introduce a
+dedicated typing system in order to ensure the consistency of stream contents
+across sources.
 % (\eg some sources might produce sound and other only video and they are merged
 % afterward)
 
-Data in streams is described by its \emph{content type}, which is a triple
-of natural numbers indicating the number of audio, video and midi channels.
-A stream may not always contain data of the same type.
-For instance, the \texttt{playlist} operator might rely on decoding files
-of heterogeneous content, \eg\ mono and stereo audio files.
-In order to specify how content types are allowed to change over time
-in a stream, we use \emph{arities}, which are essentially natural numbers
-extended with a special symbol $\star$:
-\[ a ::= \star \;|\; 0 \;|\; S(a) \]
-An arity is said to be \emph{variable} if it contains $\star$;
-otherwise it is an usual natural number, and is said to be \emph{fixed}.
-A \emph{content kind} is a triple of arities,
-and specifies which content types are acceptable.
+The nature of data in streams is described by its \emph{content type}, which is
+a triple of natural numbers indicating the number of audio, video and midi
+channels.  A stream may not always contain data of the same type.  For instance,
+the \texttt{playlist} operator might rely on decoding files of heterogeneous
+content, \eg\ mono and stereo audio files.  In order to specify how content
+types are allowed to change over time in a stream, we use \emph{arities}, which
+are essentially natural numbers extended with a special symbol $\star$:
+\[
+a\quad ::=\quad \star \;|\; 0 \;|\; S(a)
+\]
+An arity is \emph{variable} if it contains $\star$, otherwise it is an usual
+natural number, and is \emph{fixed}. A \emph{content kind} is a triple of
+arities, and specifies which content types are acceptable. For example,
+$(S(S(0)),S(\star),\star)$ is the content kind meaning ``2 audio channels, at
+least one video channel and any number of MIDI channels''.
 % S<:T means "if you can work with T you can work with S"
 %            "if you can work with a source(T) you can take a source(S)"
 %            "T is more permissive than S"
-This expressed through the subtyping relation defined in 
+This is formalized through the subtyping relation defined in
 Figure~\ref{fig:subtyping}: $T\sub K$ means
-that $T$ is accepted by $K$. More generally,
+that the content kind $T$ is accepted by $K$. More generally,
 $K \sub K'$ expresses that $K$ is more permissive than $K'$,
 which implies that a source of content kind $K$ can safely be seen
 as one of content kind $K'$.
 
-\begin{figure}[htpb]
+\begin{figure}[t]
 \[
 % c'est possible de simplifier en mettant direct K<:K,
 % mais on ne peut pas dire K<:* sans vérifier que K est bien formé
@@ -60,7 +62,7 @@ as one of content kind $K'$.
 \]\[
    \infer{(A,B,C) \sub (A',B',C')}{A \sub A' & B\sub B' & C\sub C'}
 \]
- \caption{Subtyping relation on arities}
+ \fcaption{Subtyping relation on arities}
  \label{fig:subtyping}
 \end{figure}
 
@@ -75,10 +77,11 @@ than that of their input source.
   C'est plutôt que ce serait super chiant de re-implémenter en supportant
   la variabilité\ldots
   On devrait détourner l'attention sur les opérateurs pour lesquels
-  la fixité a un sens, comme ALSA.}
+  la fixité a un sens, comme ALSA.\\\\
+SM Je pense qu'on va laisser comme ça pour cette fois}
 Also, for implementation and performance reasons, some sources have
-to operate on input streams that have a fixed kind |
-a kind is said to be fixed when all of its components are fixed.
+to operate on input streams that have a fixed kind --
+a kind is said to be fixed when all of its components are.
 Passing the expected content kind is important because some sources
 behave differently depending on their kind.
 This is the case
@@ -87,21 +90,19 @@ This is the case
 %   pas nimp du fichier, et plus subtilement le decodeur peut dropper
 %   des canaux pour s'adapter au type (par contre on ne fait rien
 %   de couteux comme du mono->stereo)
-of sound card inputs and outputs which have to initialize the sound card
-for the requested number of channels.
-\TODO{DB: nice example, echo}
-This is also the case for the \texttt{echo} operator,
+of sound card inputs and outputs which have to initialize the sound card for the
+requested number of channels, or for operators such as \texttt{echo} operator,
 which produces echo on sound and has a fixed internal buffer for storing past
 sound.
 
 \subsection{Language}
-
+\label{sec:typing-ex}
 To ensure that streaming systems built from user scripts will never
 encounter situations where a source receives data that it cannot handle,
 we leverage various features of our type system.
 By doing so, we guarantee statically that content type mismatches never happen.
 
-\begin{figure}[htpb]
+\begin{figure}[b]
   \centering
   \texttt{
     \begin{tabular}{rcl}
@@ -116,7 +117,7 @@ By doing so, we guarantee statically that content type mismatches never happen.
        (format('a,'b,'c),string,source('a,'b,'c))->source('a,'b,'c)
     \end{tabular}
   }
-  \caption{Types for some operators}
+  \fcaption{Types for some operators}
   \label{fig:types}
 \end{figure}
 \TODO{SM J'ai inventé la syntaxe \texttt{'\_a} à cause de la place.
@@ -131,49 +132,40 @@ In order to express the types of our various operators,
 we use a couple features of type systems.
 As expected, the above subtyping relation is integrated into
 the subtyping on arbitrary \liquidsoap\ types.
-We illustrate other techniques on the examples of Figure~\ref{fig:types}.
+We illustrate various content kinds in the examples of Figure~\ref{fig:types}:
 \begin{itemize}
+\item The operator \texttt{swap} exchanges the two channels of a stereo audio
+  stream. Its type is quite straightforward: it operates on streams with exactly
+  two audio channels.
 \item
-  The operator \texttt{swap} exchanges
-  the two channels of a stereo audio stream.
-  Its type is quite straightforward.
-\item
-  We use type polymorphism for allowing arbitrary arities.
+  We use type polymorphism to allow arbitrary arities.
   For example, the operator \verb.on_metadata. does not rely
   at all on the content of the stream, since it is simply in
-  charge of calling a handler on each of its metadata packets |
+  charge of calling a handler on each of its metadata packets --
   in the figure, \verb.handler. is a shortcut for
-  \verb.([(string*string)]) -> unit..
-\item
-  When an operator, such as \verb.echo.,
-  requires a fixed content type, we use type constraints
-  to express that a type variable can only be instantiated with
-  fixed arities.
-\TODO{DB We never constrain type variables to be arities,
-   as it will never happen in scripts using our well-formed API\ldots
-   however, using type annotations can trigger an assert failure!}
-\item
-  The case of the \texttt{video.greyscale} operator,
-  which converts a color video into greyscale, shows how we can
-  require at least one video channel in types.
-  Here, \verb.'b+1. is simply a shortcut for \verb.S('b)..
-\item
-  Finally, the case of \verb#output.file# (as well as several other outputs
+  \verb.([string*string]) -> unit..
+\item When an operator, such as \verb.echo., requires a fixed content type, we
+  use type constraints to express that a type variable can only be instantiated
+  with fixed arities: the type of the contents of the stream cannot change over
+  time.\TODO{DB We never constrain type variables to be arities, as it will never
+    happen in scripts using our well-formed API\ldots however, using type
+    annotations can trigger an assert failure!}
+\item The case of the \texttt{video.greyscale} operator, which converts a color
+  video into greyscale, shows how we can require at least one video channel in
+  types.  Here, \verb.'b+1. is simply a notation for \verb.S('b)..
+\item Finally, the case of \verb#output.file# (as well as several other outputs
   which encode their data before sending it to various media) is quite
-  interesting.
-  Here, the expected content kind depends on the encoding format.
-\TODO{DB a partir de la j'ai bacle, trop fatigue, mais le contenu est la..}
-  Hence, we create abstract objects representing encoding formats,
-  and a corresponding type which is parametrized by a content kind.
-  Encoding formats cannot be described by normal functions:
-  this would require dependent types, which notably breaks reasonable
-  type inference.
-  Instead they are funny constants with a normal-looking syntax.
-  Example: \verb$output.file(%vorbis,"stereo.ogg",s)$ requires that
-  \verb.s. has type \verb.source(2,0,0). but
-\TODO{RB: I don't know what to do about this line spacing...}
-  \verb$output.file(%vorbis(channels=1),"mono.ogg",s)$
-  requires that there is only one channel.
+  interesting. Here, the expected content kind depends on the format the stream
+  is being encoded to, which is given as first argument of the operator. Since
+  typing the functions generating formats would require dependent types (the
+  number of channels would be given as argument) and break type inference, we
+  have introduced particular constants for type formats with syntactic sugar for
+  them to behave like functions -- similar ideas are for example used to type
+  the \texttt{printf} function in OCaml. For example,
+  \verb$output.file(%vorbis,"stereo.ogg",s)$ requires that
+  \verb.s. has type \verb.source(2,0,0). because vorbis files are stereo by
+  default, but \verb$output.file(%vorbis(channels=1),"mono.ogg",s)$
+  requires that there is only one audio channel.
 \end{itemize}
 
 All these features of type systems, as well as their support in
