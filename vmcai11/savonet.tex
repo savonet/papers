@@ -3,6 +3,7 @@
 \usepackage[english]{babel}
 \usepackage{hyperref}
 \usepackage{wrapfig}
+\usepackage{proof}
 
 \pagestyle{plain}
 
@@ -11,11 +12,16 @@
 % DB je retrouve pas de source claire pour l'italique pour les abbrev latines,
 %   mais la virgule après i.e. et e.g. c'est clairement la règle
 % SM c'est moche, je préfère sans, même si c'est la convention c'est très rarement appliqué
-\newcommand{\eg}{{e.g.}}
-\newcommand{\ie}{{i.e.}}
+% DB bah moi je préfère avec :)
+%    je t'ai déja passé l'italique (qui se justifie pourtant vu que c'est
+%    du latin)
+\newcommand{\eg}{{e.g.},}
+\newcommand{\ie}{{i.e.},}
 \newcommand{\cf}{{cf.~}}
 \newcommand{\TODO}[1]{\marginpar{\tiny #1}}
 \newcommand{\ignore}[1]{}
+
+\newcommand{\sub}{<:}
 
 \usepackage{graphicx}
 \usepackage{xypic}
@@ -501,6 +507,7 @@ la recherche de claudio est indépendante de liq)}
 
 Documentation, errors, user friendliness.
 Requests.
+Typing sources as objects whose methods are (telnet) services.
 
 \bibliographystyle{abbrv}
 \bibliography{biblio}
