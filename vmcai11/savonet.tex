@@ -247,8 +247,8 @@ Based on the streaming model presented above, \liquidsoap{} provides the user
 with a convenient high-level language for describing streaming systems.
 Although our language borrows from other functional programming languages, it is
 has been designed from scratch in order to be able to have a dedicated static
-typing discipline together a very user-friendly language, tightly integrated
-with our tool. It is implemented in OCaml and uses several C libraries 
+typing discipline together a very user-friendly language. 
+It is implemented in OCaml and uses several C libraries 
 through external bindings, most of them also developed within the 
 \savonet{} project. The code contains approximatively $20$K lines of
 OCaml code and $10$K lines of C code and runs on all major systems, including
@@ -264,10 +264,8 @@ order. In order to address this, we have designed a new extension of
 $\lambda$-calculus with labeled arguments and multi-abstractions which makes it
 comfortable to use the scripting
 API~\cite{baelde-mimram:webradio-lambda}. Having designed our own language also
-allowed us to integrate a few domain-specific extensions, and integrate it
-tightly with the tool\TODO{SM on comprend pas trop ce que c'est que le tool, on
-  peut pas juste dire que c'est l'interpréteur ou des libraries ?}, which offers
-a browsable documentation of its scripting API and helpful error messages. In
+allowed us to integrate a few domain-specific extensions, in particular
+a browsable documentation of the scripting API and helpful error messages. In
 practice, many of the users of \liquidsoap{} are motivated by creating a radio
 and not very familiar with programming, so it can be considered that the design of
 the language was a reasonable success from this point of view.
