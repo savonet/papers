@@ -39,7 +39,7 @@
 \institute{
   University of Minnesota, USA
   \and
-  Tulane University, USA
+  Department of Mathematics, Tulane University, USA
   \and
   CEA LIST -- LMeASI, France
 }
@@ -413,12 +413,12 @@ detected when instantiating the stream generator.
 \label{sec:transitions}
 
 \liquidsoap{} is a \emph{functional} programming language and a particularly
-interesting application of this is the case of \textit{transitions} between
-tracks, \ie{} how two consecutive tracks of a source should be chained: do we
-want to mix a bit the two tracks in order to have a smooth transition? do we
+interesting application of this is the case of \textit{transitions}, 
+\eg{} how two switch from one source to another: do we
+want to mix a bit the two sources in order to have a smooth transition? do we
 want to add a jingle during the transition? etc. For example, a \emph{crossfade}
-consists in mixing the end first track whose volume is faded out with the
-beginning of second one whose volume is faded up (see Figure~\ref{fig:cross}).
+consists in mixing the end of the old source, whose volume is faded out, with the
+beginning of the new one, whose volume is faded up (see Figure~\ref{fig:cross}).
 \vspace{-5ex}
 \begin{figure}[h]
  \begin{center}
@@ -442,9 +442,9 @@ beginning of second one whose volume is faded up (see Figure~\ref{fig:cross}).
  % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{figure}
 
-In \liquidsoap{} the construction \texttt{fallback([$r$,$s$])} interactively
+For instance, in \liquidsoap{} the construction \texttt{fallback([$r$,$s$])} interactively
 selects between two sources: it fills its frame using the source \texttt{$r$} if
-it is available, or from the source \texttt{$s$} otherwise.  When switching from
+it is available, or the source \texttt{$s$} otherwise.  When switching from
 one source to another, it is possible to specify a transition, which is given by
 a function whose type is \hbox{\texttt{(source*source)->source}}, \ie{} a
 function that takes the two sources as argument, the old and new source, and
