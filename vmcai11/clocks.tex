@@ -26,7 +26,11 @@ soundcard has its own clock, which will tick at a slightly different
 rate than the main clock of the computer.
 Since liquidsoap communicates with soundcards and remote computers,
 it has to take those mismatches into account.
-\TODO{SM est-ce qu'on parle aussi des pbs de ``time drifting'' ?}
+\TODO{SM est-ce qu'on parle aussi des pbs de ``time drifting'' ? \\
+  DB c'est couvert, après si tu veux mettre le mot clé ça me va\ldots
+   sauf que je sais pas de quoi tu veux parler: si c'est le fait qu'une clock
+   se dérègle petit à petit, ça me parait déja dit; si c'est le fait que
+   les lags réseaux provoquent un glissement, c'est dit aussi.}
 
 There are also some reasons that are purely internal to liquidsoap:
 in order to produce a stream at a given speed,
@@ -37,19 +41,20 @@ such as a crossfading operator.
 \TODO{SM on devrait déjà avoir expliqué le crossfading avant}
 Crossfading consists in fading the volume of a stream around tracks
 limits, which is not problematic, and more crucially combining a portion
-of the end of a track with the beginning of the next one\footnote{
+% DB following sam's advice I removed the next two footnotes which
+%    are pretty technical
+of the end of a track with the beginning of the next one\ignore{\footnote{
   In \liquidsoap, crossfading derives from a simpler operator that
   only takes care of crossing, \ie\ combining the end of a track
   with the beginning of the next one. The \texttt{cross} operator
   takes a transition function as a parameter for describing how
   the two tracks are actually combined.
-}.
-\TODO{SM 1. c'est pas joli les notes 2. est ce que celle-ci n'est pas trop du détail ?}
+}}.
 The result is close to what was represented in Figure~\ref{cross-fig}
 except that the two tracks originate from the same source.
 During the lapse of time where the operator combines
 data from an end of track with the beginning of the other other,
-the crossing operator needs twice as much stream data\footnote{
+the crossing operator needs twice as much stream data\ignore{\footnote{
   % Note that there is no need to store the beginning of track
   % (this is only done in smart_cross for computing its volume)
   In the actual implementation, we have to
@@ -60,8 +65,7 @@ the crossing operator needs twice as much stream data\footnote{
   The time acceleration does not actually happen
   when the tracks are combined but when the sliding window
   is initially filled up.
-}.
-\TODO{SM pareil, c'est trop implém}
+}}.
 After ten tracks,
 with a crossing duration of six seconds, one more minute will have
 passed for the source compared to the time of the crossing operator.
@@ -108,7 +112,6 @@ output.icecast(%vorbis,mount="myradio",
  % Stream.png: 500x132 pixel, 91dpi, 14.03x3.70 cm, bb=0 0 398 105
 \end{figure}
 
-\TODO{SM I removed the mathttt for clocks so we don't think that they are part of the language}
 There, $clock_2$
 was created specifically for the crossfading
 operator; the rate of that clock is controlled by that operator,
