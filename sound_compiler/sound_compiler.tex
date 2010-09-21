@@ -4,6 +4,8 @@
 \usepackage{hyperref}
 \usepackage{rotating}
 
+\newcommand{\TODO}[1]{\marginpar{\footnotesize #1}}
+
 \title{Ideas for\\An Optimizing Compiler\\for Sound Analysis and Synthesis}
 \author{Samuel Mimram}
 
@@ -27,10 +29,15 @@
   samples), video (streams of images), etc.
 \item We should distinguish between two kind of things that we manipulate:
   \emph{values} which are always available in a stream (samples in audio data)
-  and \emph{events} which are punctual data (metadata, notes, etc.)
+  and \emph{events} which are punctual data (metadata, notes, etc.). For example
+  the type for metadata is \verb|(string * string) event|.
 \item We should be able to trigger a event of type unit when a data changes
   (typically when the audio data gets louder than a certain value): we need a
-  function $bool \to unit\ event$.
+  function \verb|bool -> bool event| which triggers an event with the new value
+  when the value has changed.
+\item How do we use this function to program piecewise linear functions
+  (typically ADSR envelopes)? We also need to be able to consider \emph{relative
+    times} for this (decay is after beginning of attack + 20ms).
 \item It would be very nice to have a good typing of data represented in
   frequency domain (that is after an FFT): how do we integrate this properly in
   the language.
@@ -52,6 +59,19 @@
 \item The language should be high-level and implementation-independent. In
   particular, it would be nice to be able to compile audio algos both to int and
   float and compare the difference of performance.
+\item Maybe do we need some limited form of dependent types. For example, to
+  implement a function
+  \begin{center}
+    \texttt{map : $n$:int -> ('a -> 'a) -> ('a$\null^n$ -> 'a$\null^n$)}
+  \end{center}
+   which would apply a same function to every channel of a stream.
+ \item Overloading for events / values? eg \texttt{+} can be given both types
+   \begin{center}
+     \verb|+ : int -> int|
+     \qquad and\qquad
+     \verb|+ : int event -> int event|
+   \end{center}
+   Do we want this for all operators?
 \end{itemize}
 
 \subsection{Further optimizations}
@@ -78,9 +98,78 @@
   this in a clever way.
 \end{itemize}
 
+\subsection{Hot topics}
+\subsubsection{A syntax with coarities and cocurryfication}
+We want operators with coarities e.g. the operator \texttt{swap}, which
+exchanges the two channels of a stereo stream, has two inputs of type
+\texttt{audio} and two outputs of type \texttt{audio}\TODO{Actually, it might be
+  more natural to give it a type with one input and one output both of type
+  \texttt{(audio * audio)}, but anyway.}. We write its type as follows:
+\begin{center}
+  \verb|swap : (audio , audio) -> (audio , audio)|
+\end{center}
+The language should support currying, so \texttt{swap} can be transformed into
+\begin{center}
+  \verb|swap' : (audio * audio) -> (audio , audio)|
+\end{center}
+But the language should also support \emph{cocurrying}, so that \texttt{swap}
+can also be transformed into
+\begin{center}
+  \verb|swap'' : (audio , audio) -> (audio * audio)|
+\end{center}
+Similarly to the usual arrow notation, a list \verb|(A,B,C,D)| on the left of an
+arrow should be read as \verb|(A,(B,(C,(D))))|. We often write \verb|A| instead
+of \verb|(A)|.
+
+As usual, applications can be partial: from \verb|f : (A,B)->C| and \verb|a : A|
+we can construct \verb|(f a) : B->C|. Notice that we should see the value
+\verb|a| as \verb|a : ()->A|. So we have the following more general fact: from
+\verb|f : (A,B)->C| and \verb|a : A'->A| we can construct
+\verb|(f a) :(A',B)->C|. Naturally, things should go on dually for coarities:
+from \verb|f : A->(B,C)| and \verb|b : B->B'| one can build
+\verb|(f b) : A->(B',C)|. We call a \emph{covalue} a value of type \verb|A*|
+which is by definition \verb|A->()|. So we have in particular, from
+\verb|f : A->(B,C)| and \verb|b : B*| one can build \verb|(f b) : A->C|.
+
+So far so good. We can even mix both mechanisms: from \verb|f : A->(B,C)| and
+\verb|g : (B,D)->E| one can build \verb|(g f) : (A,D)->(E,C)|. Now, suppose that
+$\texttt{C}=\texttt{D}$. How do we ``finalize'' the composition? Using a trace!
+But this is arguably not very natural...
+
+Notice that in this case, there is really no notion of input and output since we
+also have the following isomorphisms:
+\begin{center}
+  \verb|A->(B,C)|
+  \qquad$\cong$\qquad
+  \verb|(A,C*)->B|
+  \qquad
+  etc.
+\end{center}
+
+Since it might be good to work up to commutation, we could try a labeled
+alternative, but this would be quite verbose because we would have to explicit
+all the cuts. Moreover, it is not quite clear which instance of a function we
+are using. For example, suppose that we want to compute the composite
+\verb|h : (x:A)->(y:D)| of
+\begin{center}
+  \verb|f : (x:A)->(x':B,x'':C)|
+  \qquad and\qquad
+  \verb|g : (y':B,y'':C)->(y:D)|
+\end{center}
+This could be done as follows:
+\begin{verbatim}
+let f1 = new f
+let g1 = new g
+cut f1.x' g1.y'
+cut f1.y'' g1.y''
+let h = f1 * g1
+\end{verbatim}
+The details of this have to be thought in details and it is not very clear how
+to do it in a way which is not too verbose.
+
 \section{State of the art}
-A good starting point:
-\url{http://en.wikipedia.org/wiki/Comparison_of_audio_synthesis_environments}
+Wikipedia gives a good starting
+point\footnote{\url{http://en.wikipedia.org/wiki/Comparison_of_audio_synthesis_environments}}.
 
 % \begin{tabular}{cccc}
 %   &\begin{sideways}blabla\end{sideways}\\
@@ -93,10 +182,16 @@ A good starting point:
 % \end{tabular}
 
 \subsubsection{ChucK}
+A textual programming language with a C-like syntax, compiled
+on-the-fly\cite{chuck}. Their ``new operator'' called \emph{ChucK} and written
+\texttt{=>} is a massively overloaded operator for various things such as
+variable assignation, composition of operators, etc., which makes the language a
+bit messy. Has a notion of \emph{event}. The language is globally messy (I
+repeat).
 
 \subsubsection{Csound}
-\cite{csound}
-Textual
+Textual programming language with a syntax inherited from ancient
+times~\cite{csound}.
 
 \subsubsection{Faust}
 \cite{faust}
@@ -110,11 +205,14 @@ coding'' of music by the author.
 \cite{max}
 
 \subsubsection{Nsound}
-\cite{nsound} C++ framework
+A C++ framework~\cite{nsound}, ie just like ocaml-mm but in C++.
 
 \subsubsection{Nyquist}
-\cite{nyquist}
-Textual
+A textual programming language~\cite{nyquist}. It looks like a regular
+programming language where all operators would implicitly take a time
+parameter. Interesting notion of \emph{time warp} which locally modifies time by
+another function.
+
 
 \subsubsection{Pure Data}
 A purely graphical graphical language~\cite{puredata}. Detailed
@@ -137,8 +235,8 @@ synths + programming (\emph{patches} consist of \emph{modules} connected by
 lines)
 
 \subsubsection{SuperCollider}
-\cite{supercollider}
-Textual
+Object-oriented textual programming language~\cite{supercollider}.
+
 
 
 \bibliographystyle{plain}
