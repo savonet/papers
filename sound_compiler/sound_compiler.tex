@@ -1,0 +1,123 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{hyperref}
+
+\title{Ideas for\\An Optimizing Compiler\\for Sound Analysis and Synthesis}
+\author{Samuel Mimram}
+
+\hypersetup{
+  pdftitle={\csname @title\endcsname},
+  pdfauthor={\csname @author\endcsname},
+  unicode=true,
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=black,
+  urlcolor=black
+}
+
+\begin{document}
+\maketitle
+
+\section{What we want}
+\subsection{What we should be able to do}
+\begin{itemize}
+\item We want to be able to manipulate streams of data: audio (streams of
+  samples), video (streams of images), etc.
+\item We should distinguish between two kind of things that we manipulate:
+  \emph{values} which are always available in a stream (samples in audio data)
+  and \emph{events} which are punctual data (metadata, notes, etc.)
+\item It would be very nice to have a good typing of data represented in
+  frequency domain (that is after an FFT): how do we integrate this properly in
+  the language.
+\end{itemize}
+
+\subsection{What the language should look like}
+\begin{itemize}
+\item Operators with multiple outputs as well as multiple inputs. We really live
+  in a monoidal category with biproducts.
+\item What is a good syntax for this? We could have a categorical syntax (à la
+  Faust) but having the opportunity to name wires seems to be nice, so both
+  would be perfect (eg in $\lambda$-calculus we can do both $g\circ f$ and
+  $\lambda x.g(f(x))$).
+\item Typing system. We should begin with something simple.
+\item We need a trace operator: instant feedback should be ruled out by either
+  typing or checks for acyclicity.
+\item How do we type clocks properly?
+\item The language should be high-level and implementation-independent. In
+  particular, it would be nice to be able to compile audio algos both to int and
+  float and compare the difference of performance.
+\end{itemize}
+
+\subsection{Further optimizations}
+\begin{itemize}
+\item We should implement all the classical optimizations: constant propagation,
+  expression factorization, etc.
+\item Some optims are also specific to the domain of application: merge for
+  loops as much as possible, etc.
+\item Since the code will be very specific, we can vectorize it easily and use
+  SIMD operations.
+\item We should distinguish between three kind of values.
+  \begin{enumerate}
+  \item \emph{constant values}: never change during time
+  \item \emph{sparse values}: rarely change during time. In practice, this means
+    that we can consider them as constant during a buffer. The typical example
+    is a value read from an user input such as a GUI.
+  \item \emph{values} which are neither constant or sparse.
+  \end{enumerate}
+  The constant values might be inferred automatically. However, sparse value
+  might need some annotations.
+\item The stream data might be a simple value (floats for audio) or an allocated
+  value (images). In the last case, we should avoid copies and we need to do
+  this in a clever way.
+\end{itemize}
+
+\section{State of the art}
+A good starting point:
+\url{http://en.wikipedia.org/wiki/Comparison_of_audio_synthesis_environments}
+
+\subsubsection{ChucK}
+
+\subsubsection{Csound}
+\cite{csound}
+Textual
+
+\subsubsection{Faust}
+\cite{faust}
+Textual
+
+\subsubsection{Impromptu}
+\cite{impromptu} Textual with a Lisp syntax (Scheme). Very nice examples of ``live
+coding'' of music by the author.
+
+\subsubsection{Max}
+\cite{max}
+
+\subsubsection{Nsound}
+\cite{nsound} C++ framework
+
+\subsubsection{Nyquist}
+\cite{nyquist}
+Textual
+
+\subsubsection{Pure Data}
+\cite{puredata}
+Graphical
+
+\subsubsection{PWGL}
+\cite{pwgl}
+Graphical
+
+\subsubsection{Reaktor}
+\cite{reaktor} Closed source. Tons of plugins. Graphical: nice GUI to control
+synths + programming (\emph{patches} consist of \emph{modules} connected by
+lines)
+
+\subsubsection{SuperCollider}
+\cite{supercollider}
+Textual
+
+
+\bibliographystyle{plain}
+\bibliography{sound}
+\end{document}
