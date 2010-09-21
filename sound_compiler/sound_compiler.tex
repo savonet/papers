@@ -2,6 +2,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage{hyperref}
+\usepackage{rotating}
 
 \title{Ideas for\\An Optimizing Compiler\\for Sound Analysis and Synthesis}
 \author{Samuel Mimram}
@@ -27,6 +28,9 @@
 \item We should distinguish between two kind of things that we manipulate:
   \emph{values} which are always available in a stream (samples in audio data)
   and \emph{events} which are punctual data (metadata, notes, etc.)
+\item We should be able to trigger a event of type unit when a data changes
+  (typically when the audio data gets louder than a certain value): we need a
+  function $bool \to unit\ event$.
 \item It would be very nice to have a good typing of data represented in
   frequency domain (that is after an FFT): how do we integrate this properly in
   the language.
@@ -42,7 +46,8 @@
   $\lambda x.g(f(x))$).
 \item Typing system. We should begin with something simple.
 \item We need a trace operator: instant feedback should be ruled out by either
-  typing or checks for acyclicity.
+  typing or checks for acyclicity (however feedbacks are legal in presence of a
+  delay).
 \item How do we type clocks properly?
 \item The language should be high-level and implementation-independent. In
   particular, it would be nice to be able to compile audio algos both to int and
@@ -56,7 +61,8 @@
 \item Some optims are also specific to the domain of application: merge for
   loops as much as possible, etc.
 \item Since the code will be very specific, we can vectorize it easily and use
-  SIMD operations.
+  SIMD operations. Even better, we can think of using very funny things such as
+  compiling to graphic cards (Cuda or OpenCL) or VLSI.
 \item We should distinguish between three kind of values.
   \begin{enumerate}
   \item \emph{constant values}: never change during time
@@ -75,6 +81,16 @@
 \section{State of the art}
 A good starting point:
 \url{http://en.wikipedia.org/wiki/Comparison_of_audio_synthesis_environments}
+
+% \begin{tabular}{cccc}
+%   &\begin{sideways}blabla\end{sideways}\\
+%   ChucK&\\
+%   Csound&\\
+%   Faust&\\
+%   Impromptu&\\
+%   Max&\\
+%   Nyquist&
+% \end{tabular}
 
 \subsubsection{ChucK}
 
@@ -101,8 +117,15 @@ coding'' of music by the author.
 Textual
 
 \subsubsection{Pure Data}
-\cite{puredata}
-Graphical
+A purely graphical graphical language~\cite{puredata}. Detailed
+documentation~\cite{pd-doc}. The \emph{patches} (or \emph{canvases}) are build
+from \emph{boxes} linked by wires. Two kind of data: \emph{messages} (our
+events) and audio signals. There is a \emph{bang} message that boxes often
+accept to trigger a computation. No detection of loops (stack overflows).
+
+The language is not compiled, a toy compiler was
+tried\footnote{\url{http://www.media.mit.edu/resenv/PuDAC/sw.html}} and
+apparently already improves much performances. It would be nice to try with our compiler.
 
 \subsubsection{PWGL}
 \cite{pwgl}
