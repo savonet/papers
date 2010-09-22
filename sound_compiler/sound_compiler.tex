@@ -10,7 +10,7 @@
 
 \newcommand{\TODO}[1]{\marginpar{\footnotesize #1}}
 
-\title{Ideas for\\An Optimizing Compiler\\for Sound Analysis and Synthesis}
+\title{Ideas for \\An Optimizing Compiler \\for Sound Analysis and Synthesis}
 \author{Samuel Mimram}
 
 \hypersetup{
@@ -163,6 +163,16 @@ A few examples.
   \lambda y.y
   \]
 \end{itemize}
+Of course, there is an obvious family of critical pairs in our system:
+\[
+M[\hole M_1\ldots M_k/x]
+\quad\longleftarrow\quad
+(\lambda x.M)(\hole M_1\ldots M_k)
+\quad\longrightarrow\quad
+MM_1\ldots M_k
+\]
+Which branch of the critical pair is chosen will depend on typing, which is thus
+crucial in our system.
 
 \subsection{Types}
 
