@@ -1,10 +1,12 @@
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
+\usepackage{amssymb}
 \usepackage{hyperref}
 \usepackage{rotating}
 
 \newcommand{\Var}{Var}
+\newcommand{\hole}{\mathop{\_\hspace{-.3ex}\_}}
 
 \newcommand{\TODO}[1]{\marginpar{\footnotesize #1}}
 
@@ -115,53 +117,48 @@ x
 \qquad|\qquad
 MM
 \qquad|\qquad
-M|M
-\qquad|\qquad
-0
+\hole
 \]
 Substitution of a variable $x$ by a term~$N$ in a term~$M$, written~$M[N/x]$ is
 defined inductively by
 \[
-\begin{array}{c@{\qquad}c}
+\begin{array}{c}
   x[N/x]=N
-  &
+  \qquad
   y[N/x]=y
-  \\
+  \qquad
   (\lambda y.M)[N/x]=\lambda y.M[N/x]
-  &
-  (M_1M_2)[N/x]=(M_1[N/x])(M_2[N/x])
   \\
-  (M_1|M_2)[N/x]=M_1[N/x]|M_2[N/x]
-  &
-  0[N/x]=0
+  (M_1M_2)[N/x]=(M_1[N/x])(M_2[N/x])
+  \qquad
+  \hole[N/x]=\hole
 \end{array}
 \]
-where~$y\neq x$. Terms are considered modulo $\alpha$-equivalence. We also
-suppose that terms are associated on right wrt $|$ ie $M_1|(M_2|M_3)$ instead of
-$(M_1|M_2)|M_3$ and that $0$ are removed ie $M$ instead of $M|0$.\TODO{The right
-  way is to introduce an equivalence for this.}
+where~$y\neq x$. Terms are considered modulo $\alpha$-equivalence.
 
 The reductions rules are
 \[
 \begin{array}{r@{\quad}c@{\quad}l}
   (\lambda x.M)N&\longrightarrow&M[N/x]\\
-  (\lambda x.M)(N_1|N_2)&\longrightarrow&(M[N_1/x])N_2\\
+  M(\hole M_1\ldots M_k)&\longrightarrow&MM_1\ldots M_k\\
 \end{array}
 \]
-Notice that they are not confluent!...
+So, the new constructor $\hole$ should be seen as a \emph{return} operator which
+might return multiple results.
 
 A few examples.
 \begin{itemize}
-\item the duplicator: $\lambda x.(x|x)$
+\item the duplicator: $\lambda x.(\hole xx)$
 \item the erasor: $\lambda x.0$
-\item compose the two:\TODO{We have to make this example really work. With the
-    actual rules the last reduction gives $\lambda y.0y$}
+\item composite of the two:
   \[
-  \lambda y.(\lambda x.0)[(\lambda x.(x|x))y]
+  \lambda y.(\lambda x.0)((\lambda x.\hole xx)y)
   \quad\longrightarrow\quad
-  \lambda y.(\lambda x.0)(y|y)
+  \lambda y.\lambda(x.0)(\hole yy)
   \quad\longrightarrow\quad
-  \lambda y.(0|y)
+  \lambda y.\lambda(x.0)yy
+  \quad\longrightarrow\quad
+  \lambda y.0y
   \quad=\quad
   \lambda y.y
   \]
