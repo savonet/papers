@@ -4,6 +4,8 @@
 \usepackage{hyperref}
 \usepackage{rotating}
 
+\newcommand{\Var}{Var}
+
 \newcommand{\TODO}[1]{\marginpar{\footnotesize #1}}
 
 \title{Ideas for\\An Optimizing Compiler\\for Sound Analysis and Synthesis}
@@ -38,9 +40,12 @@
 \item How do we use this function to program piecewise linear functions
   (typically ADSR envelopes)? We also need to be able to consider \emph{relative
     times} for this (decay is after beginning of attack + 20ms).
+\item We should moreover be able to deal with \emph{partial streams} ie streams
+  where data is not always available.
 \item It would be very nice to have a good typing of data represented in
   frequency domain (that is after an FFT): how do we integrate this properly in
   the language.
+\item Have a good notion of track. We should be able to use events for this.
 \end{itemize}
 
 \subsection{What the language should look like}
@@ -98,8 +103,74 @@
   this in a clever way.
 \end{itemize}
 
-\subsection{Hot topics}
-\subsubsection{A syntax with coarities and cocurryfication}
+\section{The language}
+\subsection{Terms}
+Suppose given a set~$\Var$ of \emph{variables}. The syntax for terms~$M$ is
+\[
+M
+\qquad::=\qquad
+x
+\qquad|\qquad
+\lambda x.M
+\qquad|\qquad
+MM
+\qquad|\qquad
+M|M
+\qquad|\qquad
+0
+\]
+Substitution of a variable $x$ by a term~$N$ in a term~$M$, written~$M[N/x]$ is
+defined inductively by
+\[
+\begin{array}{c@{\qquad}c}
+  x[N/x]=N
+  &
+  y[N/x]=y
+  \\
+  (\lambda y.M)[N/x]=\lambda y.M[N/x]
+  &
+  (M_1M_2)[N/x]=(M_1[N/x])(M_2[N/x])
+  \\
+  (M_1|M_2)[N/x]=M_1[N/x]|M_2[N/x]
+  &
+  0[N/x]=0
+\end{array}
+\]
+where~$y\neq x$. Terms are considered modulo $\alpha$-equivalence. We also
+suppose that terms are associated on right wrt $|$ ie $M_1|(M_2|M_3)$ instead of
+$(M_1|M_2)|M_3$ and that $0$ are removed ie $M$ instead of $M|0$.\TODO{The right
+  way is to introduce an equivalence for this.}
+
+The reductions rules are
+\[
+\begin{array}{r@{\quad}c@{\quad}l}
+  (\lambda x.M)N&\longrightarrow&M[N/x]\\
+  (\lambda x.M)(N_1|N_2)&\longrightarrow&(M[N_1/x])N_2\\
+\end{array}
+\]
+Notice that they are not confluent!...
+
+A few examples.
+\begin{itemize}
+\item the duplicator: $\lambda x.(x|x)$
+\item the erasor: $\lambda x.0$
+\item compose the two:\TODO{We have to make this example really work. With the
+    actual rules the last reduction gives $\lambda y.0y$}
+  \[
+  \lambda y.(\lambda x.0)[(\lambda x.(x|x))y]
+  \quad\longrightarrow\quad
+  \lambda y.(\lambda x.0)(y|y)
+  \quad\longrightarrow\quad
+  \lambda y.(0|y)
+  \quad=\quad
+  \lambda y.y
+  \]
+\end{itemize}
+
+\subsection{Types}
+
+\section{Hot topics}
+\subsection{A syntax with coarities and cocurryfication}
 We want operators with coarities e.g. the operator \texttt{swap}, which
 exchanges the two channels of a stereo stream, has two inputs of type
 \texttt{audio} and two outputs of type \texttt{audio}\TODO{Actually, it might be
@@ -165,7 +236,9 @@ cut f1.y'' g1.y''
 let h = f1 * g1
 \end{verbatim}
 The details of this have to be thought in details and it is not very clear how
-to do it in a way which is not too verbose.
+to do it in a way which is not too verbose. The idea of labels and colabels is
+however interesting. In particular, optional coarguments mean that a default
+continuation can be given.
 
 \section{State of the art}
 Wikipedia gives a good starting
