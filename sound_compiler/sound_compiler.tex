@@ -2,12 +2,14 @@
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage{amssymb}
+\usepackage{mathpartir}
 \usepackage{hyperref}
 \usepackage{rotating}
 
 \renewcommand{\labelitemi}{--}
 
 \newcommand{\Var}{Var}
+\newcommand{\ATypes}{ATypes}
 \newcommand{\hole}{\mathop{\_\hspace{-.3ex}\_}}
 
 \newcommand{\TODO}[1]{\marginpar{\footnotesize #1}}
@@ -106,7 +108,10 @@
   \item \emph{values} which are neither constant or sparse.
   \end{enumerate}
   The constant values might be inferred automatically. However, sparse value
-  might need some annotations.
+  might require annotations. Optimize computations on constant and sparse
+  streams, ie compute functions only once.
+\item Infer which functions have side effects: for these we cannot compute once
+  functions on constant streams.
 \item The stream data might be a simple value (floats for audio) or an allocated
   value (images). In the last case, we should avoid copies and we need to do
   this in a clever way.
@@ -169,6 +174,10 @@ A few examples.
   \quad=\quad
   \lambda y.y
   \]
+\item the coidentity: $\hole$
+  \[
+  f\hole\quad\longrightarrow\quad f
+  \]
 \end{itemize}
 Of course, there is an obvious family of critical pairs in our system:
 \[
@@ -182,6 +191,26 @@ Which branch of the critical pair is chosen will depend on typing, which is thus
 crucial in our system.
 
 \subsection{Types}
+Suppose given a set $\ATypes$ of \emph{atomic types}. The syntax for types~$T$ is
+\[
+T
+\qquad::=\qquad
+A
+\qquad|\qquad
+L\to L
+\qquad|\qquad
+T * T
+\qquad|\qquad
+1
+\]
+where~$A\in\ATypes$ and lists~$L$ of types are
+\[
+L
+\qquad::=\qquad
+()
+\qquad|\qquad
+(T,L)
+\]
 
 \section{Hot topics}
 \subsection{A syntax with coarities and cocurryfication}
