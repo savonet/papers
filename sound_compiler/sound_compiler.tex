@@ -2,6 +2,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage{amssymb}
+\usepackage{amsthm}
 \usepackage{mathpartir}
 \usepackage{hyperref}
 \usepackage{rotating}
@@ -11,6 +12,11 @@
 \newcommand{\Var}{Var}
 \newcommand{\ATypes}{ATypes}
 \newcommand{\hole}{\mathop{\_\hspace{-.3ex}\_}}
+\newcommand{\ot}{\leftarrow}
+\newcommand{\oT}{\Leftarrow}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{property}[theorem]{Property}
 
 \newcommand{\TODO}[1]{\marginpar{\footnotesize #1}}
 
@@ -26,6 +32,7 @@
   citecolor=black,
   urlcolor=black
 }
+\renewcommand{\C}{\mathcal{C}}
 
 \begin{document}
 \maketitle
@@ -56,7 +63,9 @@
   streams: they can be seen as stream indexed by two finite clocks (the
   coordinates). Now, we would like to do the same kind of optimisations eg
   \verb|rotate(greyscale(img))| needs two loops over pixels but it could be done
-  using only one loop!
+  using only one loop! So we need to have multiple clocks.
+\item Allow changing the clock rate: to have an acceleration operator or to
+  resample.
 \end{itemize}
 
 \subsection{What the language should look like}
@@ -211,6 +220,36 @@ L
 \qquad|\qquad
 (T,L)
 \]
+
+\subsection{Categorical models}
+It is natural to want our category to be cartesian coclosed. However this won't
+work because
+\begin{property}
+  Any cartesian coclosed~$\C$ is equivalent to the terminal
+  category\footnote{\url{http://ncatlab.org/nlab/show/cocartesian+closed+category}}.
+\end{property}
+\begin{proof}
+  Suppose that~$\C$ is cartesian coclosed. We write $B\oT A$ for the left
+  adjoint to the product, ie
+  \[
+  \inferrule
+  {A\vdash B\times C}
+  {A\oT B\vdash C}
+  \]
+  Since the category~$\C$ is cartesian, it has a terminal object~$1$ (so it is
+  in particular non-empty). Now, given two objects~$A$ and~$B$, we have the
+  following natural bijections between hom-sets
+  \[
+  \inferrule{
+    \inferrule{
+      A\vdash B
+    }
+    {A\vdash B\times 1}
+  }
+  {A\oT B\vdash 1}
+  \]
+  Since~$1$ is terminal, the hom-set $\C(A,B)$ is thus reduced to one element.
+\end{proof}
 
 \section{Hot topics}
 \subsection{A syntax with coarities and cocurryfication}
