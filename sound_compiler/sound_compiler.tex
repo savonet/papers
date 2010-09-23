@@ -5,6 +5,8 @@
 \usepackage{hyperref}
 \usepackage{rotating}
 
+\renewcommand{\labelitemi}{--}
+
 \newcommand{\Var}{Var}
 \newcommand{\hole}{\mathop{\_\hspace{-.3ex}\_}}
 
@@ -48,6 +50,11 @@
   frequency domain (that is after an FFT): how do we integrate this properly in
   the language.
 \item Have a good notion of track. We should be able to use events for this.
+\item Images (yes images, not video streams) bear many similarities with
+  streams: they can be seen as stream indexed by two finite clocks (the
+  coordinates). Now, we would like to do the same kind of optimisations eg
+  \verb|rotate(greyscale(img))| needs two loops over pixels but it could be done
+  using only one loop!
 \end{itemize}
 
 \subsection{What the language should look like}
@@ -283,6 +290,7 @@ coding'' of music by the author.
 
 \subsubsection{Max}
 \cite{max}
+PureData is a rewrite of an old version of Max (by the same original author).
 
 \subsubsection{Nsound}
 A C++ framework~\cite{nsound}, ie just like ocaml-mm but in C++.
