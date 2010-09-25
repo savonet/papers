@@ -1,4 +1,4 @@
-\documentclass{article}
+\documentclass[a4paper,titlepage]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage{amssymb}
@@ -8,6 +8,7 @@
 \usepackage{rotating}
 
 \renewcommand{\labelitemi}{--}
+\newcommand{\ie}{i.e.~}
 
 \newcommand{\Var}{Var}
 \newcommand{\ATypes}{ATypes}
@@ -36,6 +37,8 @@
 
 \begin{document}
 \maketitle
+\tableofcontents
+\newpage
 
 \section{What we want}
 \subsection{What we should be able to do}
@@ -66,6 +69,8 @@
   using only one loop! So we need to have multiple clocks.
 \item Allow changing the clock rate: to have an acceleration operator or to
   resample.
+\item Be able to merge events ie \verb|'a event -> 'a event -> 'a events|. So we
+  should have biproducts for (\verb|unit|) events!
 \end{itemize}
 
 \subsection{What the language should look like}
@@ -187,6 +192,10 @@ A few examples.
   \[
   f\hole\quad\longrightarrow\quad f
   \]
+\item the $\eta$-coexpansion: $\lambda x.\hole x$
+  \[
+  (\lambda x.\hole x)f\quad\longrightarrow\quad fx
+  \]
 \end{itemize}
 Of course, there is an obvious family of critical pairs in our system:
 \[
@@ -206,19 +215,44 @@ T
 \qquad::=\qquad
 A
 \qquad|\qquad
+L^*
+\qquad|\qquad
 L\to L
 \qquad|\qquad
 T * T
 \qquad|\qquad
 1
 \]
-where~$A\in\ATypes$ and lists~$L$ of types are
+where~$A\in\ATypes$ and~$L$ is a list of types. A list of types is written
+\hbox{$L=(A_1,\ldots,A_n)$} and concatenation of two lists~$L_1$ and~$L_2$ is
+written~$L_1\cdot L_2$. A term of type~$A$ is called a \emph{value} and a term
+of type~$L^*$ is called a \emph{covalue}.
+
 \[
-L
-\qquad::=\qquad
-()
-\qquad|\qquad
-(T,L)
+\begin{array}{c}
+  \inferrule{\null}
+  {\Gamma,x:A\vdash x:A}
+  \\
+  \inferrule
+  {\Gamma,x:A\vdash M:K\to L}
+  {\Gamma\vdash \lambda x.M:(A)\cdot K\to L}
+  \\
+  \inferrule
+  {\Gamma\vdash M:A}
+  {\Gamma\vdash \hole M:()\to(A)}
+  \\
+  \inferrule
+  {\Gamma\vdash M:K\to L\\\Gamma\vdash N:A}
+  {\Gamma\vdash M@N:K\to L\cdot(A)}
+  \\
+  \inferrule
+  {\Gamma\vdash M:(A)\cdot K\to L\\\Gamma\vdash N:A}
+  {\Gamma\vdash MN:K\to L}
+  \\
+  \inferrule
+  {\Gamma\vdash M:K\to L_1\cdot L_2\\\Gamma\vdash N:L_1^*}
+  {\Gamma\vdash MN:K\to L_2}
+\end{array}
 \]
 
 \subsection{Categorical models}
@@ -250,6 +284,9 @@ work because
   \]
   Since~$1$ is terminal, the hom-set $\C(A,B)$ is thus reduced to one element.
 \end{proof}
+
+Maybe we can grasp ideas from~\cite{faure-miquel:cat-par-lambda} who also a have
+a parallel construction (which is different).
 
 \section{Hot topics}
 \subsection{A syntax with coarities and cocurryfication}
@@ -393,7 +430,12 @@ lines)
 \subsubsection{SuperCollider}
 Object-oriented textual programming language~\cite{supercollider}.
 
-
+\section{Fun things to try when it's done}
+\begin{itemize}
+\item Lots of sounds generated in PD:
+  \url{http://obiwannabe.co.uk/tutorials/html/tutorials_main.html}
+  (and many nice other things on this site)
+\end{itemize}
 
 \bibliographystyle{plain}
 \bibliography{sound}
