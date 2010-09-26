@@ -229,26 +229,26 @@ written~$L_1\cdot L_2$. A term of type~$A$ is called a \emph{value} and a term
 of type~$L^*$ is called a \emph{covalue}.
 
 \[
-\begin{array}{c}
+\begin{array}{cc}
   \inferrule{\null}
   {\Gamma,x:A\vdash x:A}
-  \\
+  &
+  \inferrule
+  {\null}
+  {\Gamma\vdash \hole :()\to()}
+  \\[4ex]
   \inferrule
   {\Gamma,x:A\vdash M:K\to L}
   {\Gamma\vdash \lambda x.M:(A)\cdot K\to L}
-  \\
+  &
   \inferrule
-  {\Gamma\vdash M:A}
-  {\Gamma\vdash \hole M:()\to(A)}
-  \\
-  \inferrule
-  {\Gamma\vdash M:K\to L\\\Gamma\vdash N:A}
-  {\Gamma\vdash M@N:K\to L\cdot(A)}
-  \\
+  {\Gamma\vdash M:()\to L\\\Gamma\vdash N:A}
+  {\Gamma\vdash MN:()\to L\cdot(A)}
+  \\[4ex]
   \inferrule
   {\Gamma\vdash M:(A)\cdot K\to L\\\Gamma\vdash N:A}
   {\Gamma\vdash MN:K\to L}
-  \\
+  &
   \inferrule
   {\Gamma\vdash M:K\to L_1\cdot L_2\\\Gamma\vdash N:L_1^*}
   {\Gamma\vdash MN:K\to L_2}
@@ -435,6 +435,8 @@ Object-oriented textual programming language~\cite{supercollider}.
 \item Lots of sounds generated in PD:
   \url{http://obiwannabe.co.uk/tutorials/html/tutorials_main.html}
   (and many nice other things on this site)
+\item Lots of instruments and effects in Csound:
+  \url{http://csounds.com/instruments}
 \end{itemize}
 
 \bibliographystyle{plain}
