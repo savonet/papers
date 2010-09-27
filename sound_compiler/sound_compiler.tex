@@ -17,6 +17,7 @@
 \newcommand{\oT}{\Leftarrow}
 
 \newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
 \newtheorem{property}[theorem]{Property}
 
 \newcommand{\TODO}[1]{\marginpar{\footnotesize #1}}
@@ -145,8 +146,9 @@ MM
 \qquad|\qquad
 \hole
 \]
-Substitution of a variable $x$ by a term~$N$ in a term~$M$, written~$M[N/x]$ is
-defined inductively by
+We sometimes write $\lambda xy.M$ instead of $\lambda x.\lambda
+y.M$. Substitution of a variable $x$ by a term~$N$ in a term~$M$,
+written~$M[N/x]$ is defined inductively by
 \[
 \begin{array}{c}
   x[N/x]=N
@@ -174,7 +176,7 @@ might return multiple results.
 
 A few examples.
 \begin{itemize}
-\item the duplicator: $\lambda x.(\hole xx)$
+\item the duplicator: $\delta=\lambda x.(\hole xx)$
 \item the erasor: $\lambda x.0$
 \item composite of the two:
   \[
@@ -215,18 +217,17 @@ T
 \qquad::=\qquad
 A
 \qquad|\qquad
-L^*
-\qquad|\qquad
 L\to L
 \qquad|\qquad
-T * T
+T \times T
 \qquad|\qquad
 1
 \]
 where~$A\in\ATypes$ and~$L$ is a list of types. A list of types is written
 \hbox{$L=(A_1,\ldots,A_n)$} and concatenation of two lists~$L_1$ and~$L_2$ is
-written~$L_1\cdot L_2$. A term of type~$A$ is called a \emph{value} and a term
-of type~$L^*$ is called a \emph{covalue}.
+written~$L_1\cdot L_2$. A term of type~$A$ is called a \emph{value}. We
+sometimes write~$L^*$ instead of $L\to()$ and a term of this type called a
+\emph{covalue}.
 
 \[
 \begin{array}{cc}
@@ -250,10 +251,61 @@ of type~$L^*$ is called a \emph{covalue}.
   {\Gamma\vdash MN:K\to L}
   &
   \inferrule
-  {\Gamma\vdash M:K\to L_1\cdot L_2\\\Gamma\vdash N:L_1^*}
-  {\Gamma\vdash MN:K\to L_2}
+  {\Gamma\vdash M:K\to L_1\cdot L_2\\\Gamma\vdash N:L_1\to L_1'}
+  {\Gamma\vdash M(\hole N):K\to L_1'\cdot L_2}
 \end{array}
 \]
+
+Examples:
+\begin{itemize}
+\item the duplicator
+  \[
+  \inferrule{
+    \inferrule{
+      \inferrule{
+        \inferrule{\null}{\Gamma\vdash\hole:()\to()}
+        \\
+        \inferrule{\null}{\Gamma,x:A\vdash x:A}
+      }
+      {\Gamma,x:A\vdash \hole x:()\to(A)}
+      \\
+      \inferrule{\null}{\Gamma,x:A\vdash x:A}
+    }
+    {\Gamma,x:A\vdash\hole xx:()\to(A,A)}
+  }
+  {\Gamma\vdash\lambda x.\hole xx:(A)\to(A,A)}
+  \]
+\end{itemize}
+
+\begin{lemma}[Substitution]
+  If~$\Gamma x:A\vdash M:B$ and~$\Gamma\vdash N:A$ then $\Gamma\vdash M[N/x]:B$.
+\end{lemma}
+\begin{proof}
+  TODO
+\end{proof}
+
+\begin{theorem}[Subject reduction]
+  If $\Gamma\vdash M:A$ and $M\longrightarrow M'$ then~$\Gamma\vdash M':A$.
+\end{theorem}
+\begin{proof}
+  TODO using substitution lemma
+\end{proof}
+
+\begin{theorem}[Cut-elimination]
+  TODO
+\end{theorem}
+\begin{proof}
+  TODO
+\end{proof}
+
+\begin{theorem}[Strong normalization]
+  Typable terms are strongly normalizing.
+\end{theorem}
+\begin{proof}
+  TODO
+\end{proof}
+
+Cut elimination
 
 \subsection{Categorical models}
 It is natural to want our category to be cartesian coclosed. However this won't
@@ -287,6 +339,9 @@ work because
 
 Maybe we can grasp ideas from~\cite{faure-miquel:cat-par-lambda} who also a have
 a parallel construction (which is different).
+
+\subsection{Type inference}
+TODO
 
 \section{Hot topics}
 \subsection{A syntax with coarities and cocurryfication}
