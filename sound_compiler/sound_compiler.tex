@@ -261,6 +261,7 @@ application $\regle{App}$ reformulated to our way of writing types of functions
 with multiple arguments. The rule $\regle{Ret}$ types the return statement (used
 for introducing arrow types), the rule $\regle{Ans}$ adds a new result to the
 current function and the rule~$\regle{App'}$ applies a function to some results.
+\TODO{Should we be able to add more results after we have made some abstractions?}
 
 Examples:
 \begin{itemize}
@@ -304,6 +305,13 @@ Examples:
   TODO
 \end{proof}
 
+\begin{theorem}[Unicity of typing]
+  TODO
+\end{theorem}
+\begin{proof}
+  TODO
+\end{proof}
+
 \begin{theorem}[Strong normalization]
   Typable terms are strongly normalizing.
 \end{theorem}
@@ -311,7 +319,11 @@ Examples:
   TODO
 \end{proof}
 
-Cut elimination
+The big theorem that we really want is the following one.
+\begin{theorem}
+  When we only have functions of type~$K\to L$ with~$K$ and~$L$ containing only
+  base types (no arrow types) we get the free ``boxes and wires'' category.
+\end{theorem}
 
 \subsection{Categorical models}
 It is natural to want our category to be cartesian coclosed. However this won't
