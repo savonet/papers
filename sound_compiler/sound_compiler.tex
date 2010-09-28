@@ -15,6 +15,7 @@
 \newcommand{\hole}{\mathop{\_\hspace{-.3ex}\_}}
 \newcommand{\ot}{\leftarrow}
 \newcommand{\oT}{\Leftarrow}
+\newcommand{\regle}[1]{\mathrm{[#1]}}
 
 \newtheorem{theorem}{Theorem}
 \newtheorem{lemma}[theorem]{Lemma}
@@ -205,7 +206,7 @@ M[\hole M_1\ldots M_k/x]
 \quad\longleftarrow\quad
 (\lambda x.M)(\hole M_1\ldots M_k)
 \quad\longrightarrow\quad
-MM_1\ldots M_k
+(\lambda x.M)M_1\ldots M_k
 \]
 Which branch of the critical pair is chosen will depend on typing, which is thus
 crucial in our system.
@@ -232,29 +233,34 @@ sometimes write~$L^*$ instead of $L\to()$ and a term of this type called a
 \[
 \begin{array}{cc}
   \inferrule{\null}
-  {\Gamma,x:A\vdash x:A}
+  {\Gamma,x:A\vdash x:A}{\regle{Ax}}
   &
   \inferrule
   {\null}
-  {\Gamma\vdash \hole :()\to()}
+  {\Gamma\vdash \hole :()\to()}{\regle{Ret}}
   \\[4ex]
   \inferrule
   {\Gamma,x:A\vdash M:K\to L}
-  {\Gamma\vdash \lambda x.M:(A)\cdot K\to L}
+  {\Gamma\vdash \lambda x.M:(A)\cdot K\to L}{\regle{Abs}}
   &
   \inferrule
   {\Gamma\vdash M:()\to L\\\Gamma\vdash N:A}
-  {\Gamma\vdash MN:()\to L\cdot(A)}
+  {\Gamma\vdash MN:()\to L\cdot(A)}{\regle{Ans}}
   \\[4ex]
   \inferrule
   {\Gamma\vdash M:(A)\cdot K\to L\\\Gamma\vdash N:A}
-  {\Gamma\vdash MN:K\to L}
+  {\Gamma\vdash MN:K\to L}{\regle{App}}
   &
   \inferrule
   {\Gamma\vdash M:K\to L_1\cdot L_2\\\Gamma\vdash N:L_1\to L_1'}
-  {\Gamma\vdash M(\hole N):K\to L_1'\cdot L_2}
+  {\Gamma\vdash M(\hole N):K\to L_1'\cdot L_2}{\regle{App'}}
 \end{array}
 \]
+The rules in the left column are traditional rules in $\lambda$-calculus, with
+application $\regle{App}$ reformulated to our way of writing types of functions
+with multiple arguments. The rule $\regle{Ret}$ types the return statement (used
+for introducing arrow types), the rule $\regle{Ans}$ adds a new result to the
+current function and the rule~$\regle{App'}$ applies a function to some results.
 
 Examples:
 \begin{itemize}
@@ -263,17 +269,17 @@ Examples:
   \inferrule{
     \inferrule{
       \inferrule{
-        \inferrule{\null}{\Gamma\vdash\hole:()\to()}
+        \inferrule{\null}{\Gamma\vdash\hole:()\to()}{\regle{Ret}}
         \\
-        \inferrule{\null}{\Gamma,x:A\vdash x:A}
+        \inferrule{\null}{\Gamma,x:A\vdash x:A}{\regle{Ax}}
       }
       {\Gamma,x:A\vdash \hole x:()\to(A)}
       \\
-      \inferrule{\null}{\Gamma,x:A\vdash x:A}
+      \inferrule{\null}{\Gamma,x:A\vdash x:A}{\regle{Ax}}
     }
-    {\Gamma,x:A\vdash\hole xx:()\to(A,A)}
+    {\Gamma,x:A\vdash\hole xx:()\to(A,A)}{\regle{Ans}}
   }
-  {\Gamma\vdash\lambda x.\hole xx:(A)\to(A,A)}
+  {\Gamma\vdash\lambda x.\hole xx:(A)\to(A,A)}{\regle{Abs}}
   \]
 \end{itemize}
 
