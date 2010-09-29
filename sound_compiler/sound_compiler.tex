@@ -1,6 +1,7 @@
 \documentclass[a4paper,titlepage]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
+\usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsthm}
 \usepackage{mathpartir}
@@ -12,7 +13,7 @@
 
 \newcommand{\Var}{Var}
 \newcommand{\ATypes}{ATypes}
-\newcommand{\hole}{\mathop{\_\hspace{-.3ex}\_}}
+\newcommand{\ret}{\mathop{\_\hspace{-.3ex}\_}}
 \newcommand{\ot}{\leftarrow}
 \newcommand{\oT}{\Leftarrow}
 \newcommand{\regle}[1]{\mathrm{[#1]}}
@@ -20,6 +21,8 @@
 \newtheorem{theorem}{Theorem}
 \newtheorem{lemma}[theorem]{Lemma}
 \newtheorem{property}[theorem]{Property}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{remark}[theorem]{Remark}
 
 \newcommand{\TODO}[1]{\marginpar{\footnotesize #1}}
 
@@ -145,7 +148,7 @@ x
 \qquad|\qquad
 MM
 \qquad|\qquad
-\hole
+\ret
 \]
 We sometimes write $\lambda xy.M$ instead of $\lambda x.\lambda
 y.M$. Substitution of a variable $x$ by a term~$N$ in a term~$M$,
@@ -160,7 +163,7 @@ written~$M[N/x]$ is defined inductively by
   \\
   (M_1M_2)[N/x]=(M_1[N/x])(M_2[N/x])
   \qquad
-  \hole[N/x]=\hole
+  \ret[N/x]=\ret
 \end{array}
 \]
 where~$y\neq x$. Terms are considered modulo $\alpha$-equivalence.
@@ -169,42 +172,57 @@ The reductions rules are
 \[
 \begin{array}{r@{\quad}c@{\quad}l}
   (\lambda x.M)N&\longrightarrow&M[N/x]\\
-  M(\hole M_1\ldots M_k)&\longrightarrow&MM_1\ldots M_k\\
+  M(\ret M_1\ldots M_k)&\longrightarrow&MM_1\ldots M_k\\
 \end{array}
 \]
-So, the new constructor $\hole$ should be seen as a \emph{return} operator which
+So, the new constructor $\ret$ should be seen as a \emph{return} operator which
 might return multiple results.
 
-A few examples.
-\begin{itemize}
-\item the duplicator: $\delta=\lambda x.(\hole xx)$
-\item the erasor: $\lambda x.0$
-\item composite of the two:
-  \[
-  \lambda y.(\lambda x.0)((\lambda x.\hole xx)y)
-  \quad\longrightarrow\quad
-  \lambda y.\lambda(x.0)(\hole yy)
-  \quad\longrightarrow\quad
-  \lambda y.\lambda(x.0)yy
-  \quad\longrightarrow\quad
-  \lambda y.0y
-  \quad=\quad
-  \lambda y.y
-  \]
-\item the coidentity: $\hole$
-  \[
-  f\hole\quad\longrightarrow\quad f
-  \]
-\item the $\eta$-coexpansion: $\lambda x.\hole x$
-  \[
-  (\lambda x.\hole x)f\quad\longrightarrow\quad fx
-  \]
-\end{itemize}
+\begin{example}
+  Here you go:
+  \begin{itemize}
+  \item the duplicator: $\delta=\lambda x.(\ret xx)$
+  \item the erasor: $\lambda x.0$
+  \item composite of the two:
+    \[
+    \lambda y.(\lambda x.0)((\lambda x.\ret xx)y)
+    \quad\longrightarrow\quad
+    \lambda y.\lambda(x.0)(\ret yy)
+    \quad\longrightarrow\quad
+    \lambda y.\lambda(x.0)yy
+    \quad\longrightarrow\quad
+    \lambda y.0y
+    \quad=\quad
+    \lambda y.y
+    \]
+  \item the coidentity: $\ret$
+    \[
+    f\ret\quad\longrightarrow\quad f
+    \]
+  \item the $\eta$-coexpansion: $\lambda x.\ret x$
+    \[
+    (\lambda x.\ret x)f\quad\longrightarrow\quad fx
+    \]
+  \item similarly to composition $g\circ f=\lambda x.f(g(x))$, cocomposition is
+    defined by $g\circ \lambda z_i.M=\lambda z_i.g M$. Ex: duplicate audio in an
+    audio + video stream
+    \[
+    (\lambda x.\ret x x)\circ(\lambda z.\ret a v)
+    =
+    \lambda z.(\lambda x.\ret xx)(\ret av)
+    \quad\longrightarrow\quad
+    \lambda z.(\lambda x.\ret xx)av
+    \quad\longrightarrow\quad
+    \lambda z.\ret aav
+    \]
+  \end{itemize}
+\end{example}
+
 Of course, there is an obvious family of critical pairs in our system:
 \[
-M[\hole M_1\ldots M_k/x]
+M[\ret M_1\ldots M_k/x]
 \quad\longleftarrow\quad
-(\lambda x.M)(\hole M_1\ldots M_k)
+(\lambda x.M)(\ret M_1\ldots M_k)
 \quad\longrightarrow\quad
 (\lambda x.M)M_1\ldots M_k
 \]
@@ -230,6 +248,8 @@ written~$L_1\cdot L_2$. A term of type~$A$ is called a \emph{value}. We
 sometimes write~$L^*$ instead of $L\to()$ and a term of this type called a
 \emph{covalue}.
 
+TODO: define sequents, which are considered modulo commutation in~$\Gamma$
+
 \[
 \begin{array}{cc}
   \inferrule{\null}
@@ -237,7 +257,7 @@ sometimes write~$L^*$ instead of $L\to()$ and a term of this type called a
   &
   \inferrule
   {\null}
-  {\Gamma\vdash \hole :()\to()}{\regle{Ret}}
+  {\Gamma\vdash \ret :()\to()}{\regle{Ret}}
   \\[4ex]
   \inferrule
   {\Gamma,x:A\vdash M:K\to L}
@@ -252,37 +272,116 @@ sometimes write~$L^*$ instead of $L\to()$ and a term of this type called a
   {\Gamma\vdash MN:K\to L}{\regle{App}}
   &
   \inferrule
-  {\Gamma\vdash M:K\to L_1\cdot L_2\\\Gamma\vdash N:L_1\to L_1'}
-  {\Gamma\vdash M(\hole N):K\to L_1'\cdot L_2}{\regle{App'}}
+  {\Gamma\vdash M:K_1\to L\\\Gamma\vdash N:()\to K_1\cdot K_2}
+  {\Gamma\vdash MN:()\to L\cdot K_2}{\regle{App'}}
+  \\[4ex]
+  \inferrule
+  {\Gamma\vdash M:()\to(A)}
+  {\Gamma\vdash (\lambda x.x)M:A}{\regle{Ret'}}
 \end{array}
 \]
-The rules in the left column are traditional rules in $\lambda$-calculus, with
-application $\regle{App}$ reformulated to our way of writing types of functions
-with multiple arguments. The rule $\regle{Ret}$ types the return statement (used
-for introducing arrow types), the rule $\regle{Ans}$ adds a new result to the
-current function and the rule~$\regle{App'}$ applies a function to some results.
-\TODO{Should we be able to add more results after we have made some abstractions?}
+\TODO{We need a rule to go from \hbox{$()\to(A)$} to $A$}. The rules in the left
+column are traditional rules in $\lambda$-calculus, with application
+$\regle{App}$ reformulated to our way of writing types of functions with
+multiple arguments. The rule $\regle{Ret}$ types the return statement (used for
+introducing arrow types), the rule $\regle{Ans}$ adds a new result to the
+current function and the rule~$\regle{App'}$ applies a function to some
+results. The restriction on the $\regle{Ans}$ rule is to avoid an ambiguity
+with~$\regle{App'}$.
 
-Examples:
-\begin{itemize}
-\item the duplicator
-  \[
-  \inferrule{
+\begin{remark}
+  There are four rules for application, so we should study conflicts between
+  rules.
+  \begin{itemize}
+  \item $\regle{Ans}$ vs. $\regle{App}$: there is no conflict between these two
+    rules since~$M$ is nullary in the first one and non-nullary in the second
+    one
+  \item $\regle{Ans}$ vs. $\regle{App'}$:
+    \[
+    \inferrule{
+      \Gamma\vdash M:()\to L
+      \\
+      \Gamma\vdash N:()\to K
+    }
+    {
+      \Gamma\vdash MN:()\to L\cdot(()\to K)
+      \\\\\text{or}\\\\
+      \Gamma\vdash MN:()\to K
+    }
+    \]
+    Two side conditions are possible to avoid that:
+    \begin{enumerate}
+    \item in $\regle{Ans}$: $A$ is not a nullary arrow type
+    \item in $\regle{App'}$: $K_1\neq ()$
+    \end{enumerate}
+    The first one seems to be preferable since we want to be able to insert new
+    results into functions. However, it removes the possibility to return a
+    stream\ldots We could also distinguish between the two kinds of composition,
+    but this looks like an overkill just for this case.
+  \item $\regle{App}$ vs. $\regle{App'}$: unification gives $K_1=(A)\cdot K$ and
+    $A=()\to K_1\cdot K_2$ which has no solution (there are no recursive types)
+  \item $\regle{Ret'}$ vs. \ldots: this one is really particular and we can add
+    a constant for an operator behaving like identity (but different from
+    identity during typing so that we identify this case):
+    \[
+    !\quad:\quad(()\to(A))\to A
+    \]
+    with the reduction rule
+    \[
+    !M
+    \qquad\longrightarrow\qquad
+    (\lambda x.x)M
+    \]
+  \end{itemize}
+\end{remark}
+
+\begin{example}
+  Here you go:
+  \begin{itemize}
+  \item the duplicator
+    \[
     \inferrule{
       \inferrule{
-        \inferrule{\null}{\Gamma\vdash\hole:()\to()}{\regle{Ret}}
+        \inferrule{
+          \inferrule{\null}{\Gamma\vdash\ret:()\to()}{\regle{Ret}}
+          \\
+          \inferrule{\null}{\Gamma,x:A\vdash x:A}{\regle{Ax}}
+        }
+        {\Gamma,x:A\vdash \ret x:()\to(A)}
         \\
         \inferrule{\null}{\Gamma,x:A\vdash x:A}{\regle{Ax}}
       }
-      {\Gamma,x:A\vdash \hole x:()\to(A)}
-      \\
-      \inferrule{\null}{\Gamma,x:A\vdash x:A}{\regle{Ax}}
+      {\Gamma,x:A\vdash\ret xx:()\to(A,A)}{\regle{Ans}}
     }
-    {\Gamma,x:A\vdash\hole xx:()\to(A,A)}{\regle{Ans}}
-  }
-  {\Gamma\vdash\lambda x.\hole xx:(A)\to(A,A)}{\regle{Abs}}
-  \]
-\end{itemize}
+    {\Gamma\vdash\lambda x.\ret xx:(A)\to(A,A)}{\regle{Abs}}
+    \]
+  \item an audio + video stream
+    \[
+    \tiny
+    \inferrule{
+      \inferrule{
+        \inferrule{\null}{\Gamma,a:A,v:V\vdash\ret:()\to()}{\regle{Ret}}
+        \\
+        \inferrule{\null}{\Gamma,a:A,v:V\vdash a:A}{\regle{Ax}}
+      }
+      {\Gamma,a:A,v:V\vdash \ret a:()\to(A)}{\regle{Ans}}
+      \\
+      \inferrule{\null}{\Gamma,a:A,v:V\vdash v:V}{\regle{Ax}}
+    }
+    {\Gamma,a:A,v:V\vdash\ret av:()\to(A,V)}{\regle{Ans}}
+    \]
+  \item duplicate audio in an audio + video stream
+    \[
+    \tiny
+    \inferrule{
+      \inferrule{\vdots}{\Gamma,a:A,v:V\vdash \lambda x.\ret xx:(A)\to(A,A)}
+      \\
+      \inferrule{\vdots}{\Gamma,a:A,v:V\vdash \ret av:()\to(A,V)}
+    }
+    {\Gamma,a:A,v:V\vdash(\lambda x.\ret xx)(\ret av):()\to(A,A,V)}{\regle{App'}}
+    \]
+  \end{itemize}
+\end{example}
 
 \begin{lemma}[Substitution]
   If~$\Gamma,x:A\vdash M:B$ and~$\Gamma\vdash N:A$ then $\Gamma\vdash M[N/x]:B$.
@@ -319,7 +418,7 @@ Examples:
   TODO
 \end{proof}
 
-The big theorem that we really want is the following one.
+The big theorem that we really want is the following one. This is close to the work of~\cite{hasegawa:sharing-graphs}
 \begin{theorem}
   When we only have functions of type~$K\to L$ with~$K$ and~$L$ containing only
   base types (no arrow types) we get the free ``boxes and wires'' category.
