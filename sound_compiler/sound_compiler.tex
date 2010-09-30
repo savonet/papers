@@ -7,6 +7,7 @@
 \usepackage{mathpartir}
 \usepackage{hyperref}
 \usepackage{rotating}
+\usepackage{a4wide}
 
 \renewcommand{\labelitemi}{--}
 \newcommand{\ie}{i.e.~}
@@ -182,26 +183,28 @@ might return multiple results.
   Here you go:
   \begin{itemize}
   \item the duplicator: $\delta=\lambda x.(\ret xx)$
-  \item the erasor: $\lambda x.0$
+  \item the erasor: $\lambda x.\ret$
   \item composite of the two:
     \[
-    \lambda y.(\lambda x.0)((\lambda x.\ret xx)y)
+    \lambda y.(\lambda x.\ret)((\lambda x.\ret xx)y)
     \quad\longrightarrow\quad
-    \lambda y.\lambda(x.0)(\ret yy)
+    \lambda y.\lambda(x.\ret)(\ret yy)
     \quad\longrightarrow\quad
-    \lambda y.\lambda(x.0)yy
+    \lambda y.\lambda(x.\ret)yy
     \quad\longrightarrow\quad
-    \lambda y.0y
-    \quad=\quad
-    \lambda y.y
+    \lambda y.\ret y
     \]
   \item the coidentity: $\ret$
     \[
     f\ret\quad\longrightarrow\quad f
     \]
-  \item the $\eta$-coexpansion: $\lambda x.\ret x$
+  \item the $\eta$-coexpansion: $\lambda x.f(\ret x)$
     \[
-    (\lambda x.\ret x)f\quad\longrightarrow\quad fx
+    (\lambda x.f(\ret x))g
+    \quad\longrightarrow\quad
+    f(\ret g)
+    \quad\longrightarrow\quad
+    fg
     \]
   \item similarly to composition $g\circ f=\lambda x.f(g(x))$, cocomposition is
     defined by $g\circ \lambda z_i.M=\lambda z_i.g M$. Ex: duplicate audio in an
@@ -237,16 +240,16 @@ T
 A
 \qquad|\qquad
 L\to L
-\qquad|\qquad
-T \times T
-\qquad|\qquad
-1
+% \qquad|\qquad
+% T \times T
+% \qquad|\qquad
+% 1
 \]
 where~$A\in\ATypes$ and~$L$ is a list of types. A list of types is written
 \hbox{$L=(A_1,\ldots,A_n)$} and concatenation of two lists~$L_1$ and~$L_2$ is
-written~$L_1\cdot L_2$. A term of type~$A$ is called a \emph{value}. We
-sometimes write~$L^*$ instead of $L\to()$ and a term of this type called a
-\emph{covalue}.
+written~$L_1\cdot L_2$. A term of type~$A$ is called a \emph{value}.
+% We sometimes write~$L^*$ instead of $L\to()$ and a term of this type called a
+% \emph{covalue}.
 
 TODO: define sequents, which are considered modulo commutation in~$\Gamma$
 
@@ -280,22 +283,20 @@ TODO: define sequents, which are considered modulo commutation in~$\Gamma$
   {\Gamma\vdash (\lambda x.x)M:A}{\regle{Ret'}}
 \end{array}
 \]
-\TODO{We need a rule to go from \hbox{$()\to(A)$} to $A$}. The rules in the left
-column are traditional rules in $\lambda$-calculus, with application
-$\regle{App}$ reformulated to our way of writing types of functions with
-multiple arguments. The rule $\regle{Ret}$ types the return statement (used for
-introducing arrow types), the rule $\regle{Ans}$ adds a new result to the
+The rules in the left column are traditional rules in $\lambda$-calculus, with
+application $\regle{App}$ reformulated to our way of writing types of functions
+with multiple arguments. The rule $\regle{Ret}$ types the return statement (used
+for introducing arrow types), the rule $\regle{Ans}$ adds a new result to the
 current function and the rule~$\regle{App'}$ applies a function to some
-results. The restriction on the $\regle{Ans}$ rule is to avoid an ambiguity
-with~$\regle{App'}$.
+results.
 
 \begin{remark}
   There are four rules for application, so we should study conflicts between
-  rules.
+  them.
   \begin{itemize}
   \item $\regle{Ans}$ vs. $\regle{App}$: there is no conflict between these two
     rules since~$M$ is nullary in the first one and non-nullary in the second
-    one
+    one.
   \item $\regle{Ans}$ vs. $\regle{App'}$:
     \[
     \inferrule{
@@ -319,7 +320,7 @@ with~$\regle{App'}$.
     stream\ldots We could also distinguish between the two kinds of composition,
     but this looks like an overkill just for this case.
   \item $\regle{App}$ vs. $\regle{App'}$: unification gives $K_1=(A)\cdot K$ and
-    $A=()\to K_1\cdot K_2$ which has no solution (there are no recursive types)
+    $A=()\to K_1\cdot K_2$ which has no solution (there are no recursive types).
   \item $\regle{Ret'}$ vs. \ldots: this one is really particular and we can add
     a constant for an operator behaving like identity (but different from
     identity during typing so that we identify this case):
@@ -332,6 +333,16 @@ with~$\regle{App'}$.
     \qquad\longrightarrow\qquad
     (\lambda x.x)M
     \]
+    This suggests that we may distinguish between streams and functions (which
+    would be implemented uniformly). The application of a function removes the
+    nullary abstraction when applied to its last argument while a stream keeps
+    it. The~$!$ operator would thus have the type
+    \begin{center}
+      \verb|!   :   ((),('a)) stream -> 'a|
+    \end{center}
+    This might also solve the $\regle{Ans}$ vs. $\regle{App'}$ problem since we
+    would have time as an implicit first argument, however we have to think
+    precisely about how we should handle time\ldots
   \end{itemize}
 \end{remark}
 
@@ -372,22 +383,57 @@ with~$\regle{App'}$.
     \]
   \item duplicate audio in an audio + video stream
     \[
-    \tiny
     \inferrule{
-      \inferrule{\vdots}{\Gamma,a:A,v:V\vdash \lambda x.\ret xx:(A)\to(A,A)}
+      \inferrule{\vdots}{\Gamma\vdash \lambda x.\ret xx:(A)\to(A,A)}
       \\
-      \inferrule{\vdots}{\Gamma,a:A,v:V\vdash \ret av:()\to(A,V)}
+      \inferrule{\vdots}{\Gamma\vdash \ret av:()\to(A,V)}
     }
-    {\Gamma,a:A,v:V\vdash(\lambda x.\ret xx)(\ret av):()\to(A,A,V)}{\regle{App'}}
+    {\Gamma\vdash(\lambda x.\ret xx)(\ret av):()\to(A,A,V)}{\regle{App'}}
     \]
   \end{itemize}
 \end{example}
 
 \begin{lemma}[Substitution]
-  If~$\Gamma,x:A\vdash M:B$ and~$\Gamma\vdash N:A$ then $\Gamma\vdash M[N/x]:B$.
+  If~$\Gamma,x:A\vdash M:B$ and~$\Gamma\vdash N:A$ then \hbox{$\Gamma\vdash M[N/x]:B$}.
 \end{lemma}
 \begin{proof}
-  TODO
+  By induction on the size of the proof of~$\Gamma,x:A\vdash M:B$.
+  \[
+  \begin{array}{c@{\quad\text{implies}\quad}c}
+    \inferrule{\null}
+    {\Gamma,x:A\vdash x:A}{\regle{Ax}}
+    &
+    \inferrule
+    {\null}
+    {\Gamma\vdash N:A}
+    \\
+    \inferrule
+    {\null}
+    {\Gamma\vdash \ret :()\to()}{\regle{Ret}}
+    &
+    \inferrule
+    {\null}
+    {\Gamma,x:A\vdash \ret :()\to()}{\regle{Ret}}
+    \\
+    \inferrule
+    {\Gamma,x:A,y:A\vdash M:K\to L}
+    {\Gamma,x:A\vdash\lambda y.M:(A)\cdot K\to L}{\regle{Abs}}
+    &
+    \inferrule
+    {\Gamma,y:A\vdash M[N/x]:K\to L}
+    {\Gamma\vdash\lambda y.M[N/x]:(A)\cdot K\to L}{\regle{Abs}}
+    \\
+    \inferrule
+    {\Gamma,x:A\vdash M:()\to L\\\Gamma\vdash P:A}
+    {\Gamma,x:A\vdash MP:()\to L\cdot(A)}{\regle{Ans}}
+    &
+    \inferrule
+    {\Gamma\vdash M[N/x]:()\to L\\\Gamma\vdash P[N/x]:A}
+    {\Gamma\vdash (MP)[N/x]:()\to L\cdot(A)}{\regle{Ans}}
+    \\
+    \vdots&\vdots
+  \end{array}
+  \]
 \end{proof}
 
 \begin{theorem}[Subject reduction]
