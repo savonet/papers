@@ -1,0 +1,145 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{proof}
+\renewcommand{\|}{\; | \;}
+
+\begin{document}
+
+The language at this stage is \textbf{not a stream language}.
+It is only a language about functions with multiple outputs
+or, from a logical viewpoint, functions of type
+$A_1 \wedge \ldots \wedge A_n \supset B_1 \wedge \ldots \wedge B_n$.
+
+The main reason for designing such a language is to give more
+flexibility than with tuples, and notably compose multiple ``wires''
+at one time.
+
+Here is an alternative approach to build such a language:
+we design a sequent calculus with the expected operations,
+and could derive a term language for that.
+
+Our sequents represent a conjunction of hypothesis entailing
+a \textbf{conjunction} of conclusions. We only put the structural
+rules that have a (canonical) meaning for us, and it's all pretty
+straightforward.
+
+\section{Explicit presentation}
+
+In the following I write sequents treating both sides as multisets,
+but really the formulas come with a location/name distinguishing them.
+
+Identity:
+\[ \infer{A\vdash A}{} \]
+
+Contraction:
+\[ \infer{\Gamma,A\vdash \Delta}{\Gamma,A,A\vdash \Delta}
+\quad\quad
+   \infer{\Gamma\vdash A,A,\Delta}{\Gamma\vdash A,\Delta} \]
+
+Weakening:
+\[ \infer{\Gamma,A\vdash\Delta}{\Gamma\vdash\Delta}
+\quad\quad
+   \infer{\Gamma\vdash \Delta}{\Gamma\vdash A,\Delta} \]
+
+Logical rules:
+\[ \infer{(\Gamma)\vdash\top}{} \quad\quad \infer{\Gamma,\bot\vdash\Delta}{} \]
+\[ \infer{\Gamma,A\wedge A'\vdash \Delta}{\Gamma,A,A'\vdash \Delta}
+\quad\quad
+   \infer{\Gamma\vdash A\wedge A',\Delta}{\Gamma\vdash A,A',\Delta} \]
+\[ \infer{\Gamma,A\vee A' \vdash \Delta}{\Gamma,A\vdash \Delta &
+                                         \Gamma,A'\vdash \Delta}
+\quad\quad
+   \infer{\Gamma \vdash A_0\vee A_1,\Delta}{\Gamma\vdash A_i,\Delta} \]
+\[ \infer{\Gamma,\Gamma',B\supset A\vdash \Delta,\Delta'}{
+      \Gamma\vdash B,\Delta & \Gamma',A\vdash \Delta'}
+\quad\quad
+   \infer{\Gamma\vdash A\supset B}{\Gamma,A\vdash B} \]
+\[ \infer{\Gamma,\Gamma'\vdash \Delta,\Delta'}{
+      \Gamma\vdash\Delta & \Gamma'\vdash\Delta'} \]
+
+The right implication rule may seem restrictive but it is important to avoid
+proving $(A\supset B)\wedge \Gamma$ by using $A$ to produce $\Gamma$:
+for example, $(A\supset A),A$ should not be provable.
+The left rule seems to make sense; still it's worth checking cut-elimination
+carefully (all other rules are harmless).
+
+A sequent with an empty right hand-side should be provable,
+so we could reformulate the $\top$ rule to simply erase $\top$.
+
+The last ``splitting'' rule is necessary because of the two
+rules that force having only one conclusion: the
+right implication rule and the identity.
+It can be used to build a proof of $(A \supset A),\top$.
+
+\section{Optimized presentation}
+
+As usual we can get rid of contraction and weakening on the left.
+
+Identity (the new variant avoids using the splitting rule,
+but in a real system we would probably need the two forms):
+\[ \infer{\Gamma,A\vdash A,\Delta}{\Gamma,A\vdash \Delta} \]
+
+Contraction:
+\[ \infer{\Gamma\vdash A,A,\Delta}{\Gamma\vdash A,\Delta} \]
+
+Weakening:
+\[ \infer{\Gamma\vdash \Delta}{\Gamma\vdash A,\Delta} \]
+
+Logical rules:
+\[ \infer{\Gamma\vdash\top,\Delta}{\Gamma\vdash\Delta}
+    \quad\quad \infer{\Gamma\vdash}{}   
+    \quad\quad \infer{\Gamma,\bot\vdash\Delta}{} \]
+\[ \infer{\Gamma,A\wedge A'\vdash \Delta}{\Gamma,A,A'\vdash \Delta}
+\quad\quad
+   \infer{\Gamma\vdash A\wedge A',\Delta}{\Gamma\vdash A,A',\Delta} \]
+\[ \infer{\Gamma,A\vee A' \vdash \Delta}{\Gamma,A\vdash \Delta &
+                                         \Gamma,A'\vdash \Delta}
+\quad\quad
+   \infer{\Gamma \vdash A_0\vee A_1,\Delta}{\Gamma\vdash A_i,\Delta} \]
+\[ \infer{\Gamma,B\supset A\vdash \Delta,\Delta'}{
+      \Gamma\vdash B,\Delta & \Gamma,A\vdash \Delta'}
+\quad\quad
+   \infer{\Gamma\vdash A\supset B}{\Gamma,A\vdash B} \]
+\[ \infer{\Gamma\vdash \Delta,\Delta'}{
+      \Gamma\vdash\Delta & \Gamma\vdash\Delta'} \]
+
+I finally add the $n$-ary cut:
+\[ \infer{\Gamma\vdash \Delta,\Delta'}{
+       \Gamma\vdash \Delta,\Delta'' & \Delta'',\Gamma\vdash\Delta'} \]
+
+\section{Term language}
+
+Now I derive a stupid term language from the above rules,
+or rather their natural deduction equivalent,
+using locations ($l$) to disambiguate:
+\begin{eqnarray*}
+ M &::=& \text{insert}_l(x,M) \| \text{dup}_l(M) \| \text{del}_l(M) \\
+   &\|& \text{insert}_l((),M) \| () \| \delta_{\bot,l}(M) \\
+   &\|& \text{let } x,y = M \text{ in } M' \\
+   &\|& \text{pair}_{l_1,l_2\mapsto l}(M) \\
+   &\|& \delta_\vee(M,M',M'') \| \text{in}_i(M) \\
+   &\|& M_1 M_2 \| \lambda x. M \\
+   &\|& (M_1,M_2) \\
+   &\|& \text{cut}_{l_1,\ldots,l_n\mapsto l'_1,\ldots,l'_n}(M_1,M_2)
+\end{eqnarray*}
+
+It looks like insertion is used twice but notice that it is not a general
+insertion construct, but can only be used to insert a variable or unit
+(ie. an axiom or top proof).
+But in a practical language, the general operation might make sense.
+
+We probably also want a construct for swapping wires,
+it should be derivable.
+
+For readability,
+the natural deduction reformulation of application (and disjunction 
+elimination to a lesser extent) is simplified with arities one,
+but the general form should
+be derivable (our calculus is far from being minimal, in fact it's just
+intuitionistic logic with lots of noise).
+
+Note that cut and application are not the same: application applies on one
+wire, but cut really composes proofs by connecting several wires.
+
+\end{document}
