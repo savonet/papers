@@ -27,14 +27,14 @@ breakatwhitespace=false,        % sets if automatic breaks should only happen at
 title=\lstname,                 % show the filename of files included with \lstinputlisting;
                                 % also try caption instead of title
 escapeinside={\%*}{*)},         % if you want to add a comment within your code
-emph={add,output,input,icecast,playlist,file,
+emph={add,output,input,icecast,single,playlist,file,
               fallback,crossfade,http,fade,initial,final,cross},            % if you want to add more keywords to the set
-emphstyle=\color[rgb]{0,0.5,0.3},
-keywordstyle=\color{red},
+keywordstyle=\color[rgb]{0,0.5,0.3},
+emphstyle=\color{red},
 stringstyle=\color{blue},
 }
 
-\newcommand{\kw}[1]{{\color[rgb]{0,0.5,0.3} #1}}
+\newcommand{\kw}[1]{{\color{red} #1}}
 
 \usepackage{tikz}
 \usepackage[all]{xy}
@@ -82,9 +82,9 @@ Alan Kay \hspace{0.5cm} ~
 \begin{frame}[fragile]{Simple things}
 
 \begin{lstlisting}
-output.icecast(%vorbis,
-               mount="radio.ogg",
-               playlist("music.pls"))
+       output.icecast(%vorbis,
+                      mount="radio.ogg",
+                      single("music.mp3"))
 \end{lstlisting}
 
 \end{frame}
@@ -93,7 +93,7 @@ output.icecast(%vorbis,
 
 \begin{frame}{Complex things}
 
-\begin{block}{Radio Pi}
+\begin{example}[Radio Pi]
 \begin{itemize}
 \item \emph{Several channels}: jazz, rock, techno, metal, etc.
 \item Main channel relaying thematic ones depending on the time
@@ -101,12 +101,12 @@ output.icecast(%vorbis,
 \item Interface with a web-based \emph{file scheduler}
 \item \emph{Live shows} selectively relayed on various thematic channels
 \item Volume normalization using \emph{Replay Gain}
-\item Smart \emph{cross-fading}
+\item Smart \emph{cross-fading} and various transitions
 \item \emph{Blank detection} for live and files
 \item etc.
 \end{itemize}
 All this in \emph{one instance} of liquidsoap.
-\end{block}
+\end{example}
 
 \end{frame}
 
@@ -117,8 +117,8 @@ All this in \emph{one instance} of liquidsoap.
 \begin{block}{Liquidsoap}
 \begin{enumerate}
 \item<3-> A script language
-\item A notion of source (interactive stream generator)
-\item<2-> Interfaces: libraries, external and remote applications
+\item<2-> A notion of {\em source} (interactive stream generator)
+\item<1-> Interfaces: libraries, external and remote applications
 \end{enumerate}
 \end{block}
 
@@ -148,7 +148,7 @@ music = playlist("/path/to/music")
 s = fallback([live,music])
 s = crossfade(s)
 output.icecast(%vorbis,mount="radio.ogg",s)
-output.file(%vorbis,"backup.ogg",s)
+output.file(%mp3(bitrate=16),"/path/to/backup.ogg",s)
 \end{lstlisting}
 
 \end{frame}
@@ -157,25 +157,19 @@ output.file(%vorbis,"backup.ogg",s)
 
 \begin{frame}{Language design}
 
-\begin{block}{Expressiveness vs Safety}
-
-Users should have access to the model:
+\begin{block}{Expressiveness vs.~Safety}
 \begin{itemize}
-\item Compose an operator with any sources
+\item Users should have maximum access to the model
+\item The language should prevent mistakes, hide complexity
 \end{itemize}
+\end{block}
 
-The language should avoid mistakes:
-\begin{itemize}
-\item Typos, type errors
-\end{itemize}
-
-Key techniques:
+\begin{block}{Key techniques}
 \begin{itemize}
 \item Static types, inference
 \item Functional language: immutability by default
-\item Various analyses: fallibility, branching, \ldots
+\item Various analyses: fallibility, sharing\ldots
 \end{itemize}
-
 \end{block}
 
 \end{frame}
@@ -209,7 +203,9 @@ def mycross(old,new) =
   add([fade.initial(duration=2.,new),
        fade.final(duration=3.,old)])
 end
-s = cross(mycross,s)
+
+# Apply mycross in between tracks
+s = cross(duration=3.,mycross,s)
 \end{lstlisting}
 
 \end{frame}
@@ -225,13 +221,14 @@ s = cross(mycross,s)
 \item Switch, sequence, add
 \item Sound processing: compression, change pitch, etc.
 \item Event handlers: tracks, metadata, blank
+\item \ldots
 \end{itemize}
 \end{block}
 
 \begin{block}{Interfaces}
 \begin{itemize}
 \item Icecast, Shoutcast and compatible: output, relay and host
-\item ALSA, AO, Pulseaudio, Jack, etc.
+\item ALSA, OSS, Jack, Pulseaudio, AO\ldots
 \end{itemize}
 \end{block}
 
@@ -244,31 +241,21 @@ s = cross(mycross,s)
 %% ============================================
 
 \begin{frame}{Does it make coffee?}
-\vfill
-\begin{center}
-{\LARGE No} ~ (not even the sound of brewing it)
-\end{center}
-\vfill
 
-It also does not have
+\pause
+
+\begin{block}{Liquidsoap does not\ldots}
 \begin{itemize}
-\item any comprehensive graphical interface,
-\item web interface,
-\item or any kind of database integration.
+\item No established graphical or web interface, no database stuff
+  \\ \emph{But} it can easily communicate with such systems
+\item No processing of encoded data
 \end{itemize}
-\end{frame}
-
-\begin{frame}{The price to pay}
-
-\begin{block}{Everything has to be decoded}
-The model allowing arbitrary compositions \\
-makes it difficult to avoid decoding.
 \end{block}
 
-\vfill\pause
+\pause
 
-\begin{block}{But that's all!}
-It's even efficient:
+\begin{block}{But what it does, it does it well}
+It's even \emph{efficient}:
 \begin{itemize}
 \item competes with \texttt{ices} on similar tasks
 \item 80 instances on a single Core i7 920
@@ -277,28 +264,80 @@ It's even efficient:
 
 \end{frame}
 
-\begin{frame}{Related tools}
+% =========================================
 
-To name a few: chuck, puredata, faust, streamit \ldots
+\begin{frame}
 
-\vfill
-
-We have more high-level notions: track, metadata \\
-and an \emph{interactive} notion of source \\
-and many other nice ``auxiliary'' things (request, server).
+\vfill\begin{center}
+There is more in \\
+\LARGE Liquidsoap \emph{1.0} beta
+\end{center}\vfill
 
 \end{frame}
 
-%% ===========================================
-
 \begin{frame}{Stream content}
-Stream content and conversions: montrer ça du point de vue audio, les applis usuelles ne permettent en effet pas de controler ce genre de chose (c'est plus un truc de lib genre gstreamer ou jack); peut etre parler de video et midi.
+
+\begin{center}
+\large
+  Each source has its own content type: \\
+  any number of \textbf{audio video or midi} channels
+\begin{flushright}
+\small \color{gray} No cost for the user: content types are infered
+\end{flushright}
+\end{center}
+
+\begin{block}{Traditional radio uses}
+\begin{itemize}
+\item Manual control over stereo/mono conversions
+\item Produce many audio channels ({\em e.g.} dolby) for on-site playout, \\
+  convert to stereo for web broadcast
+\end{itemize}
+\end{block}
+
+\begin{block}{Experimenting}
+More ideas to try with video and MIDI\ldots
+\end{block}
+
 \end{frame}
 
 %% ===========================================
 
 \begin{frame}{Clocks}
-General idea, external and internal motivations (cross, drift and lags)
+
+\[
+\xymatrix{
+  \text{\only<3->{\color{red}}remote server A} \ar[dr] &
+        & \mbox{\only<3->{\color{gray}}remote server B} \\
+  \text{\only<3->{\color{blue}}soundcard 1} \ar[r]      &
+                \text{liquidsoap} \ar[ur]\ar[r]\ar[dr]
+        & \mbox{\only<3->{\color{blue}}soundcard 1}     \\
+  \text{\only<3->{\color{green}}soundcard 2} \ar[ur] &
+        & \mbox{\only<3->{\color{blue}}backup file}
+}
+\]
+
+\vspace{0.5cm}
+\pause
+
+\begin{center}
+\large
+  A liquidsoap instance can control several clocks, \\
+  each source assigned to a single clock
+\begin{flushright}
+\small \color{gray} No cost for the user: clocks are infered
+\end{flushright}
+\end{center}
+
+\pause
+\pause
+
+%\begin{block}{Uses}
+\begin{itemize}
+\item Deal with drift and lags of external clocks
+\item Avoid internal time inconsistencies (\kw{cross}, \kw{stretch}\ldots)
+\end{itemize}
+%\end{block}
+
 \end{frame}
 
 %% ===========================================
@@ -306,17 +345,22 @@ General idea, external and internal motivations (cross, drift and lags)
 \begin{frame}{Background}
 
 \begin{block}{The Savonet team}
-Since 2003 \\
-Main devs: David Baelde, Romain Beauxis and Samuel Mimram. \\
-A few others: Peter Brookes, Vincent Tabard, etc.
+Open-source development since \emph{2003}, unfunded
+\begin{center}
+David Baelde, Romain Beauxis and Samuel Mimram \\
+Peter Brookes, Vincent Tabard\ldots
+\end{center}
+Languages: mostly \emph{Ocaml}, also C and various script languages
 \end{block}
 
-\begin{block}{Programming languages}
-Mostly OCaml (pros and a little cons for contributors)
-\end{block}
+\vfill
 
-\begin{block}{A noble goal}
-Bringing research ideas and tools to the masses!
+\begin{block}{Community}
+\begin{itemize}
+\item Not many contributors or even doc writers
+\item An established user base (bug reports)
+\item Reaching the point where users help each other
+\end{itemize}
 \end{block}
 
 \end{frame}
@@ -327,22 +371,25 @@ Bringing research ideas and tools to the masses!
 
 \begin{block}{Liquidsoap}
 \begin{itemize}
-\item More features than most tools
+\item Many great features
 \item A unique ability to combine them at will
 \end{itemize}
 \end{block}
 
 \begin{block}{Future}
 \begin{itemize}
-\item Already there: video and MIDI streams
+\item Develop uses of video and MIDI streams
 \item Coming: more real-time uses, e.g. telephony
+\item More fine-grained language, notably for approaching DSP
+  % To name a few: chuck, puredata, faust, streamit \ldots
 \end{itemize}
 \end{block}
 
-\begin{block}{Community}
-If you like it, contribute, even if you don't know how to code in
-OCaml, or don't code at all.
-\end{block}
+\vfill
+
+\begin{center}
+  \large \emph{Try liquidsoap, stay tuned, join the community!}
+\end{center}
 
 \end{frame}
 
