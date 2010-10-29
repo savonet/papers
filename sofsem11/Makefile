@@ -6,7 +6,7 @@ savonet.pdf: $(wildcard *tex)
 dist:
 	mkdir sofsem11
 	cp biblio.bib clocks.tex hetero.tex llncs.cls savonet.tex stream.pdf sofsem11/
-	tar zcvf sofsem11.tar.gz sofsem11
+	cd sofsem11 && zip -r ../sofsem11.zip *
 	rm -rf sofsem11
 
 clean:
