@@ -280,7 +280,7 @@ TODO: define sequents, which are considered modulo commutation in~$\Gamma$
   \\[4ex]
   \inferrule
   {\Gamma\vdash M:()\to(A)}
-  {\Gamma\vdash (\lambda x.x)M:A}{\regle{Ret'}}
+  {\Gamma\vdash (\lambda x.x)M:A}{\regle{Val}}
 \end{array}
 \]
 The rules in the left column are traditional rules in $\lambda$-calculus, with
@@ -310,6 +310,13 @@ results.
       \Gamma\vdash MN:()\to K
     }
     \]
+    This corresponds essentially to decide whether we want to allow the
+    following reduction:
+    \[
+    (\ret M_i)(\ret N_j)
+    \qquad\longrightarrow\qquad
+    (\ret M_iN_j)
+    \]
     Two side conditions are possible to avoid that:
     \begin{enumerate}
     \item in $\regle{Ans}$: $A$ is not a nullary arrow type
@@ -321,9 +328,9 @@ results.
     but this looks like an overkill just for this case.
   \item $\regle{App}$ vs. $\regle{App'}$: unification gives $K_1=(A)\cdot K$ and
     $A=()\to K_1\cdot K_2$ which has no solution (there are no recursive types).
-  \item $\regle{Ret'}$ vs. \ldots: this one is really particular and we can add
-    a constant for an operator behaving like identity (but different from
-    identity during typing so that we identify this case):
+  \item $\regle{Val}$ vs. \ldots: this one is really particular and we can add a
+    constant for an operator behaving like identity (but different from identity
+    during typing so that we identify this case):
     \[
     !\quad:\quad(()\to(A))\to A
     \]
@@ -506,6 +513,10 @@ a parallel construction (which is different).
 \subsection{Type inference}
 TODO
 
+\subsection{In practice}
+We modify the rule~$\regle{App}$ so that applications resulting in nullary
+functions are automatically followed by~$\regle{Val}$.
+
 \section{Hot topics}
 \subsection{A syntax with coarities and cocurryfication}
 We want operators with coarities e.g. the operator \texttt{swap}, which
@@ -645,8 +656,18 @@ Graphical
 synths + programming (\emph{patches} consist of \emph{modules} connected by
 lines)
 
+\subsubsection{StreamIt}
+\cite{streamit}
+
 \subsubsection{SuperCollider}
 Object-oriented textual programming language~\cite{supercollider}.
+
+\subsubsection{See also}
+http://conal.net/blog/posts/why-program-with-continuous-time/
+
+in particular
+
+http://conal.net/papers/icfp97/
 
 \section{Fun things to try when it's done}
 \begin{itemize}
