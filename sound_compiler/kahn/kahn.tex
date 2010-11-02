@@ -1,11 +1,74 @@
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+% \newcommand{\Types}{Types}
+% \newcommand{\Ops}{Ops}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\intset}[1]{[#1]}
+\renewcommand{\labelitemi}{--}
+\newcommand{\resp}{resp.~}
+\newcommand{\qtext}[1]{\quad\text{#1}\quad}
 
 \title{Approximation of Continuous Kahn Networks}
 \author{Samuel Mimram}
 
+\hypersetup{
+  pdftitle={\csname @title\endcsname},
+  pdfauthor={\csname @author\endcsname},
+  unicode=true,
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=black,
+  urlcolor=black
+}
+
 \begin{document}
 \maketitle
+
+\section{Kahn Networks}
+A \emph{signature} $(\Sigma,\sigma,\tau)$ consists of a set~$\Sigma$ of
+\emph{symbols} and two functions \hbox{$\sigma,\tau:\Sigma\to\N$}, which to
+every symbol~$f$ associate its \emph{arity} and~\emph{coarity} respectively. We
+often write~$f:m\to n$ to indicate that~$f$ is an operator such that~$\sigma(f)=m$
+and \hbox{$\tau(f)=n$}.
+
+Given an integer~$n\in\N$, we write~$\intset{n}=\{0,\ldots,n-1\}$ for the
+canonical set with~$n$ elements.
+
+A \emph{Kahn network} $K=(P,O,\lambda,s,t):m\to n$, with $m,n\in\N$, consists of
+\begin{itemize}
+\item a set~$P$ of \emph{ports},
+\item a set~$O$ of \emph{operators},
+\item a \emph{labeling function} $\lambda:O\to\Sigma$ which to every operator
+  associates a symbol called its \emph{label},
+\item a \emph{source function}
+  \[
+  \intset{m}+\sum_{o\in O}\intset{\sigma(\lambda(o))}\to P
+  \]
+\item and a \emph{target function}
+  \[
+  \intset{n}+\sum_{o\in O}\intset{\tau(\lambda(o))}\to P
+  \]
+\end{itemize}
+where the sum above denotes the disjoint union of sets. We sometimes write
+$o:m\to n$ when $o$ is an operator labeled by~$f:m\to n$. Given an operator
+\hbox{$o:m\to n$} and an integer~$i$ such that $0\leq i<m$ (\resp $0\leq i<n$),
+we write~$o^i$ (\resp $o_i$) for the port which is the the image of
+$i\in\intset{\sigma(\lambda(o))}$ under~$s$ (\resp of
+$i\in\intset{\tau(\lambda(o))}$ under~$t$). We similarly write $K^i$ (\resp
+$K^j$) for the image under~$s$ (\resp $t$) of $i\in m$ (\resp $i\in n$). A Kahn
+network should satisfy the following condition:
+\begin{itemize}
+\item \emph{output unicity}: for every port~$p\in P$, there should be exactly
+  one index~$i$ and operation~$o\in O$ such that
+  \[
+  \text{either } p=o_i \qtext{or} p=K_i
+  \]
+\end{itemize}
+
 
 \end{document}
