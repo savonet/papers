@@ -3,15 +3,31 @@
 \usepackage[english]{babel}
 \usepackage{amsfonts}
 \usepackage{amsmath}
+\usepackage{amsthm}
 \usepackage{hyperref}
+\usepackage[matrix,arrow]{xy}
+% \usepackage{tikz}
 
-% \newcommand{\Types}{Types}
-% \newcommand{\Ops}{Ops}
+% Rounded rectangle
+% \tikzset{rr/.style={rectangle,thick,color=black}}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{property}[theorem]{Property}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{remark}[theorem]{Remark}
+
 \newcommand{\N}{\mathbb{N}}
+\newcommand{\R}{\mathbb{R}}
 \newcommand{\intset}[1]{[#1]}
 \renewcommand{\labelitemi}{--}
 \newcommand{\resp}{resp.~}
 \newcommand{\qtext}[1]{\quad\text{#1}\quad}
+\newcommand{\qqtext}[1]{\qquad\text{#1}\qquad}
+\newcommand{\qto}{\quad\to\quad}
+\newcommand{\qcolon}{\quad:\quad}
+\newcommand{\category}[1]{\mathbf{#1}}
+\newcommand{\KN}{\category{KN}}
 
 \title{Approximation of Continuous Kahn Networks}
 \author{Samuel Mimram}
@@ -30,6 +46,7 @@
 \maketitle
 
 \section{Kahn Networks}
+\subsection{Formal definition}
 A \emph{signature} $(\Sigma,\sigma,\tau)$ consists of a set~$\Sigma$ of
 \emph{symbols} and two functions \hbox{$\sigma,\tau:\Sigma\to\N$}, which to
 every symbol~$f$ associate its \emph{arity} and~\emph{coarity} respectively. We
@@ -47,11 +64,11 @@ A \emph{Kahn network} $K=(P,O,\lambda,s,t):m\to n$, with $m,n\in\N$, consists of
   associates a symbol called its \emph{label},
 \item a \emph{source function}
   \[
-  \intset{m}+\sum_{o\in O}\intset{\sigma(\lambda(o))}\to P
+  s\qcolon\intset{m}+\sum_{o\in O}\intset{\sigma(\lambda(o))}\qto P
   \]
 \item and a \emph{target function}
   \[
-  \intset{n}+\sum_{o\in O}\intset{\tau(\lambda(o))}\to P
+  t\qcolon \intset{n}+\sum_{o\in O}\intset{\tau(\lambda(o))}\qto P
   \]
 \end{itemize}
 where the sum above denotes the disjoint union of sets. We sometimes write
@@ -66,9 +83,47 @@ network should satisfy the following condition:
 \item \emph{output unicity}: for every port~$p\in P$, there should be exactly
   one index~$i$ and operation~$o\in O$ such that
   \[
-  \text{either } p=o_i \qtext{or} p=K_i
+  \text{either } p=o_i \qqtext{or} p=K_i
   \]
 \end{itemize}
 
+For example, the echo process is....
+% \[
+% \begin{tikzpicture}
+  % \node [rr] {+} (1,0);
+  % \node [rr] {d} (1,1);
+% \end{tikzpicture}
+% \]
 
+Given a signature~$\Sigma=(\Sigma,\sigma,\tau)$, we write~$\KN_\Sigma$ for the
+category whose objects are natural integers and whose morphisms are Kahn
+networks \hbox{$K:m\to n$}. The composite of two networks $K:m\to n$ and~$L:n\to
+p$ is the network $L\circ K:m\to p$ defined by
+\begin{itemize}
+\item the set of ports is defined as the pushout
+  \[
+  \xymatrix{
+    &\ar[dl]_{\tau_K}\intset{n}\ar[dr]^{\sigma_L}&\\
+    P_K\ar@{.>}[dr]&&\ar@{.>}[dl]P_L\\
+    &P_{L\circ K}&\\
+  }
+  \]
+\item the set of operators is $O_{L\circ K}=O_L+O_K$ with~$\lambda_{L\circ
+    K}=\lambda_L+\lambda_K$ as labeling function,
+\item the source and target functions are obtained similarly from the source and
+  target functions of~$K$ and~$L$.
+\end{itemize}
+The identity network on an object~$n$ is the network whose set of ports
+is~$\intset{n}$, set of operators is empty, labeling function is the initial
+arrow and source and target functions are identity $\intset{n}\to\intset{n}$.
+
+\subsection{Free compact closed categories}
+\begin{theorem}
+  Given a signature~$\Sigma$, the category~$\KN_\Sigma$ is a full subcategory
+  of the free cartesian compact closed category on~$\Sigma$.
+\end{theorem}
+
+\subsection{Semantics of Kahn networks}
+To every process $K:m\to n$ one associates a partial function~$\R^m\to\R^n$
+defined inductively as follows.
 \end{document}
