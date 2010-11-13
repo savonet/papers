@@ -11,12 +11,16 @@
 % Rounded rectangle
 % \tikzset{rr/.style={rectangle,thick,color=black}}
 
+\newcommand{\TODO}[1]{\marginpar{\tiny #1}}
+
 \newtheorem{theorem}{Theorem}
+\newtheorem{definition}[theorem]{Definition}
 \newtheorem{lemma}[theorem]{Lemma}
 \newtheorem{property}[theorem]{Property}
 \newtheorem{example}[theorem]{Example}
 \newtheorem{remark}[theorem]{Remark}
 
+\newcommand{\ce}{\mathop{\mathrm{e}}}
 \newcommand{\N}{\mathbb{N}}
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\intset}[1]{[#1]}
@@ -41,12 +45,30 @@
   citecolor=black,
   urlcolor=black
 }
+\renewcommand{\C}{\mathcal{C}}
 
 \begin{document}
 \maketitle
 
+We want something like functional reactive
+programming~\cite{elliott1997functional}:
+\begin{enumerate}
+\item the underlying idealized model consists of streams of values indexed over
+  a continuous time and events,
+\item the actual implementation is discrete but should not explicitly depend on
+  the sampling rate chosen.
+\end{enumerate}
+
+Continuous time in hybrid models~\cite{liu:causality-hybrid}.
+
+
 \section{Kahn Networks}
 \subsection{Formal definition}
+We give an abstract definition of Kahn
+networks~\cite{kahn:semantics-parallel}. There were a lot of investigations
+about the discrete-time semantics of these
+networks~\cite{hildebrandt2004relational, ...}.
+
 A \emph{signature} $(\Sigma,\sigma,\tau)$ consists of a set~$\Sigma$ of
 \emph{symbols} and two functions \hbox{$\sigma,\tau:\Sigma\to\N$}, which to
 every symbol~$f$ associate its \emph{arity} and~\emph{coarity} respectively. We
@@ -56,36 +78,47 @@ and \hbox{$\tau(f)=n$}.
 Given an integer~$n\in\N$, we write~$\intset{n}=\{0,\ldots,n-1\}$ for the
 canonical set with~$n$ elements.
 
-A \emph{Kahn network} $K=(P,O,\lambda,s,t):m\to n$, with $m,n\in\N$, consists of
-\begin{itemize}
-\item a set~$P$ of \emph{ports},
-\item a set~$O$ of \emph{operators},
-\item a \emph{labeling function} $\lambda:O\to\Sigma$ which to every operator
-  associates a symbol called its \emph{label},
-\item a \emph{source function}
-  \[
-  s\qcolon\intset{m}+\sum_{o\in O}\intset{\sigma(\lambda(o))}\qto P
-  \]
-\item and a \emph{target function}
-  \[
-  t\qcolon \intset{n}+\sum_{o\in O}\intset{\tau(\lambda(o))}\qto P
-  \]
-\end{itemize}
-where the sum above denotes the disjoint union of sets. We sometimes write
-$o:m\to n$ when $o$ is an operator labeled by~$f:m\to n$. Given an operator
-\hbox{$o:m\to n$} and an integer~$i$ such that $0\leq i<m$ (\resp $0\leq i<n$),
-we write~$o^i$ (\resp $o_i$) for the port which is the the image of
-$i\in\intset{\sigma(\lambda(o))}$ under~$s$ (\resp of
-$i\in\intset{\tau(\lambda(o))}$ under~$t$). We similarly write $K^i$ (\resp
-$K^j$) for the image under~$s$ (\resp $t$) of $i\in m$ (\resp $i\in n$). A Kahn
-network should satisfy the following condition:
-\begin{itemize}
-\item \emph{output unicity}: for every port~$p\in P$, there should be exactly
-  one index~$i$ and operation~$o\in O$ such that
-  \[
-  \text{either } p=o_i \qqtext{or} p=K_i
-  \]
-\end{itemize}
+The following definition is essentially the same as the notion of \emph{network}
+introduced in~\cite{hasegawa2008finite}.\TODO{Check the differences. In
+  particular, we should apparently allow ``floating ports''.}
+\begin{definition}
+  A \emph{Kahn network} $K=(P,O,\lambda,s,t):m\to n$, with $m,n\in\N$, consists
+  of
+  \begin{itemize}
+  \item a set~$P$ of \emph{ports},
+  \item a finite set~$O$ of \emph{operators},
+  \item a \emph{labeling function} $\lambda:O\to\Sigma$ which to every operator
+    associates a symbol called its \emph{label},
+  \item a \emph{source function}
+    \[
+    s\qcolon\intset{m}+\sum_{o\in O}\intset{\sigma(\lambda(o))}\qto P
+    \]
+  \item and a \emph{target function}
+    \[
+    t\qcolon \intset{n}+\sum_{o\in O}\intset{\tau(\lambda(o))}\qto P
+    \]
+  \end{itemize}
+  where the sum above denotes the disjoint union of sets. We sometimes write
+  $o:m\to n$ when $o$ is an operator labeled by~$f:m\to n$. Given an operator
+  \hbox{$o:m\to n$} and an integer~$i$ such that $0\leq i<m$ (\resp $0\leq
+  i<n$), we write~$o^i$ (\resp $o_i$) for the port which is the the image of
+  $i\in\intset{\sigma(\lambda(o))}$ under~$s$ (\resp of
+  $i\in\intset{\tau(\lambda(o))}$ under~$t$). We similarly write $K^i$ (\resp
+  $K^j$) for the image under~$s$ (\resp $t$) of $i\in m$ (\resp $i\in n$). A
+  Kahn network should satisfy the following condition:
+  \begin{itemize}
+  \item \emph{output unicity}: for every port~$p\in P$, there should be exactly
+    one index~$i$ and operation~$o\in O$ such that
+    \[
+    \text{either } p=o_i \qqtext{or} p=K_i
+    \]
+  \end{itemize}
+\end{definition}
+
+\begin{remark}
+  A Kahn network necessarily has a finite set of ports.
+\end{remark}
+
 
 For example, the echo process is....
 % \[
@@ -94,6 +127,8 @@ For example, the echo process is....
   % \node [rr] {d} (1,1);
 % \end{tikzpicture}
 % \]
+
+A morphism between two Kahn networks is...
 
 Given a signature~$\Sigma=(\Sigma,\sigma,\tau)$, we write~$\KN_\Sigma$ for the
 category whose objects are natural integers and whose morphisms are Kahn
@@ -117,13 +152,142 @@ The identity network on an object~$n$ is the network whose set of ports
 is~$\intset{n}$, set of operators is empty, labeling function is the initial
 arrow and source and target functions are identity $\intset{n}\to\intset{n}$.
 
-\subsection{Free compact closed categories}
+We have actually constructed a bicategory since composition is defined up to
+isomorphism. However, we can recover a category by considering KN up to iso of
+KN.
+
+This construction can be extended without difficulty to typed Kahn networks. A
+nice and abstract description of this construction can be carried on using
+polygraphs~\cite{burroni1993higher}, but we won't go into this here.
+
+\subsection{Free traced monoidal categories}
+Recall that a traced symmetric monoidal
+category~\cite{joyal-street-verity:traced-monoidal-categories} is...
+
+Given a signature~$\Sigma$, a $\Sigma$-object in a monoidal category~$\C$
+is... The free category on a signature~$\Sigma$ is...
+
 \begin{theorem}
-  Given a signature~$\Sigma$, the category~$\KN_\Sigma$ is a full subcategory
-  of the free cartesian compact closed category on~$\Sigma$.
+  Given a signature~$\Sigma$, the category~$\KN_\Sigma$ is the free traced
+  cartesian category on~$\Sigma$.
 \end{theorem}
 
+An explicit description of the free traced symmetric monoidal category on a
+category is given in~\cite{abramsky:traced-compact-closed}. We recover this
+construction when all the symbols have arity and coarity~$1$.
+
+\begin{remark}
+  We can actually take typed symbols as signature and really recover the
+  construction of~\cite{abramsky:traced-compact-closed}.
+\end{remark}
+
+Notes:
+\begin{itemize}
+\item A traced cartesian category is the same as a cartesian category with a
+  fixpoint operator~\cite{hasegawa1997recursion}.
+\item If we only consider a delayed trace, then all the axioms of traced SMC are
+  satisfied, \emph{excepting} the yanking axiom. Actually, it seems that the
+  notion of traced monoidal category without yanking has been investigated under
+  the name of \emph{categories with feedback}~\cite{katis2002feedback}, with
+  this idea in mind. They even describe the free category with feedback on a
+  category. Some links between this notion and electronic circuits are
+  investigated in~\cite{katis1999algebra}.
+\item The property of a circuit not to have instant feedback is linked to
+  \emph{feedback reliability} in~\cite{pardo2004synchronous}, we shall restrict
+  to those. Can this be enforced by a typing system?
+\end{itemize}
+
 \subsection{Semantics of Kahn networks}
-To every process $K:m\to n$ one associates a partial function~$\R^m\to\R^n$
-defined inductively as follows.
+Since the category~$\KN_\Sigma$ is the free trace cartesian category
+on~$\Sigma$, given any traced cartesian category~$\C$, together with an
+interpretation of the symbols into this category, an interpretation
+functor~$\KN_\Sigma\to\C$ is defined by the universal property... In other
+words, we ``only'' have to define a proper traced cartesian category~$\C$ in
+order to give a semantics to our networks. Actually, this idea of having a
+traced monoidal category with continuous functions is quite natural (for example
+the possibility of constructing a traced monoidal category of manifolds and
+smooth maps is evoked in~\cite{abramsky1996retracing}), but has not been
+formally investigated to the best of our knowledge.
+
+Since we don't mind about types, we might assume that the objects of~$\C$ are
+natural integers in~$\N$. A morphism~$f:m\to n$ should be ``something like'' a
+differentiable function~$f:\R^m\to\R^n$. Notice that we surely want to have
+piecewise differentiable functions and act as if they were differentiable. For
+example, we want to have the square waveform, or more simply the function~$f$
+defined by
+\[
+f(t)=
+\begin{cases}
+  0&\text{if $t<0$}\\
+  1&\text{if $t\geq 0$}\\
+\end{cases}
+\]
+This function obviously cannot be derived, but we can achieve what we want if we
+consider distributions instead of functions: the derivative is the Dirac
+``function''. Do we really want to go into this?... Do we want to consider
+Diracs as events? The derivative of the square function is a sequence of Diracs
+alternatively up and down; however, we really want to differentiate it in order
+for example to apply a first-order filter on it. What does all this means in
+details? A differentiating RC circuit applied to a square does not give Diracs
+at all for example but decaying exponentials instead of impulses.
+
+We shall also avoid the ``Zeno effect'': first smooth maps and then extend to
+piecewise smooth maps?
+
+Interestingly, the Cauchy-Lipschitz theorem (called the Picard-Lindelöf theorem
+everywhere but in
+France)\footnote{\url{http://en.wikipedia.org/wiki/Picard\%E2\%80\%93Lindel\%C3\%B6f_theorem}}
+uses the Banach fixpoint theorem in order to show the existence and unicity of
+solutions to some ODE. Could this be related to the usual fixpoint semantics
+of KN?
+
+\section{Discrete-time approximations}
+We write~$T$ for the sampling period and~$t_n=n\times T$. The idea of the
+\emph{Euler method} is to approximate~$y'(t_{n+1})$ by
+\[
+\frac{y(t_{n+1})-y(t_n)}n
+\]
+
+By Taylor's theorem, there exists~$\xi_n\in[t_n,t_{n+1}]$ such that
+\[
+y(t_{n+1})=y(t_n)+Ty'(t_n)+\frac{T^2}2 y''(\xi_n)
+\]
+Now, if $y$ satisfies the equation $y'(t)=f(t,y(t))$, we have
+\[
+y(t_{n+1})=y(t_n)+Tf(t_n,y(t_n))+\frac{T^2}2 y''(\xi_n)
+\]
+The \emph{single-step truncation error} associated with the Euler method is thus
+\[
+e_{n+1}=\frac{T^2}2 y''(\xi_n)
+\]
+By generalizing this in order to take in account the \emph{cumulative error}, it
+can be
+shown\footnote{\url{http://www.mathcs.emory.edu/ccs/ccs315/ccs315/node25.html}}
+that
+
+\begin{theorem}
+  Suppose that
+  \[
+  M=\sup_{s\in\R}\left|\frac{\partial f(s,z)}{\partial z}\right|<\infty
+  \]
+  Then we have the following error bound
+  \[
+  |y(t_n)-\tilde{y_n}|<\ce^{(t_n-t_0)M}|y(t_0)-\tilde{y_0}|+T\left(\frac{\ce^{(t_n-t_0)M}-1}{2M}\right)\max_{t_0\leq t\leq t_n}|y''(t)|
+  \]
+  where $\tilde{y_n}$ denotes the value computed at step~$n$ by the Euler
+  method. In particular, if $\tilde{y_0}=y(t_0)$ and $y''$ is bounded then
+  \[
+  |y(t_n)-\tilde{y_n}|<cT
+  \]
+  for some constant~$c$. Moreover, this can be generalized to any ODE.
+\end{theorem}
+
+\begin{remark}
+  Faster convergences can be obtained using Taylor series or Runge-Kutta
+  methods. For example, with RK4 the cumulative error is $O(T^4)$.
+\end{remark}
+
+
+\bibliographystyle{alpha}
+\bibliography{sound}
 \end{document}
