@@ -21,6 +21,7 @@
 \newtheorem{remark}[theorem]{Remark}
 
 \newcommand{\ce}{\mathop{\mathrm{e}}}
+\newcommand{\dd}[1]{\mathop{\mathrm{d}#1}}
 \newcommand{\N}{\mathbb{N}}
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\intset}[1]{[#1]}
@@ -32,6 +33,8 @@
 \newcommand{\qcolon}{\quad:\quad}
 \newcommand{\category}[1]{\mathbf{#1}}
 \newcommand{\KN}{\category{KN}}
+
+\newcommand{\ie}{i.e.~}
 
 \title{Approximation of Continuous Kahn Networks}
 \author{Samuel Mimram}
@@ -80,7 +83,8 @@ canonical set with~$n$ elements.
 
 The following definition is essentially the same as the notion of \emph{network}
 introduced in~\cite{hasegawa2008finite}.\TODO{Check the differences. In
-  particular, we should apparently allow ``floating ports''.}
+  particular, we should apparently allow ``floating ports'' so this messes up
+  with output unicity.}
 \begin{definition}
   A \emph{Kahn network} $K=(P,O,\lambda,s,t):m\to n$, with $m,n\in\N$, consists
   of
@@ -197,7 +201,31 @@ Notes:
   to those. Can this be enforced by a typing system?
 \end{itemize}
 
-\subsection{Semantics of Kahn networks}
+A \emph{Kahn network with feedback} on a signature sigma is a Kahn network of
+the signature~$\Sigma\uplus\{d\}$ where $d:1\to 1$ is an symbol called
+\emph{delay}. Such a Kahn network is \emph{instant-feedback free} when TODO all
+the cycles contain at least a delay.
+
+\begin{theorem}
+  The category of feedback-free Kahn networks with delay is the free feedback
+  category on~$\Sigma$.
+\end{theorem}
+
+\section{Semantics of Kahn networks}
+\subsection{Discrete-time semantics}
+Recall the usual discrete time semantics.
+
+\begin{theorem}
+  The discrete-time semantics can be recovered from the continuous time by
+  considering the feedback category of partially defined signals where delays
+  are angelic: they delay in a way such that we get the most information where
+  the information order on a sequence is such that~$s\sqsubseteq t$
+  whenever~$\tilde{s}$ is a prefix of~$\tilde{t}$ where~$\tilde{s}$ is the
+  sequence obtained from~$s$ by removing undefined values (TODO or something
+  like that).
+\end{theorem}
+
+\subsection{Continuous-time semantics}
 Since the category~$\KN_\Sigma$ is the free trace cartesian category
 on~$\Sigma$, given any traced cartesian category~$\C$, together with an
 interpretation of the symbols into this category, an interpretation
@@ -239,7 +267,29 @@ everywhere but in
 France)\footnote{\url{http://en.wikipedia.org/wiki/Picard\%E2\%80\%93Lindel\%C3\%B6f_theorem}}
 uses the Banach fixpoint theorem in order to show the existence and unicity of
 solutions to some ODE. Could this be related to the usual fixpoint semantics
-of KN?
+of KN? The theorem says that
+
+\begin{theorem}
+  Given an ODE $y'(t)=f(t,y(t))$, with
+  \[
+  f:[t_0-\alpha,t_0+\alpha]\times[a-\beta,a+\beta]^n\to\R^n
+  \]
+  continuous and Lipschitz continuous in~$y$, with Lipschitz constant~$L$ for
+  every \hbox{$t\in[t_0-\alpha,t_0+\alpha]$}, and with initial
+  condition~$y(t_0)=y_0$.  Then there exists a unique solution on the interval
+  $[t_0-b,t_0+b]$ with~$b=\min\{\alpha,\beta/M\}$.
+\end{theorem}
+\begin{proof}
+  The sequence of functions
+  \[
+  y_{n+1}(t)=y_0+\int_{t_0}^tf(t,y_n(t))\dd t
+  \]
+  converges uniformly to the solution.
+\end{proof}
+
+Morally, the hypothesis of this theorem should be satisfied in our KN. Can we
+enforce this by typing or static analysis? A nice course on
+ODE\footnote{\url{http://www.math.byu.edu/~grant/courses/m634/f99/lectures.html}}.
 
 \section{Discrete-time approximations}
 We write~$T$ for the sampling period and~$t_n=n\times T$. The idea of the
