@@ -201,8 +201,9 @@ Notes:
   to those. Can this be enforced by a typing system?
 \end{itemize}
 
-A \emph{Kahn network with feedback} on a signature sigma is a Kahn network of
-the signature~$\Sigma\uplus\{d\}$ where $d:1\to 1$ is an symbol called
+\subsection{Kahn networks with delay}
+A \emph{Kahn network with delay} on a signature sigma is a Kahn network of the
+signature~$\Sigma\uplus\{d\}$ where $d:1\to 1$ is an symbol called
 \emph{delay}. Such a Kahn network is \emph{instant-feedback free} when TODO all
 the cycles contain at least a delay.
 
@@ -210,6 +211,7 @@ the cycles contain at least a delay.
   The category of feedback-free Kahn networks with delay is the free feedback
   category on~$\Sigma$.
 \end{theorem}
+
 
 \section{Semantics of Kahn networks}
 \subsection{Discrete-time semantics}
@@ -241,10 +243,10 @@ Since we don't mind about types, we might assume that the objects of~$\C$ are
 natural integers in~$\N$. A morphism~$f:m\to n$ should be ``something like'' a
 differentiable function~$f:\R^m\to\R^n$. Notice that we surely want to have
 piecewise differentiable functions and act as if they were differentiable. For
-example, we want to have the square waveform, or more simply the function~$f$
-defined by
+example, we want to have the square waveform, or more simply the \emph{Heaviside
+  function}~$H$ defined by
 \[
-f(t)=
+H(t)=
 \begin{cases}
   0&\text{if $t<0$}\\
   1&\text{if $t\geq 0$}\\
@@ -252,12 +254,15 @@ f(t)=
 \]
 This function obviously cannot be derived, but we can achieve what we want if we
 consider distributions instead of functions: the derivative is the Dirac
-``function''. Do we really want to go into this?... Do we want to consider
-Diracs as events? The derivative of the square function is a sequence of Diracs
-alternatively up and down; however, we really want to differentiate it in order
-for example to apply a first-order filter on it. What does all this means in
-details? A differentiating RC circuit applied to a square does not give Diracs
-at all for example but decaying exponentials instead of impulses.
+``function''. Do we really want to go into this?... Actually we don't seem to
+have, see for example Carathéodory's existence theorem for
+ODE\footnote{\url{http://en.wikipedia.org/wiki/Carath\%C3\%A9odory\%27s_existence_theorem}}.
+Do we want to consider Diracs as events? The derivative of the square function
+is a sequence of Diracs alternatively up and down; however, we really want to
+differentiate it in order for example to apply a first-order filter on it. What
+does all this means in details? A differentiating RC circuit applied to a square
+does not give Diracs at all for example but decaying exponentials instead of
+impulses.
 
 We shall also avoid the ``Zeno effect'': first smooth maps and then extend to
 piecewise smooth maps?
@@ -337,6 +342,11 @@ that
   methods. For example, with RK4 the cumulative error is $O(T^4)$.
 \end{remark}
 
+\section{Future works}
+\begin{itemize}
+\item Link independent subcomponents of the networks with Eigenspace
+  decomposition linear ODE.
+\end{itemize}
 
 \bibliographystyle{alpha}
 \bibliography{sound}
