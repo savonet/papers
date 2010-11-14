@@ -61,6 +61,8 @@ programming~\cite{elliott1997functional}:
 \item the actual implementation is discrete but should not explicitly depend on
   the sampling rate chosen.
 \end{enumerate}
+This allow nice things, for example we can choose other methods than Euler's to
+solve involved ODE.
 
 Continuous time in hybrid models~\cite{liu:causality-hybrid}.
 
@@ -173,17 +175,14 @@ is... The free category on a signature~$\Sigma$ is...
 
 \begin{theorem}
   Given a signature~$\Sigma$, the category~$\KN_\Sigma$ is the free traced
-  cartesian category on~$\Sigma$.
+  cartesian category on~$\Sigma$.\TODO{Be careful of floating ports, we might
+    have to add an axiom.}
 \end{theorem}
 
 An explicit description of the free traced symmetric monoidal category on a
-category is given in~\cite{abramsky:traced-compact-closed}. We recover this
-construction when all the symbols have arity and coarity~$1$.
-
-\begin{remark}
-  We can actually take typed symbols as signature and really recover the
-  construction of~\cite{abramsky:traced-compact-closed}.
-\end{remark}
+category is given in~\cite{abramsky:traced-compact-closed} and generalized
+in~\cite{hasegawa2008finite}. We recover these construction (the first one is
+the special case where all the symbols have arity and coarity~$1$).
 
 Notes:
 \begin{itemize}
@@ -256,13 +255,13 @@ This function obviously cannot be derived, but we can achieve what we want if we
 consider distributions instead of functions: the derivative is the Dirac
 ``function''. Do we really want to go into this?... Actually we don't seem to
 have, see for example Carathéodory's existence theorem for
-ODE\footnote{\url{http://en.wikipedia.org/wiki/Carath\%C3\%A9odory\%27s_existence_theorem}}.
-Do we want to consider Diracs as events? The derivative of the square function
-is a sequence of Diracs alternatively up and down; however, we really want to
-differentiate it in order for example to apply a first-order filter on it. What
-does all this means in details? A differentiating RC circuit applied to a square
-does not give Diracs at all for example but decaying exponentials instead of
-impulses.
+ODE\footnote{\url{http://en.wikipedia.org/wiki/Carath\%C3\%A9odory\%27s_existence_theorem}}. A
+whole theory has been developed around this, calling this \emph{impulsive
+  differential equations}~\cite{lakshmikantham1989theory}. Do we want to
+consider Diracs as events? The derivative of the square function is a sequence
+of Diracs alternatively up and down; however, we really want to differentiate it
+in order for example to apply a first-order filter on it. What does all this
+means in details?
 
 We shall also avoid the ``Zeno effect'': first smooth maps and then extend to
 piecewise smooth maps?
@@ -332,9 +331,9 @@ that
   where $\tilde{y_n}$ denotes the value computed at step~$n$ by the Euler
   method. In particular, if $\tilde{y_0}=y(t_0)$ and $y''$ is bounded then
   \[
-  |y(t_n)-\tilde{y_n}|<cT
+  |y(t_n)-\tilde{y_n}|<c_nT
   \]
-  for some constant~$c$. Moreover, this can be generalized to any ODE.
+  for some constant~$c_n$. Moreover, this can be generalized to any ODE.
 \end{theorem}
 
 \begin{remark}
