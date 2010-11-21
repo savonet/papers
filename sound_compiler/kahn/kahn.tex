@@ -6,7 +6,8 @@
 \usepackage{amsthm}
 \usepackage{hyperref}
 \usepackage[matrix,arrow]{xy}
-% \usepackage{tikz}
+\usepackage{tikz}
+\usepackage{circuitikz}
 
 % Rounded rectangle
 % \tikzset{rr/.style={rectangle,thick,color=black}}
@@ -20,7 +21,8 @@
 \newtheorem{example}[theorem]{Example}
 \newtheorem{remark}[theorem]{Remark}
 
-\newcommand{\ce}{\mathop{\mathrm{e}}}
+\newcommand{\ce}{{\mathop{\mathrm{e}}}}
+\newcommand{\cj}{\mathrm{j}}
 \newcommand{\dd}[1]{\mathop{\mathrm{d}#1}}
 \newcommand{\N}{\mathbb{N}}
 \newcommand{\R}{\mathbb{R}}
@@ -213,6 +215,46 @@ the cycles contain at least a delay.
 
 
 \section{Semantics of Kahn networks}
+\subsection{An example}
+Suppose that we have a resistor and a capacitor in series:
+\[
+\begin{circuitikz}
+  \draw (0,2) to[R=R] (2,2);
+  \draw (2,2) to (3,2);
+  \draw (2,2) to[C=C] (2,0);
+  \draw (0,0) to (3,0);
+\end{circuitikz}
+\]
+$U$ is the input voltage, $V$ is the output voltage (on the capacitor).
+\[
+U=U_R+V
+\qquad
+U_R=RI
+\qquad
+I=C\frac{\dd V}{\dd t}
+\]
+thus
+\[
+U=RC\frac{\dd V}{\dd t}+V
+\]
+The transfer function is
+\[
+G(\omega)=|H(\cj\omega)|=\frac{\omega RC}{\sqrt{1+(\omega RC)^2}}
+\]
+This is thus a low-pass filter.
+
+The same behavior is achieved in discrete-time by an IIR filter
+\[
+U_n=RC\frac{V_n-V_{n-1}}{T}+V_n
+\]
+thus
+\[
+V_n=\frac{T}{2RC}U_n+\frac 12 V_{n-1}
+\]
+TODO: improve this
+formulation\footnote{\url{http://en.wikipedia.org/wiki/High-pass_filter}}. TODO:
+what does it mean to be ``independent'' of the sampling rate then???
+
 \subsection{Discrete-time semantics}
 Recall the usual discrete time semantics.
 
@@ -240,9 +282,20 @@ formally investigated to the best of our knowledge.
 
 Since we don't mind about types, we might assume that the objects of~$\C$ are
 natural integers in~$\N$. A morphism~$f:m\to n$ should be ``something like'' a
-differentiable function~$f:\R^m\to\R^n$. Notice that we surely want to have
-piecewise differentiable functions and act as if they were differentiable. For
-example, we want to have the square waveform, or more simply the \emph{Heaviside
+differentiable function~$f:\R^m\to\R^n$. We have to be able to show that
+
+\begin{theorem}
+  The result does not really depend on the initial choice for $f(t-\dd t)$ at
+  $t=0$.
+\end{theorem}
+
+\noindent This seems to be the right way to express that our network behaves
+like a differential equation?
+
+We shall also avoid the ``Zeno effect'': first smooth maps and then extend to
+piecewise smooth maps? Notice that we surely want to have piecewise
+differentiable functions and act as if they were differentiable. For example, we
+want to have the square waveform, or more simply the \emph{Heaviside
   function}~$H$ defined by
 \[
 H(t)=
@@ -262,9 +315,6 @@ consider Diracs as events? The derivative of the square function is a sequence
 of Diracs alternatively up and down; however, we really want to differentiate it
 in order for example to apply a first-order filter on it. What does all this
 means in details?
-
-We shall also avoid the ``Zeno effect'': first smooth maps and then extend to
-piecewise smooth maps?
 
 Interestingly, the Cauchy-Lipschitz theorem (called the Picard-Lindelöf theorem
 everywhere but in
