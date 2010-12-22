@@ -1,0 +1,83 @@
+
+# Le tick est un event magique envoyé aux sources qui sont vraiment pompées
+# on pourrait le dispatcher de façon plus fine pour les samples audio/video
+
+source sinus freq = 
+  events = 
+   | tick -> emit (Sample (sin(t*freq))
+end
+
+source mean s s' =
+  get = s#get || s'#get
+  # let get peut etre inféré, et pourrait etre un moyen de forcer la clock
+  events = 
+   | s:(Sample x),s':(Sample x') -> emit (Sample (x + x') / 2)
+end
+
+source id s = 
+  get = s#get
+  events = 
+   | s:e -> emit e
+end
+
+# La vraie question sur le switch c'est comment on fait #is_ready
+
+source switch l =
+  current = (..)
+  get = current#get
+  events 
+   | current:EOT -> reselect; emit EOT
+   | current:e -> e
+end
+
+source rms s = 
+  get = s#get
+  rms = (...)
+  events
+   | current:(Sample s) -> 
+       rms += s*s ;
+       if rms <= threshold then
+         emit EOT
+       else
+         emit (Sample x)
+end
+
+source add audio video = 
+  get = audio#get || video#get
+  events = 
+   | audio:(Sample (Audio x)),video:(Sample (Video y)) ->
+       emit (Sample (Audio x,Video y)
+end
+
+source crossfade s =
+  state = (...) 
+  events = 
+   | s:EOT in duration ->
+       state <- Cross
+       s <- f(s_before,s_after)
+   | s:e -> e
+end
+
+# Variante SPAGHETTI avec handlers globaux sur les events
+# où on peut réagir à un truc sans forcément pomper la source correspondante
+
+source merge s =
+  get = s#get
+  handler
+    | s:EOT -> ()
+end
+
+source on_track f s =
+  get = s#get
+  handler
+    | s:EOT -> f() ; emit EOT
+end
+
+# switch visibilite sur les evenements que tu connais
+source switch f a b =
+  current <- a
+  reselect = current <- if a#is_ready then a else b
+  get = current#get
+  handle
+    | current:EOT -> reselect ; raise EOT
+end

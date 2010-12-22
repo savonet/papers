@@ -1,0 +1,174 @@
+
+source sine freq =
+  method get = sin(time*freq)
+end
+
+source trackify d s =
+
+  val sparse duration = d
+  val mutable t0 = 0
+
+  # Most methods are essentially called by the server,
+  # "outside" of the streaming flow
+  # When possible it's preferable to control the source
+  # by injecting events because it's single-thread
+  # (no need to think about race conditions)
+
+  method change_duration d' =
+    duration <- d'
+
+  # get is a special method
+  # Ici on fait un abus sur le try with puisqu'on catch un test et
+  # pas un evenement mais c'est pour la bonne cause: la pureté
+  # (les effets sont que dans le with)
+
+  method get =
+    try s#get with
+      | time = t0 + duration ->
+          t0 <- time ;
+          emit End_of_track
+
+  # Batard: on fait le emit apres le get...
+  # J'aime bien penser en simplifié que #get fait un nombre de emit
+  # (qui suspendent le calcul) suivis d'un return ou die (pas de sample)
+
+  method get =
+    if time >= t0 + duration then
+      t0 <- time ;
+      emit End_of_track ;
+    s#get
+
+end
+
+# Play a or b, toggling whenever the event happens
+
+source toggle_on a b evt =
+
+  val children = [a,b]
+  val cur = 0
+
+  method get t =
+    try children[cur]#get with
+      | e when e=evt ->
+          cur := 1-cur
+          # e must "come from" the particular #get
+          # e is not re-emitted
+
+end
+
+# A fallback with only two sources
+
+source fallback a b =
+
+  val mutable cur = a
+
+  method get t =
+    try cur#get with
+      | EOT ->
+         # TODO c'est quoi #is_ready?
+         cur <- if a#is_ready then a else b
+         # ici si on a changé de source, on laisse le vieux cur#get
+         # suspendu pour longtemps (on se fout de ce qu'il a après son EOT)
+         raise EOT
+
+end
+
+# Here we un-suspend the coroutine
+
+source merge s =
+  method get =
+    try cur#get with
+      | EOT k -> resume k
+          # k peut etre implicite: on ignore l'evenement et on
+          # dit au cur#get de reprendre comme si de rien n'était
+end
+
+# Forbid tracks without at least d seconds in between
+# Super exemple pour sentir comment #is_ready est inféré de #get
+
+source delay d s =
+  val mutable t_end = 0
+  val in_track = true
+  method get =
+    if (not in_track) && time < t_end+d then die ;
+    in_track <- true ;
+    try cut#get with
+      | EOT ->
+          t_end <- time
+          in_track <- false
+end
+
+# Map2 can only produce when its two sources are available
+# It raises twice as much end_of_tracks?
+
+source map2 f a b =
+  method get t =
+    f a#get b#get
+end
+
+# Audio + video
+# The coding style makes it look like we're producing video and audio
+# all the time (no choice when the code has to be resolution-independent)
+# When streaming, the #get method is lazily evaluated to produce video/audio
+# samples only when needed (typically, much fewer video than audio samples)
+
+source psychedelic color_oscillo sound_oscillo =
+  method get t =
+    # A record is better practice than a tuple
+    # The user won't have a choice
+    { audio = sound_oscillo t ;
+      video = color_oscillo t }
+end
+
+# Swap: too imperative?
+
+source swap_audio s =
+  method get t =
+    let a = s#get in
+      (a.(0),a.(1)) <- (a.(1),a.(0)) ;
+      a
+      # ou bien (equivalent si ya que deux canaux)
+      # (a.(1),a.(0))
+  end
+
+source rms window s =
+
+  val t0 = 0
+  val rms = 0
+
+  # TODO fenetre glissante
+  # TODO comment on parle de samples
+
+  method get =
+    x = s#get
+    rms += audio(x)*audio(x) # *dtime
+    { sqrt(rms/duration) | x }
+
+end
+
+# TODO écrire skip_blank pour l'evenement sample-based
+
+source on_neg s =
+
+  method get =
+    x = s#get
+    if x<0 then emit EOT
+    return x
+
+end
+
+# Ceci est un hack: soit cela influe sur la clock soit on a #is_ready
+# qui dépend des samples...
+
+source remove_neg s =
+
+  # SHAZAM CLOCK s
+
+  method get =
+    let rec foo () =
+      x = s#get
+      if x < 0 then foo () else return x
+    in foo ()
+
+end
+
