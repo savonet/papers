@@ -3,6 +3,10 @@ source sine freq =
   method get = sin(time*freq)
 end
 
+source id s =
+  method get = s#get
+end
+
 source trackify d s =
 
   val sparse duration = d
@@ -30,7 +34,9 @@ source trackify d s =
 
   # Batard: on fait le emit apres le get...
   # J'aime bien penser en simplifié que #get fait un nombre de emit
-  # (qui suspendent le calcul) suivis d'un return ou die (pas de sample)
+  # (qui suspendent le calcul) suivis d'un return ou die/fail (pas de sample)
+  # Le temps local à la source avance après le return (il est freezé
+  # entre les pistes, ce qui correspond aux die)
 
   method get =
     if time >= t0 + duration then
@@ -73,7 +79,18 @@ source fallback a b =
 
 end
 
+# La semantique est claire: ce get ne return que si les deux return,
+# et il re-emet (en se suspendant) les evenements que chacun émettrait
+# L'ordre est non spécifié
+
+source mean s s' =
+  get = (cur#get+cur#get)/2
+end
+
 # Here we un-suspend the coroutine
+# Par contre cette implem laisse un GROS TROU: on vire meme le dernier
+# EOT apres lequel la source peut devenir indispo
+# On veut imposer l'invariant que is_ready ne change qu'apres un EOT
 
 source merge s =
   method get =
@@ -81,6 +98,14 @@ source merge s =
       | EOT k -> resume k
           # k peut etre implicite: on ignore l'evenement et on
           # dit au cur#get de reprendre comme si de rien n'était
+end
+
+# Map2 can only produce when its two sources are available
+# It raises twice as much end_of_tracks?
+
+source map2 f a b =
+  method get t =
+    f a#get b#get
 end
 
 # Forbid tracks without at least d seconds in between
@@ -98,13 +123,16 @@ source delay d s =
           in_track <- false
 end
 
-# Map2 can only produce when its two sources are available
-# It raises twice as much end_of_tracks?
-
-source map2 f a b =
-  method get t =
-    f a#get b#get
-end
+source rms s =
+  rms = 0
+  get =
+    x = s#get
+    rms += s*s
+    nb_samples += 1 # ça ou un time-t0 et un dt
+    if sqrt(rms/nb_samples) <= threshold then
+      emit EOT
+    else
+      return x
 
 # Audio + video
 # The coding style makes it look like we're producing video and audio

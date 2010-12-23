@@ -4,7 +4,49 @@
 
 source sinus freq = 
   events = 
-   | tick -> emit (Sample (sin(t*freq))
+    | tick -> emit (Sample (sin(t*freq))
+end
+
+source id s = 
+  get = s#get
+  events = 
+   | s:e -> emit e
+end
+
+# Avec trackify on a un exemple d'opérateur qui fait un event spontané.
+# Je l'exprime aussi avec tick comme trigger... du coup on peut pas
+# faire d'evenement pas calé sur le temps?
+
+source trackify d s =
+  mutable t0 = 0
+  events =
+    | tick -> if time>=t0+duration then ( t0 <- 0 ; emit EOT )
+    | s:e -> emit e
+end
+
+# Memes remarques qu'en coroutine
+
+source toggle_on a b evt =
+  children = [a,b]
+  cur = 0
+  events =
+    | cur:e -> if e=evt then cur := 1-cur else emit e
+end
+
+# La vraie question sur le switch c'est comment on fait #is_ready
+# on peut imaginer analyser le code pour l'inférer:
+#   pour chaque source on regarde comment elle pourrait émettre
+#   (soit un sample soit un eot ou pourquoi pas autre chose)
+#   et cela va cascader en #is_ready sur d'autres sources, etc
+# Au fond c'est encore une fois tres proche de l'approche coroutine
+
+source switch l =
+  current = reselect()
+  reselect() =
+    renvoyer le premier s#is_ready dans l
+  events
+   | current:EOT -> current<-reselect(); emit EOT
+   | current:e -> e
 end
 
 source mean s s' =
@@ -14,40 +56,39 @@ source mean s s' =
    | s:(Sample x),s':(Sample x') -> emit (Sample (x + x') / 2)
 end
 
-source id s = 
-  get = s#get
-  events = 
-   | s:e -> emit e
+# Meme faille qu'en coroutine
+
+source merge s =
+  events
+    | s:EOT -> ()
+    | s:e -> emit e
 end
 
-# La vraie question sur le switch c'est comment on fait #is_ready
-
-source switch l =
-  current = (..)
-  get = current#get
-  events 
-   | current:EOT -> reselect; emit EOT
-   | current:e -> e
-end
+# Dans RMS on peut calculer #is_ready statiquement (c'est s#is_ready)
+# mais on ne pourrait pas savoir si on va avoir une fin de piste
+# sans connaitre le prochain sample (a moins de traiter la condition
+# sur le rms en sparse)... de tte façon on ne sait pas si on en a besoin
 
 source rms s = 
-  get = s#get
-  rms = (...)
+  rms = 0
   events
    | current:(Sample s) -> 
-       rms += s*s ;
-       if rms <= threshold then
+       rms += s*s
+       nb_samples += 1
+       if sqrt(rms/nb_samples) <= threshold then
          emit EOT
        else
          emit (Sample x)
 end
 
-source add audio video = 
+source mux audio video = 
   get = audio#get || video#get
   events = 
    | audio:(Sample (Audio x)),video:(Sample (Video y)) ->
        emit (Sample (Audio x,Video y)
 end
+
+# Pas fini...
 
 source crossfade s =
   state = (...) 
@@ -56,28 +97,4 @@ source crossfade s =
        state <- Cross
        s <- f(s_before,s_after)
    | s:e -> e
-end
-
-# Variante SPAGHETTI avec handlers globaux sur les events
-# où on peut réagir à un truc sans forcément pomper la source correspondante
-
-source merge s =
-  get = s#get
-  handler
-    | s:EOT -> ()
-end
-
-source on_track f s =
-  get = s#get
-  handler
-    | s:EOT -> f() ; emit EOT
-end
-
-# switch visibilite sur les evenements que tu connais
-source switch f a b =
-  current <- a
-  reselect = current <- if a#is_ready then a else b
-  get = current#get
-  handle
-    | current:EOT -> reselect ; raise EOT
 end
