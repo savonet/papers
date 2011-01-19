@@ -588,6 +588,20 @@ to do it in a way which is not too verbose. The idea of labels and colabels is
 however interesting. In particular, optional coarguments mean that a default
 continuation can be given.
 
+\newpage
+\section{The monadic approach}
+\subsection{Streams}
+Suppose fixed a type~$\tau$ for time.
+\begin{itemize}
+\item on types: $TA=\tau\to A$
+\item return: $r=\lambda x.(\lambda t.x):A\to TA$
+\item bind: $b=\lambda fx.(\lambda t.f(xt)t):(A\to TB)\to TA\to TB$
+\item on morphisms: $Tf=\lambda t.(\lambda x.f(xt)):TA\to TB$
+\end{itemize}
+
+Notice that $Tf=b(r\circ f)=b(\lambda x.r(fx))$
+
+\newpage
 \section{State of the art}
 Wikipedia gives a good starting
 point\footnote{\url{http://en.wikipedia.org/wiki/Comparison_of_audio_synthesis_environments}}.
@@ -617,6 +631,13 @@ times~\cite{csound}.
 \subsubsection{Faust}
 \cite{faust}
 Textual
+
+\subsubsection{Haskell implementations}
+There are various libraries for manipulating data streams / simulating digital
+circuits in Haskell: ForSyDe, Hawk, Lava, etc. See
+\url{http://www.haskell.org/haskellwiki/Applications_and_libraries/Hardware_verification}. Pros:
+easy to implement, cons: very unnatural syntax, relatively low-level and
+unconstrained. See also \url{http://www.haskell.org/haskellwiki/Synthesizer}.
 
 \subsubsection{Impromptu}
 \cite{impromptu} Textual with a Lisp syntax (Scheme). Very nice examples of ``live
@@ -680,6 +701,7 @@ http://conal.net/papers/icfp97/
   \url{http://csounds.com/instruments}
 \end{itemize}
 
+\newpage
 \bibliographystyle{plain}
 \bibliography{sound}
 \end{document}

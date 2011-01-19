@@ -1,0 +1,88 @@
+
+L'autre jour après avoir dit à Sam que EOT c'est pas juste un
+evenement, je me suis dit que ce serait utile d'écrire de façon
+précise ce genre de réflexions. Je le fais par mail, parce que je sais
+pas où le mettre sur SVN, mais n'hésitez pas à changer de medium si
+vous voulez.
+
+
+GUIDELINES
+
+Le but de ces réflexions n'est pas de contraindre dogmatiquement ce
+qui peut etre tenté, mais d'offrir des énoncés simples. Ainsi quand on
+propose un design on peut vérifier s'il répond à chaque point, ou
+proposer un argument expliquant pourquoi le point est invalide. Ces
+points sont loin d'etre tous dépendants.
+
+On a vu que tenter de parler syntaxe ne mène pas à grand chose. Ici je
+parle en termes très généraux. J'utilise #get et #is_ready
+informellement.
+
+1. Le temps local à une source n'avance pas quand elle n'est pas
+utilisée. Autrement dit, on veut du streaming paresseux, et c'est
+ingérable sans introduire des échelles de temps locales.
+
+2. L'indisponibilité n'est pas la production d'un élément spécial
+\bot. Sinon il faudrait consommer le \bot pour faire avancer la source
+(son temps local) et ainsi sortir de l'indisponibilité.
+
+3. EOT n'est pas un évènement (en tout cas pas un comme les autres)
+car sa sémantique est couplée à la disponibilité d'un flux.
+
+4. Les évenements doivent (pouvoir) etre preemptifs, en tout cas pour EOT.
+
+5. #is_ready ne peut être simulé en tentant de faire un #get. En
+effet, cela fait avancer la source interrogée. Or, on veut pouvoir
+vérifier si une source est disponible sans pour autant s'engager à la
+consommer.
+
+6. Le sampling rate doit être invisible et modifiable pour le cas des
+opérateurs "pur", qui doit pouvoir se formaliser facilement sur la
+syntaxe choisie.
+
+7. Le modèle de calcul doit permettre de facilement sampler
+indépendamment différents types de données (audio, video, les deux) à
+un instant donné.
+
+
+REFLEXIONS
+
+Les points (1) et (2) peuvent etre jetés à la poubelle pour la
+sémantique. Mais le projet ne s'appelle pas liquidsoap 2 si ils ne
+sont pas dans le langage concret.
+
+Le point (3) peut etre pris plus ou moins sérieusement, mais
+j'aimerais bien que la syntaxe et/ou des analyses statiques permettent
+de garantir qu'un flux n'échoue pas sans émettre EOT et
+réciproquement. La sémantique de ces choses est liée à #is_ready aussi
+bien sûr.
+
+Par rapport au point (2) une question naturelle est "mais alors,
+qu'est qui fait évoluer la source pour la rendre indisponible?". La
+disponibilité peut etre restaurée à une date fixe (donné dans le temps
+de l'horloge globale) ou alors dépendre de l'environnement (date
+donnée en temps "réel", ou par exemple disponibilité d'un buffer pour
+input.http).
+
+Sur (5) on peut ajouter un raffinement: pouvoir demander si une source
+dispo a un sample à produire ou si elle est sur le point d'émettre EOT
+et de devenir indispo. Cela peut être utile pour "bien" implémenter un
+mux. Je crois que dans mes billets sur le blog j'avais fait venir ce
+besoin assez naturellement.
+
+Les points (6) et (7) permettent d'envisager de faire de l'adaptation
+de samplerate, et en particulier de dropper des frames. Au passage, je
+crois que cela fait apparaitre plusieurs façons de resampler. Par
+exemple si tu veux stretcher une sine(), la rendre deux fois plus
+lente, tu peux lui demander deux fois plus de samples et tu n'as pas à
+appliquer un algo de resampling. Cela ne fonctionne pas avec un
+fichier décodé. Mais on pourrait imaginer déporter le resampling
+uniquement sur les fichiers (alors qu'actuellement on le fait une fois
+sur les fichiers pour aller vers 44100 puis encore une fois si ya un
+noeud de resampling).
+
+
+J'ai pas le temps de décrire un peu mes tentatives récentes, une en
+style algèbre de processus, une en style graphique, et une
+indescriptible. De toute façon il n'y a rien qui constitue une réponse
+choc...
