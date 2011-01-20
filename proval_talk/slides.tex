@@ -1,0 +1,558 @@
+\documentclass{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+
+\usetheme{Pittsburgh}
+\useinnertheme{default}
+\setbeamertemplate{footline}[page number]
+\setbeamertemplate{navigation symbols}{}
+
+%\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\lstset{ %
+language=Ruby,                % choose the language of the code
+basicstyle=\footnotesize,       % the size of the fonts that are used for the code
+numbers=left,                   % where to put the line-numbers
+numberstyle=\footnotesize,      % the size of the fonts that are used for the line-numbers
+stepnumber=0,                   % the step between two line-numbers. If it's 1 each line 
+                                % will be numbered
+numbersep=5pt,                  % how far the line-numbers are from the code
+backgroundcolor=\color{white},  % choose the background color. You must add \usepackage{color}
+showspaces=false,               % show spaces adding particular underscores
+showstringspaces=false,         % underline spaces within strings
+showtabs=false,                 % show tabs within strings adding particular underscores
+frame=none,	                % adds a frame around the code
+tabsize=2,	                % sets default tabsize to 2 spaces
+captionpos=b,                   % sets the caption-position to bottom
+breaklines=true,                % sets automatic line breaking
+breakatwhitespace=false,        % sets if automatic breaks should only happen at whitespace
+title=\lstname,                 % show the filename of files included with \lstinputlisting;
+                                % also try caption instead of title
+escapeinside={\%*}{*)},         % if you want to add a comment within your code
+emph={add,output,input,icecast,single,playlist,file,
+              fallback,crossfade,http,fade,initial,final,cross},            % if you want to add more keywords to the set
+keywordstyle=\color[rgb]{0,0.5,0.3},
+emphstyle=\color{red},
+stringstyle=\color{blue},
+}
+
+\newcommand{\kw}[1]{{\color{red} #1}}
+
+\usepackage{tikz}
+\usepackage[all]{xy}
+
+\renewcommand{\emph}[1]{\alert{#1}}
+\renewcommand{\textbf}[1]{{\color{blue} #1}}
+
+\usepackage{mathpartir}
+
+\newcommand{\liquidsoap}{Liquidsoap}
+\newcommand{\savonet}{Savonet}
+\newcommand{\eg}{e.g.~}
+\newcommand{\cf}{cf.~}
+\newcommand{\letin}[3]{\text{\texttt{let }} #1 = #2 \text{\texttt{ in }} #3}
+\newcommand{\univ}[2]{\forall #1.~ #2}
+\newcommand{\regle}[1]{\text{\textrm{(#1)}}}
+\newcommand{\mabs}[2]{{\color{red}\lambda\{}#1{\color{red}\}.}#2}
+\newcommand{\tmabs}[2]{\{#1\}\to #2}
+\newcommand{\mapp}[2]{#1{\color{red}\{}#2{\color{red}\}}}
+\renewcommand{\vec}[1]{\overrightarrow{#1}}
+\newcommand{\TODO}[1]{\textbf{TODO~: }{#1}}
+\newcommand{\FV}[1]{\mathcal{FV}(#1)}
+\newcommand{\eqdef}{:=}
+\newcommand{\interp}[1]{\llbracket{#1}\rrbracket}
+
+\newcommand{\sub}{\leq}
+
+\title{\emph{\LARGE Liquidsoap} \\
+  Un langage de programmation \\ pour les flux~multimedia}
+\date{David Baelde} % pour le séminaire Proval du 20 janvier
+
+\begin{document}
+
+\begin{frame}
+  \maketitle
+\end{frame}
+
+\begin{frame}{Introduction}
+
+  \begin{block}{Radio web}
+  \begin{itemize}
+  \item \emph{Production}, diffusion et écoute de flux audio
+  \item Outils à \emph{utilisation unique}, graphiques ou pas
+    % légers et communicants (ices, ezstream, darkice)
+    % ou graphiques plus complets (rivendell, winradio).
+  \end{itemize}
+  \end{block}
+
+  \begin{block}{Liquidsoap}
+  \begin{enumerate}
+  \item Interfaces: bibliothèques, applications externes et distantes
+  \item Modèle: Une notion abstraite de source (générateur de flux)
+  \item \emph{Langage}: accès libre et sûr au modèle
+  \end{enumerate}
+  \end{block}
+
+  \begin{block}{Historique}
+  \begin{itemize}
+  \item Depuis 2003 (ENS Lyon) avec S.~Mimram, R.~Beauxis
+  \item 100k LOC dans trunk, 58k lignes de Caml pour liquidsoap
+  \item Stable, ``nombreux'' utilisateurs
+    % indépendantes, étudiantes, commerciales
+    % musique, politique, art
+  \end{itemize}
+  \end{block}
+
+\end{frame}
+
+
+%% =======================================================================
+
+\begin{frame}[fragile]{Principe}
+
+\vspace{0.5cm}
+
+\[
+\xymatrix{
+  *+[F]{\mathtt{input.http}} \ar[r] &
+     *+[F]{\mathtt{fallback}} \ar[r]\ar[dr] &
+     *+<7pt>[F=]{\mathtt{output.icecast}} \\
+  *+[F]{\mathtt{playlist}}\ar[ur] &
+     % *+[F]{\mathtt{crossfade}}\ar[u]
+     &
+     *+<7pt>[F=]{\mathtt{output.file}}\\
+}
+\]
+
+\vspace{1cm}
+
+\only<1>{\begin{block}{Une source, c'est quoi?}
+  \begin{itemize}
+    \item Flux d'échantillons, avec pistes et meta-données
+    \item Peut être temporairement indisponible
+    \item Passif (paresseux) ou actif (typiquement, sorties)
+  \end{itemize}
+\end{block}}
+
+\pause
+
+\begin{block}{Script}
+Sources représentées par un \emph{type abstrait}
+\begin{lstlisting}
+live = input.http("http://server:8000/live.ogg")
+music = playlist("/path/to/music")
+s = fallback(track_sensitive=false,[live,music])
+output.icecast(%vorbis,mount="radio.ogg",s)
+output.file(%mp3(bitrate=16),"/path/to/backup.ogg",s)
+\end{lstlisting}
+\end{block}
+
+\end{frame}
+
+\begin{frame}[fragile]{Transitions}
+
+  \begin{center}
+  \begin{tikzpicture}[xscale=0.8,yscale=0.8]
+  \draw[->] (0,0) -- (0,2.5);
+  \draw (-0.1,2) -- (0.1,2);
+  \draw (0,2) node[anchor=east]{100};
+  \draw (0,0) node[anchor=east]{0};
+  \draw[->] (0,0) -- (7.5,0);
+  \foreach \x in {1,2,3,4,5,6,7} \draw (\x,-0.1) -- (\x,0.1);
+  \draw (0,2.5) node[anchor=south]{volume (\%)};
+  \draw (7.5,0) node[anchor=west]{time (sec)};
+  \draw (0,2) -- (2,2) -- (5,0);
+  \draw (2,0) -- (4,2) -- (7.5,2);
+  \draw (1,2) node[anchor=south]{old};
+  \draw (6,2) node[anchor=south]{new};
+  \end{tikzpicture}
+  \end{center}
+
+\vfill
+
+  \begin{lstlisting}
+  def f(old,new) =
+    add([fade.initial(duration=2.,new),
+         fade.final(duration=3.,old)])
+  end
+  s = fallback(track_sensitive=false,
+               transitions=[f,f],
+               [live,music])
+  \end{lstlisting}
+
+\end{frame}
+
+%% =======================================================================
+
+\begin{frame}[fragile]{Le langage liquidsoap}
+
+  \begin{block}{Pourquoi un nouveau langage}
+  \begin{itemize}
+    \item Fonctionnel, statiquement typé, étiquettes
+\begin{center}\tiny\begin{verbatim}
+$ liquidsoap -h cross
+Generic cross operator, allowing the composition of the N last seconds of a track with
+the beginning of the next track.
+Type: (?id:string, ?duration:float, ?override:string, ?inhibit:float, ?minimum:float,
+       ?conservative:bool, ?active:bool, ((source('a), source('a))->source('a)),
+       source('a))->source('a)
+Parameters:
+* duration : float (default 5.)
+    Duration in seconds of the crossed end of track. This value can be changed on a ...
+* override : string (default "liq_start_next")
+    Metadata field which, if present and containing a float, overrides the 'duration' ...
+* inhibit : float (default -1.)
+    Minimum delay between two transitions. It is useful in order to avoid that a ...
+* minimum : float (default -1.)
+    Minimum duration (in sec.) for a cross: If the track ends without any warning ...
+* conservative : bool (default false)
+    Do not trust remaining time estimations, always buffering data in advance. This ...
+...
+\end{verbatim}\end{center}
+    \item Besoin d'analyses plus ou moins statiques
+    \item Système de type spécifique
+  \end{itemize}
+  \end{block}
+
+  % Pas de type principal, mais on peut plonger
+  % En pratique: inférence limitée aux cas simples.
+
+\end{frame}
+
+\begin{frame}[fragile]{Les étiquettes d'OCaml}
+
+\vspace{0.5cm}
+
+  \begin{block}{Sucre syntaxique typé, éliminé à la compilation}
+  \vspace{-0.3cm}\begin{verbatim}
+# let app f = f ~a:1 ~b:2 ;;
+val app : (a:int -> b:int -> 'a) -> 'a = <fun>
+# app (fun ~b ~a -> a+b) ;;
+This function should have type a:int -> b:int -> 'a.
+  \end{verbatim}
+  \end{block}
+
+  \begin{block}{Multi-application cachée, arité non nulle}
+  \vspace{-0.3cm}\begin{verbatim}
+# let f ?(a=false) () = a ;;
+val f : ?a:bool -> unit -> bool = <fun>
+# f () ~a:true ;;
+- : bool = true
+# (f ()) ~a:true ;;
+This expression is not a function, it cannot be applied.
+  \end{verbatim}
+  \end{block}
+
+\end{frame}
+
+\begin{frame}{Termes}
+
+Petit ML avec multi-abstraction et application:
+\begin{eqnarray*}
+  M &::=& v \\
+  &|& x \\
+  &|& \letin{x}{M}{M} \\
+  &|& \lambda \{\ldots, l_i:x_i, \ldots, l_j:x_j=M, \ldots\}.M \\
+  &|& M\{l_1=M,\ldots,l_n=M\}
+\end{eqnarray*}
+
+\vfill
+
+Modulo \emph{permutation d'étiquettes distinctes}:
+\[ \small
+ \begin{array}{rcl}
+ \lambda \{ \Gamma, l:x, l':x', \Delta \}.M & \equiv &
+ \lambda \{ \Gamma, l':x', l:x, \Delta \}.M \\
+ \lambda \{ \Gamma, l:x=N, l':x', \Delta \}.M & \equiv &
+ \lambda \{ \Gamma, l':x', l:x=N, \Delta \}.M \\
+ \lambda \{ \Gamma, l:x=N, l':x'=N', \Delta \}.M & \equiv &
+ \lambda \{ \Gamma, l':x'=N', l:x=N, \Delta \}.M
+ \end{array}
+\]
+
+\end{frame}
+
+\begin{frame}{Réduction}
+On a trois règles de réduction:
+\[
+ \letin{x}{M}{N}
+   {\color{red}\;\leadsto\;}
+   N[M/x]
+\]
+L'application peut être \emph{partielle}
+  si $\Gamma$ est \emph{ineffaçable}:
+\[
+ (\lambda\{\vec{l_i:x_i,l_j:x_j=M_j},\Gamma\}.M)\{\vec{l_i=N_i}\}
+   {\color{red}\;\leadsto\;}
+   \lambda\{\Gamma\}.(M[\vec{N_i/x_i}])
+  \]
+ou \emph{totale} sinon:
+\[
+(\lambda\{\vec{l_i:x_i,l_j:x_j=P_j},\vec{l'_k:y_k=M_k}\}.M)\{\vec{l_i=N_i}\}
+   {\color{red}\;\leadsto\;}
+   M[\vec{N_i/x_i},\vec{M_k/y_k}]
+ \]
+
+\begin{block}{Exemple}
+\begin{itemize}
+  \item $F := \mabs{l_1:x,l_2:y={\color{blue}12},l_3:z={\color{blue}13}}{M}$
+  \item $\mapp{F}{l_3={\color{blue}3}} \leadsto \mabs{l_1:x,l_2:y={\color{blue}12}}{M[{\color{blue}3}/z]}$
+  \item $\mapp{\mapp{F}{l_3={\color{blue}3}}}{l_1={\color{blue}1}} \leadsto M[{\color{blue}1}/x,{\color{blue}12}/y,{\color{blue}3}/z]$
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Typage}
+
+\begin{block}{Types}
+\begin{eqnarray*}
+  t &::=& \iota
+  \quad\mathop{|}\quad \alpha
+  \quad\mathop{|}\quad
+     \{\ldots, l_i:t_i,\ldots, ?l_j:t_j, \ldots\} \rightarrow t \\
+ \sigma &::=& t
+    \quad\mathop{|}\quad \univ{\alpha}{\sigma} \label{tt:univ}
+\end{eqnarray*}
+\end{block}
+
+\vfill
+
+\begin{block}{Règles}
+\[
+  \inferrule{%
+    \Gamma\vdash N_i:t_i \mbox{ pour chaque $i$} \\ %
+    \Gamma \vdash M:\{\ldots, l_i:t_i\ldots, ?l_j:t_j,\ldots\}\rightarrow t
+  }{%
+    \Gamma \vdash M \{ \ldots, l_i=N_i, \ldots, l_j=N_j, \ldots \} : t %
+  }
+\]
+\vspace{0.1cm}
+\[ \small
+  \inferrule{ %
+    \Gamma, \ldots, x_i:t_i, \ldots, x_j:t_j, \ldots \vdash M : t
+    \\ \cdots \\
+    \Gamma\vdash M_j:t_j
+    \\ \cdots %
+  }{%
+    \Gamma\vdash\lambda\{ \ldots, l_i:x_i,\ldots, l_j:x_j=M_j, \ldots \}.M
+    : \{ \ldots, l_i:t_i,\ldots, ?l_j:t_j,\ldots \} \rightarrow t}
+\]
+\end{block}
+
+\end{frame}
+
+\begin{frame}{Sous-typage et application partielle}
+
+Pour \textbf{accorder réduction et typage},
+une fonction de type $\tmabs{l_1:t_1,l_2:t_2}{t}$
+doit pouvoir être considérée comme une fonction de type
+$\tmabs{l_1:t_1}{\tmabs{l_2:t_2}{t}}$.
+
+\vfill
+
+\[
+\inferrule{\mbox{$\Delta$ ineffaçable}}{
+  \{ \Gamma, \Delta \}\rightarrow t \;{\color{red}\leq}\;
+       \{\Gamma\}\rightarrow\{\Delta\}\rightarrow t
+}
+\qquad
+\inferrule{\mbox{$\Delta$ effaçable}}{
+  \{ \Gamma, \Delta \}\rightarrow t
+ \;{\color{red}\leq}\;
+  \{\Gamma\}\rightarrow t
+}
+\]
+
+\vfill
+
+Quelques équations invalides:
+\begin{itemize}
+\item $
+\tmabs{l_1:t_1}{\tmabs{l_2:t_2}{t}}
+\;{\color{red}\not\leq}\;
+\tmabs{l_1:t_1,l_2:t_2}{t}
+$
+\item $\tmabs{\Gamma,?l:t,\Delta}{t'} \;{\color{red}\not\leq}\;
+  \tmabs{\Gamma,l:t,\Delta}{t'}$
+\end{itemize}
+\end{frame}
+
+%% =======================================================================
+
+\begin{frame}{Typage du contenu}
+
+%{\color{gray}[Version 1.0 beta]}
+Chaque source a son propre type de contenu, \\
+  un nombre quelconque de canaux audio, video ou midi.
+%\begin{itemize}
+%\item Contrôle des conversions stereo/mono/dolby
+%\item Support plus naturel de la video et du MIDI
+%\end{itemize}
+
+\vfill
+
+\begin{block}{Arités: fixes ou variables}
+\[
+a\quad ::=\quad \star \;|\; 0 \;|\; S(a)
+\]
+\vfill
+\[
+   \inferrule{~}{0\sub 0} \quad\quad
+   \inferrule{A\sub A'}{S(A)\sub S(A')} \quad\quad
+   \inferrule{~}{\star\sub\star} \quad\quad
+   \inferrule{~}{0\sub \star} \quad\quad
+   \inferrule{A\sub\star}{S(A)\sub \star}
+\]\[
+   \inferrule{A \sub A' \\ B\sub B' \\ C\sub C'}{(A,B,C) \sub (A',B',C')}
+\]
+\end{block}
+
+\end{frame}
+
+\begin{frame}{Typage du contenu}
+
+\vspace{0.5cm}
+
+  \texttt{\small
+    \begin{tabular}{rcl}
+    swap&:&(source(2,0,0)) -> source(2,0,0)\\
+    blank &:& () -> source('*a,'*b,'*c) \\
+    on\_metadata&:&(handler,source('*a,'*b,'*c)) -> \\
+           & & source('*a,'*b,'*c)\\
+    echo&:&(delay:float,source('\#a,0,0)) -> \\
+        & & source('\#a,0,0)\\
+    % DB vire le prefixe "video." pour faire de la place a gauche
+    %  en vrai greyscale veut du fixed arity, pcq son implem est pas
+    %  assez générale
+    greyscale&:&(source('*a,'*b+1,'*c)) -> \\ & & source('*a,'*b+1,'*c)\\
+    output.file &:& 
+       (format('*a,'*b,'*c), string, \\
+     & & \phantom{(}source('*a,'*b,'*c)) ->\\
+     & & source('*a,'*b,'*c)
+    \end{tabular}
+  }
+
+  \begin{block}{Remarques}
+  \begin{itemize}
+  \item Contraintes de type spécifiques
+  \item On forcer les types inconnus
+  \item Polymorphisme ad-hoc / non-paramétrique (FFI only)
+  \end{itemize}
+  \end{block}
+
+\end{frame}
+
+%% =======================================================================
+
+\begin{frame}[fragile]{Horloges multiples}
+
+%{\color{gray}[Version 1.0 beta]}
+%Décentralisation de l'horloge
+
+\[ \small
+\xymatrix{
+   *+[F]{\mathtt{playlist}}\ar[r]
+   {\save "1,1"*+<10pt>[F--]\frm{} \restore}
+   & *+[F]{\mathtt{crossfade}}\ar[r] &
+      *+[F]{\mathtt{fallback}}\ar[r]& *+[F]{\mathtt{output}} \\
+   & & *+[F]{\mathtt{jingles}}\ar[u]
+   {\save "2,3"-<20pt>."1,4"."1,1"*+<20pt>[F--]\frm{} \restore}
+   &
+}
+\]
+
+\vfill
+
+\begin{block}{Script}
+Inférence automatique, mais pas statique
+\begin{lstlisting}
+output.icecast(%vorbis,mount="myradio",
+  fallback([crossfade(playlist("some.txt")),jingles]))
+\end{lstlisting}
+\end{block}
+
+\end{frame}
+
+\begin{frame}{Horloges}
+
+\begin{block}{Utilisations}
+\begin{itemize}
+\item \'Eviter les incohérences temporelles internes
+   (\kw{cross}, \kw{stretch}\ldots)
+\item Contrôler le parallélisme, exploiter plusieurs coeurs
+\item Gérer les écarts et blocages de multiples horloges externes
+\[
+\xymatrix{
+  \text{\only<1->{\color{red}}remote server A} \ar[dr] &
+        & \mbox{\only<1->{\color{gray}}remote server B} \\
+  \text{\only<1->{\color{blue}}soundcard 1} \ar[r]      &
+                \text{liquidsoap} \ar[ur]\ar[r]\ar[dr]
+        & \mbox{\only<1->{\color{blue}}soundcard 1}     \\
+  \text{\only<1->{\color{green}}soundcard 2} \ar[ur] &
+        & \mbox{\only<1->{\color{blue}}backup file}
+}
+\]
+\end{itemize}
+\end{block}
+
+\end{frame}
+
+%% =======================================================================
+
+\begin{frame}{En pratique}
+
+\begin{block}{Implémentation}
+\begin{itemize}
+ \item Langage: traits impératifs, suffisamment d'inférence
+ \item User-friendly:
+   messages simples, cacher ce qui peut l'être, doc
+ \item OCaml: utilisation des étiquettes et de l'objet
+ \item Structure par plugins
+ \item Efficace: traitement par bloc, en place (analyse du partage)
+\end{itemize}
+\end{block}
+
+\vfill
+
+\begin{block}{Fonctionnalités}
+\begin{itemize}
+\item Sources: fichier, playlist, queues, script externe
+\item Opérateurs: switch, add, traitement du signal, évènements
+% TODO détection de blanc visible?
+% \item Traitement du signal: compression, changer la hauteur, etc.
+% \item Gestion d'évènements: pistes, metadonnée, silence
+\item Interfaces: serveurs de diffusion, carte son, librairies audio
+\item Formats: WAV, Ogg, MP3, AAC+, Flac, externe
+\item Requêtes et protocoles, serveur, etc.
+\end{itemize}
+\end{block}
+
+\end{frame}
+
+
+%% =======================================================================
+
+\begin{frame}{Conclusion}
+
+\begin{block}{Liquidsoap}
+\begin{itemize}
+  \item Une boîte à outil pour le streaming multimedia
+  \item Un logiciel OCaml relativement gros et grand public
+  \item De la programmation fonctionnelle dans les mains de tous
+\end{itemize}
+\end{block}
+
+\vfill
+
+\begin{block}{Liquidsoap 2.0: un nouveau langage}
+\begin{itemize}
+\item Exposer la définition des sources dans le langage
+\item Compiler: sûreté, efficacité, nouvelles applications
+\item Liens avec les systèmes synchrones et hybrides
+\end{itemize}
+\end{block}
+
+\end{frame}
+
+\end{document}
