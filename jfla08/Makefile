@@ -1,11 +1,14 @@
 FIG = transitions.tex transitions-out.tex transitions-out-in.tex
 FIGPDF = $(FIG:.tex=.pdf)
 
-pdf: baelde.pdf
+pdf: baelde.pdf slides.pdf
 
 baelde.pdf: baelde.tex $(FIGPDF)
 #	if [ -f /usr/bin/rubber ]; then rubber -d $^; else pdflatex $^; fi
-	pdflatex $^
+	pdflatex $<
+
+slides.pdf: slides.tex $(FIGPDF)
+	pdflatex $<
 
 figures: $(FIGPDF)
 
