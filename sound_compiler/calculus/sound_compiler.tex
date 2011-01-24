@@ -590,16 +590,71 @@ continuation can be given.
 
 \newpage
 \section{The monadic approach}
+We write $g\circ f$ for $\lambda x.f(gx)$.
+
+\subsection{Monads}
+A monad~$T$ is defined by
+\begin{itemize}
+\item return: $\rho:A\to TA$
+\item bind: $\beta:(A\to TB)\to TA\to TB$
+\end{itemize}
+
+In order to fulfill typing coherence, we sometimes need to add implicit
+coercions when applying functions to arguments. Here are a few examples, on how to compute $fx$.
+\begin{itemize}
+\item lifting arguments
+  \[
+  \inferrule{f:TA\to B\\ x:A}{f(\rho x):B}
+  \]
+\item lifting functions
+  \[
+  \inferrule{f:A\to B\\x:TA}{\beta(\rho\circ f)x:TB}
+  \qquad
+  \inferrule{f:A\to B\\x:TA}{(\lambda x_0.\beta(\lambda x_0'.\rho(f x_0'))x_0)x:TB}
+  \]
+\item lifting lifted functions
+  \[
+  \inferrule{f:A\to TB\\x:TA}{\beta f:TB}
+  \]
+  notice that we don't want to apply previous case here and lift twice the result
+\item lifting functions with two arguments
+  \[
+  \inferrule{f:A\to B\to C\\x:TA}{(\lambda x_0 x_1.\beta(\lambda x_0'.\beta(\lambda x_1'.\rho(f x_0' x_1'))x_1)x_0)x:TB\to TC}
+  \qquad
+  \inferrule{f:A\to B\to C\\x:TA}{(\lambda x_0 x_1.\beta(\lambda x_0'.\beta(\rho\circ(f x_0'))x_1)x_0)x:TB\to TC}
+  \]
+\item
+  \[
+  \inferrule{f:A\to B\to C\to TD\\x:TA}{\beta(\lambda x.f x y z)x:B\to C\to TD}
+  \]
+\end{itemize}
+
+
 \subsection{Streams}
 Suppose fixed a type~$\tau$ for time.
 \begin{itemize}
-\item on types: $TA=\tau\to A$
-\item return: $r=\lambda x.(\lambda t.x):A\to TA$
-\item bind: $b=\lambda fx.(\lambda t.f(xt)t):(A\to TB)\to TA\to TB$
-\item on morphisms: $Tf=\lambda t.(\lambda x.f(xt)):TA\to TB$
+\item on types: $SA=\tau\to A$
+\item return: $\rho=\lambda x.(\lambda t.x):A\to SA$
+\item bind: $\beta=\lambda fx.(\lambda t.f(xt)t):(A\to SB)\to SA\to SB$
+\item on morphisms: $Sf=\lambda t.(\lambda x.f(xt)):SA\to SB$
 \end{itemize}
 
-Notice that $Tf=b(r\circ f)=b(\lambda x.r(fx))$
+Feedback has type $\mathcal{F}:A\to S(A\to A)\to SA$
+
+\subsection{Concrete cases}
+\subsubsection{Vibrato}
+A sine at freq $f_0$ is $\sin(2\pi f_0 t)$. Now, suppose that we want to have a
+varying frequency $f(t)$, e.g. $f(t)=f_0+f_\Delta\cos(2\pi t)$. The natural
+thing to consider would be
+\[
+\sin(2\pi f(t) t)
+\]
+(this is actually what is given by the monadic composition). However this is
+not correct since amplitude augments with time. The correct answer is
+\[
+\sin(2\pi f_0 t+f_\Delta\cos(2\pi t))
+\]
+How do we achieve this cleanly with monads?
 
 \newpage
 \section{State of the art}
