@@ -1,7 +1,4 @@
-pdf: savonet.pdf
-
-savonet.pdf: $(wildcard *tex)
-	if [ -f /usr/bin/rubber ]; then rubber -d -W refs savonet; else pdflatex savonet; fi
+pdf: savonet.pdf talk.pdf
 
 dist:
 	mkdir sofsem11
@@ -11,3 +8,6 @@ dist:
 
 clean:
 	rubber -d --clean savonet.tex
+
+%.pdf: %.tex
+	rubber -d $<
