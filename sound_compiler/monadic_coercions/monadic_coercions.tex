@@ -12,8 +12,8 @@
 \renewcommand{\leq}{\leqslant}
 \renewcommand{\geq}{\geqslant}
 \renewcommand{\labelitemi}{--}
-\newcommand{\cast}[1]{\leq_{#1}}
-\newcommand{\qcast}[1]{\quad\cast{#1}\quad}
+\newcommand{\cast}{\leq}
+\newcommand{\qcast}{\quad\cast\quad}
 \newcommand{\casted}[1]{\overline{#1}}
 \newcommand{\qeq}{\quad=\quad}
 \newcommand{\add}{\mathop{add}}
@@ -42,6 +42,11 @@ Monads are a classical notion in category theory~\cite{mac1998categories}. They
 were introduced in computer science by Moggi~\cite{moggi2002computational} and
 mad popular by Wadler~\cite{wadler1992comprehending}.
 
+Mention Haskell's typeclasses and support for monads. However, this is not what
+we want (explain why).
+
+We want \emph{coercions} (or \emph{type conversion}).
+
 What we want is sometimes called
 \emph{autolifting}\footnote{\url{http://haskell.1045720.n5.nabble.com/Making-monadic-code-more-concise-td3266090.html}}.
 
@@ -52,6 +57,7 @@ non-deterministic and thus not canonical.
 A notion of subtyping between monad is studied in~\cite{tolmach1998optimizing}.
 
 A completely unrelated paper with a cool title~\cite{shalgi2008being}.
+
 
 \section{A $\lambda$-calculus with monadic types}
 
@@ -83,8 +89,8 @@ $(\add\ [1;2;3]\ 1)$ should be automatically converted to ... which evaluates
 to~$[2;3;4]$.
 
 Every monad thus defines a preorder relation, called \emph{casting}, on types as
-the reflexive and transitive closure of the smallest relation~$\cast T$ on
-types, where \hbox{$A\cast T B$} means that every value of type~$A$ may be
+the reflexive and transitive closure of the smallest relation~$\cast$ on
+types, where \hbox{$A\cast B$} means that every value of type~$A$ may be
 casted into a value of type~$B$, or more precisely that every typing proof on
 the left of~\eqref{eq:cast} may be transformed in to a typing proof of the form
 given on the right of~\eqref{eq:cast}, what we write
@@ -94,10 +100,21 @@ given on the right of~\eqref{eq:cast}, what we write
   \qquad\rightsquigarrow\qquad
   \inferrule{\casted\pi}{\Gamma\vdash\casted{M}:B}
 \end{equation}
-The casting relation as well as the associated typing proof transformation is
-defined as follows:
+
+The casting relation~$\cast$ is defined as the smallest relation on types such
+that:
 \begin{enumerate}
-\item $A\cast T TA$
+\item $A\cast TA$
+\item $A\to TB\cast TA\to TB$
+\item if~$A\cast A'$ and~$B\cast B'$ then $A'\to B\cast A\to B'$\TODO{Do we
+    really want to allow casting for~$A$? If so, we have \hbox{$A\to TB\cast
+      TA\to TB \cast A\to TB$} ... Or restrict to the case where~$A'$ is not of
+    the form~$TA$?}
+\item if $A\to C\cast A'\to C'$ then $A\to B\to C\cast A'\to B\to C'$
+\end{enumerate}
+The typing proof transformation is defined by the following rewriting rules:
+\begin{enumerate}
+\item \emph{Return.}
   \[
   \inferrule{\pi}{\Gamma\vdash M:A}
   \qquad\rightsquigarrow\qquad
@@ -106,7 +123,7 @@ defined as follows:
   }
   {\Gamma\vdash r_TM:TA}
   \]
-\item $A\to TB\cast T TA\to TB$
+\item \emph{Bind.}
   \[
   \inferrule{\pi}{\Gamma\vdash M:A\to TB}
   \qquad\rightsquigarrow\qquad
@@ -114,13 +131,7 @@ defined as follows:
     \inferrule{\pi}{\Gamma\vdash M:A\to TB}
   }{\Gamma\vdash b_TM:TA\to TB}
   \]
-% \item $A_1\to A_2\to\ldots\to A_n\to TA\qcast T TA_1\to A_2\to\ldots\to A_n\to TA$
-  % \[
-  % \inferrule{\Gamma\vdash M:A_1\to A_2\to\ldots\to A_n\to
-  %   TA}{\Gamma\vdash\lambda x_1\ldots x_n.b_T(\lambda x_1'.f x_1'x_2\ldots
-  %   x_n)x_1:TA_1\to A_2\to\ldots\to A_n\to TA}
-  % \]
-\item if~$B\cast T B'$ then $A\to B\cast T A\to B'$
+\item \emph{Abstraction.}
   \[
   \inferrule{\pi}{\Gamma\vdash M:A\to B}
   \qquad\rightsquigarrow\qquad
@@ -129,13 +140,13 @@ defined as follows:
   }
   {\Gamma\vdash(\lambda x.\casted{Mx}):A\to B'}
   \]
-  where
+  whenever
   \[
   \inferrule{\rho}{\Gamma,x:A\vdash Mx:B}
   \qquad\rightsquigarrow\qquad
   \inferrule{\casted\rho}{\Gamma,x:A\vdash\casted{Mx}:B'}
   \]
-  by induction hypothesis, $\rho$ is the derivation
+  where $\rho$ is the derivation
   \[
   \inferrule{
     \inferrule{
@@ -146,8 +157,9 @@ defined as follows:
   {\Gamma,x:A\vdash Mx:B}
   \]
   and~$x\not\in\FV\Gamma$.\TODO{Define~$\FV\Gamma$}
-\item if $A\to C\cast T A'\to C'$ then $A\to B\to C\cast T\to A'\to B\to C'$
+\item \emph{Argument.}
   \[
+  \hspace{-10ex}
   \inferrule{\pi}{\Gamma\vdash M:A\to B\to C}
   \qquad\rightsquigarrow\qquad
   \inferrule{
@@ -159,15 +171,15 @@ defined as follows:
     {\Gamma,x:A',y:B\vdash\casted{(\lambda x.Mxy)}x':C'}
   }{\Gamma\vdash\lambda x'y.\casted{(\lambda x.Mxy)}x':A'\to B\to C'}
   \]
-  where
+  whenever
   \[
   \inferrule{\rho}{\Gamma,x:A',y:B\vdash\lambda x.Mxy:A\to C}
   \qquad\rightsquigarrow\qquad
   \inferrule{\casted\rho}{\Gamma,x:A',y:B\vdash\casted{\lambda x.Mxy}:A'\to C'}
   \]
-  by induction hypothesis, $\rho$ is the derivation
+  where $\rho$ is the derivation
   \[
-  \hspace{-10ex}
+  \hspace{-15ex}
   \inferrule{
     \inferrule{
       \inferrule{
@@ -184,21 +196,23 @@ defined as follows:
   {\Gamma,x:A',y:B\vdash\lambda x.Mxy:A\to C}
   \]
   and~$x,y\not\in\FV\Gamma$.
-\item We also add the following rewriting rule: TODO application
 \end{enumerate}
+
+\begin{theorem}
+  $\rightsquigarrow$ implies $\cast$.
+\end{theorem}
 
 \section{Properties of coercions}
 \subsection{Determinism}
 We suppose fixed monads~$(T_i,r_{T_i},b_{T_i})$ and write~$\equiv$ for the
 smallest congruence containing $\alpha$-equivalence, $\beta$-reduction, (typed)
 $\eta$-equivalence as well as all the~$\equiv_{T_i}$, as defined
-in~\eqref{eq:monad-laws}. We also write~$\cast{}$ for relation which is the
-``union'' (TODO) of all the~$\cast{T_i}$. Notice that the typing proof rewriting
+in~\eqref{eq:monad-laws}. Notice that the typing proof rewriting
 rule~$\rightsquigarrow$ that we have defined is non-deterministic. However, we
 show here that it is deterministic up to~$\equiv$.
 
 \begin{theorem}
-  Given types~$A$ and~$A'$ such that~$A\cast{} A'$, and a derivation
+  Given types~$A$ and~$A'$ such that~$A\cast A'$, and a derivation
   \[
   \inferrule{\pi}{\Gamma\vdash M:A}
   \]
@@ -226,10 +240,11 @@ expanded.
 
 In a given context~$\Gamma$, if~$M$ and~$N$ are terms of respective types~$TA$
 and \hbox{$A\to B\to C$}, the term~$MN$ can be casted into a term of type
-either~$TB\to TC$ or~$T(B\to C)$, which are incomparable wrt~$\cast{}$. In the
+either~$TB\to TC$ or~$T(B\to C)$, which are incomparable wrt~$\cast$. In the
 following, we restrict ourselves to expanded types.
 
 \section{A typing algorithm}
+\subsection{Inference up to coercion}
 \subsection{The algorithm}
 
 \subsection{Properties of the algorithm}
@@ -237,12 +252,21 @@ following, we restrict ourselves to expanded types.
   We infer the smallest possible type.
 \end{theorem}
 
+\section{An example}
+Explain streams + feedback.
+
 \section{Future works}
-Extend to:
+Extend to more general cases.
 \begin{itemize}
-\item other constructions such as products and coproducts
-\item composition of monads
-\item type schemes with Henessy-Milner type inference
+\item Other constructions such as products and coproducts
+\item Composition of monads
+\item Type schemes with Hindley-Milner type
+  inference~\cite{hindley1969principal, damas1982principal}. Notice that it
+  breaks let-polymorphism: each instance of a value declared by a let has to be
+  compiled separately. Also, it is ambiguous with polymorphism: $id\ [1;2;3]$
+  should evaluate (in one step) to~$[1;2;3]$ or to~$[id\ 1;id\ 2;id\ 3]$? We
+  should be able to obtain results with parametricity though... (in the previous
+  example, both evaluations lead to the same result!)
 \end{itemize}
 
 \bibliographystyle{alpha}
