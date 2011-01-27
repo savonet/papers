@@ -1,0 +1,250 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\usepackage{mathpartir}
+\usepackage{amsthm}
+
+\newtheorem{theorem}{Theorem}
+
+\renewcommand{\leq}{\leqslant}
+\renewcommand{\geq}{\geqslant}
+\renewcommand{\labelitemi}{--}
+\newcommand{\cast}[1]{\leq_{#1}}
+\newcommand{\qcast}[1]{\quad\cast{#1}\quad}
+\newcommand{\casted}[1]{\overline{#1}}
+\newcommand{\qeq}{\quad=\quad}
+\newcommand{\add}{\mathop{add}}
+\newcommand{\FV}[1]{\mathop{FV}(#1)}
+\newcommand{\TODO}[1]{\marginpar{\tiny #1}}
+\newcommand{\gramdef}{\quad::=\quad}
+\newcommand{\gramor}{\quad|\quad}
+
+\title{Monadic Coercions}
+\author{Samuel Mimram}
+\hypersetup{
+  pdftitle={\csname @title\endcsname},
+  pdfauthor={\csname @author\endcsname},
+  unicode=true,
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=black,
+  urlcolor=black
+}
+
+
+\begin{document}
+\maketitle
+
+Monads are a classical notion in category theory~\cite{mac1998categories}. They
+were introduced in computer science by Moggi~\cite{moggi2002computational} and
+mad popular by Wadler~\cite{wadler1992comprehending}.
+
+What we want is sometimes called
+\emph{autolifting}\footnote{\url{http://haskell.1045720.n5.nabble.com/Making-monadic-code-more-concise-td3266090.html}}.
+
+An algorithm for coercing type inference in ML~\cite{luo2008coercions}: uses
+return as a particular case of coercion, but the inferred type is
+non-deterministic and thus not canonical.
+
+A notion of subtyping between monad is studied in~\cite{tolmach1998optimizing}.
+
+A completely unrelated paper with a cool title~\cite{shalgi2008being}.
+
+\section{A $\lambda$-calculus with monadic types}
+
+\subsection{$\lambda$-calculus}
+
+\subsection{Monads}
+A monad $(T,r_T,b_T)$ consists of a type~$TA$ for each type~$A$ and two
+operations
+\[
+r_T:A\to TA
+\qquad\qquad
+b_T:(A\to TB)\to TA\to TB
+\]
+such that
+\begin{equation}
+  \label{eq:monad-laws}
+  b_Tk(r_T x)\equiv_T kx
+  \qquad\qquad
+  b_Tr_Te\equiv_T e
+  \qquad\qquad
+  b_T(\lambda x.b_T(kx)h)e\equiv_T b_Tk(b_T e k)
+\end{equation}
+
+\subsection{Coercions}
+Intuitively, the return operation~$r_T$ allows us to \emph{coerce} or
+\emph{cast} a value of type~$A$ into a value of type~$TA$. We would like to make
+these coercions implicit. For instance, if $T$ is the list monad then the term
+$(\add\ [1;2;3]\ 1)$ should be automatically converted to ... which evaluates
+to~$[2;3;4]$.
+
+Every monad thus defines a preorder relation, called \emph{casting}, on types as
+the reflexive and transitive closure of the smallest relation~$\cast T$ on
+types, where \hbox{$A\cast T B$} means that every value of type~$A$ may be
+casted into a value of type~$B$, or more precisely that every typing proof on
+the left of~\eqref{eq:cast} may be transformed in to a typing proof of the form
+given on the right of~\eqref{eq:cast}, what we write
+\begin{equation}
+  \label{eq:cast}
+  \inferrule{\pi}{\Gamma\vdash M:A}
+  \qquad\rightsquigarrow\qquad
+  \inferrule{\casted\pi}{\Gamma\vdash\casted{M}:B}
+\end{equation}
+The casting relation as well as the associated typing proof transformation is
+defined as follows:
+\begin{enumerate}
+\item $A\cast T TA$
+  \[
+  \inferrule{\pi}{\Gamma\vdash M:A}
+  \qquad\rightsquigarrow\qquad
+  \inferrule{
+    \inferrule{\pi}{\Gamma\vdash M:A}
+  }
+  {\Gamma\vdash r_TM:TA}
+  \]
+\item $A\to TB\cast T TA\to TB$
+  \[
+  \inferrule{\pi}{\Gamma\vdash M:A\to TB}
+  \qquad\rightsquigarrow\qquad
+  \inferrule{
+    \inferrule{\pi}{\Gamma\vdash M:A\to TB}
+  }{\Gamma\vdash b_TM:TA\to TB}
+  \]
+% \item $A_1\to A_2\to\ldots\to A_n\to TA\qcast T TA_1\to A_2\to\ldots\to A_n\to TA$
+  % \[
+  % \inferrule{\Gamma\vdash M:A_1\to A_2\to\ldots\to A_n\to
+  %   TA}{\Gamma\vdash\lambda x_1\ldots x_n.b_T(\lambda x_1'.f x_1'x_2\ldots
+  %   x_n)x_1:TA_1\to A_2\to\ldots\to A_n\to TA}
+  % \]
+\item if~$B\cast T B'$ then $A\to B\cast T A\to B'$
+  \[
+  \inferrule{\pi}{\Gamma\vdash M:A\to B}
+  \qquad\rightsquigarrow\qquad
+  \inferrule{
+    \inferrule{\casted\rho}{\Gamma,x:A\vdash \casted{Mx}:B'}
+  }
+  {\Gamma\vdash(\lambda x.\casted{Mx}):A\to B'}
+  \]
+  where
+  \[
+  \inferrule{\rho}{\Gamma,x:A\vdash Mx:B}
+  \qquad\rightsquigarrow\qquad
+  \inferrule{\casted\rho}{\Gamma,x:A\vdash\casted{Mx}:B'}
+  \]
+  by induction hypothesis, $\rho$ is the derivation
+  \[
+  \inferrule{
+    \inferrule{
+      \inferrule{\pi}{\Gamma\vdash M:A\to B}
+    }
+    {\Gamma,x:A\vdash M:A\to B}
+  }
+  {\Gamma,x:A\vdash Mx:B}
+  \]
+  and~$x\not\in\FV\Gamma$.\TODO{Define~$\FV\Gamma$}
+\item if $A\to C\cast T A'\to C'$ then $A\to B\to C\cast T\to A'\to B\to C'$
+  \[
+  \inferrule{\pi}{\Gamma\vdash M:A\to B\to C}
+  \qquad\rightsquigarrow\qquad
+  \inferrule{
+    \inferrule{
+      \inferrule{\casted\rho}{\Gamma,x:A',y:B\vdash\casted{\lambda x.Mxy}:A'\to C'}
+      \\
+      \inferrule{\null}{\Gamma,x:A',y:B\vdash x':A'}
+    }
+    {\Gamma,x:A',y:B\vdash\casted{(\lambda x.Mxy)}x':C'}
+  }{\Gamma\vdash\lambda x'y.\casted{(\lambda x.Mxy)}x':A'\to B\to C'}
+  \]
+  where
+  \[
+  \inferrule{\rho}{\Gamma,x:A',y:B\vdash\lambda x.Mxy:A\to C}
+  \qquad\rightsquigarrow\qquad
+  \inferrule{\casted\rho}{\Gamma,x:A',y:B\vdash\casted{\lambda x.Mxy}:A'\to C'}
+  \]
+  by induction hypothesis, $\rho$ is the derivation
+  \[
+  \hspace{-10ex}
+  \inferrule{
+    \inferrule{
+      \inferrule{
+        \inferrule{\pi}{\Gamma\vdash M:A\to B\to C}
+      }
+      {\Gamma,x:A',y:B,x:A\vdash M:A\to B\to C}
+      \and
+      \inferrule{\null}{\Gamma,x:A',y:B,x:A\vdash x:A}
+      \and
+      \inferrule{\null}{\Gamma,x:A',y:B,x:A\vdash y:B}
+    }
+    {\Gamma,x:A',y:B,x:A\vdash Mxy:A\to C}
+  }
+  {\Gamma,x:A',y:B\vdash\lambda x.Mxy:A\to C}
+  \]
+  and~$x,y\not\in\FV\Gamma$.
+\item We also add the following rewriting rule: TODO application
+\end{enumerate}
+
+\section{Properties of coercions}
+\subsection{Determinism}
+We suppose fixed monads~$(T_i,r_{T_i},b_{T_i})$ and write~$\equiv$ for the
+smallest congruence containing $\alpha$-equivalence, $\beta$-reduction, (typed)
+$\eta$-equivalence as well as all the~$\equiv_{T_i}$, as defined
+in~\eqref{eq:monad-laws}. We also write~$\cast{}$ for relation which is the
+``union'' (TODO) of all the~$\cast{T_i}$. Notice that the typing proof rewriting
+rule~$\rightsquigarrow$ that we have defined is non-deterministic. However, we
+show here that it is deterministic up to~$\equiv$.
+
+\begin{theorem}
+  Given types~$A$ and~$A'$ such that~$A\cast{} A'$, and a derivation
+  \[
+  \inferrule{\pi}{\Gamma\vdash M:A}
+  \]
+  if
+  \[
+  \inferrule{\pi}{\Gamma\vdash M:A}
+  \rightsquigarrow
+  \inferrule{\pi'}{\Gamma\vdash M':A'}
+  \qquad\text{and}\qquad
+  \inferrule{\pi}{\Gamma\vdash M:A}
+  \rightsquigarrow
+  \inferrule{\pi''}{\Gamma\vdash M'':A'}
+  \]
+  then~$M'\equiv M''$.
+\end{theorem}
+
+\subsection{Minimality}
+A type~$A$ is \emph{expanded} when it is generated by the following grammar
+\[
+A\gramdef X\gramor A\to A\gramor TX
+\]
+where~$X$ is an atomic type. In expanded types monads are only allowed on atomic
+types. For instance, given types~$A$ and~$B$, the type~$T(A\to B)$ is not
+expanded.
+
+In a given context~$\Gamma$, if~$M$ and~$N$ are terms of respective types~$TA$
+and \hbox{$A\to B\to C$}, the term~$MN$ can be casted into a term of type
+either~$TB\to TC$ or~$T(B\to C)$, which are incomparable wrt~$\cast{}$. In the
+following, we restrict ourselves to expanded types.
+
+\section{A typing algorithm}
+\subsection{The algorithm}
+
+\subsection{Properties of the algorithm}
+\begin{theorem}
+  We infer the smallest possible type.
+\end{theorem}
+
+\section{Future works}
+Extend to:
+\begin{itemize}
+\item other constructions such as products and coproducts
+\item composition of monads
+\item type schemes with Henessy-Milner type inference
+\end{itemize}
+
+\bibliographystyle{alpha}
+\bibliography{monadic}
+\end{document}
