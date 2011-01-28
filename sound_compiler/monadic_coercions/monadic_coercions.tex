@@ -8,6 +8,9 @@
 \usepackage{amsthm}
 
 \newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{example}
+\newtheorem{example}[theorem]{Example}
 
 \renewcommand{\leq}{\leqslant}
 \renewcommand{\geq}{\geqslant}
@@ -21,8 +24,13 @@
 \newcommand{\TODO}[1]{\marginpar{\tiny #1}}
 \newcommand{\gramdef}{\quad::=\quad}
 \newcommand{\gramor}{\quad|\quad}
+\newcommand{\trule}[1]{\mathrm{(#1)}}
+\newcommand{\rewrites}{\rightsquigarrow}
+\newcommand{\qqrewrites}{\qquad\rewrites\qquad}
+\newcommand{\reduces}[1]{\longrightarrow_{#1}}
+\newcommand{\mreduces}[1]{\overset\ast\longrightarrow_{#1}}
 
-\title{Monadic Coercions}
+\title{Implicit Monadic Coercions}
 \author{Samuel Mimram}
 \hypersetup{
   pdftitle={\csname @title\endcsname},
@@ -60,44 +68,120 @@ A completely unrelated paper with a cool title~\cite{shalgi2008being}.
 
 
 \section{A $\lambda$-calculus with monadic types}
+\subsection{The simply typed $\lambda$-calculus}
+\paragraph{Terms.}
+We suppose fixed a set of \emph{variables}~$x,y,\ldots$ and a set of
+\emph{atomic terms} $t,u,\ldots$. $\lambda$-terms~$M$ are defined by the grammar
+\[
+M\gramdef x\gramor\lambda x.M\gramor MM\gramor t
+\]
+where~$x$ is a variable and~$t$ is an atomic term. Terms are considered up to
+the usual $\alpha$-conversion rule.
 
-\subsection{$\lambda$-calculus}
+The reduction is the usual $\beta$-reduction: $(\lambda x.M)N\reduces\beta
+M[N/x]$, where $M[N/x]$ denotes the term~$M$ where every free occurrence of the
+variable~$x$ has been replaced by the term~$N$. We also suppose that we are
+given reduction rules of the form~$tM_1\ldots M_k\reduces\tau M$ where~$t$ is an
+atomic term and reduction using these rules is called the $\tau$-reduction. We
+say that a term~$M$ \emph{reduces} to~$N$ whenever~$M\mreduces{}N$,
+where~$\mreduces{}$ is the reflexive and transitive closure
+of~$\reduces{}=\reduces\beta\cup\reduces\tau$.
+
+\paragraph{Types.}
+We suppose fixed a set of \emph{atomic types}~$X,Y,\ldots$ and a set of
+\emph{type constructors}~$T,U,\ldots$. We also suppose given a type~$A_t$ for
+each atomic term~$t$. Types~$A$ are defined by the grammar
+\[
+A\gramdef X\gramor A\to A\gramor TA
+\]
+where~$X$ is an atomic type and~$T$ is a type constructor.
+
+\paragraph{Typing rules.}
+A \emph{context} $\Gamma$ is a set of pairs $\{x_1:A_1,\ldots,x_n:A_n\}$ where
+the~$x_i$ are variables and the~$A_i$ are types. The variables~$x_i$ are called
+the \emph{free variables} of~$\Gamma$ and denoted by~$\FV\Gamma$. A
+\emph{sequent} is a triple $\Gamma\vdash M:A$ where~$\Gamma$ is a context, $M$
+is a $\lambda$-term and~$A$ is a type.
+
+Typing rules are defined by rules for deriving a sequent from a list of
+sequents:
+\[
+\begin{array}{c@{\qquad\qquad}c}
+  \inferrule{\Gamma\vdash M:A\to B\\\Gamma\vdash N:B}{\Gamma\vdash MN:B}{\trule{App}}
+  &
+  \inferrule{\Gamma,x:A\vdash M:B}{\Gamma\vdash\lambda x.M:A\to B}{\trule{Abs}}
+  \\
+  \inferrule{\null}{\Gamma,x:A\vdash x:A}{\trule{Ax}}
+  &
+  \inferrule{\null}{\Gamma\vdash t:A_t}{\trule{Cst}}
+  \\
+  \inferrule{\Gamma\vdash M:A}{\Gamma,x:B\vdash M:A}{\trule{Weak}}
+\end{array}
+\]
+In the~$\trule{Abs}$ rule, we implicitly suppose that~$x$ is not free
+in~$\Gamma$. In the following, we suppose that the $\tau$-reduction rules are
+such that if $\Gamma\vdash M:A$ is derivable and $M\reduces\tau N$
+then~$\Gamma\vdash N:A$ is also derivable, so that reduction always preserves
+typing.
 
 \subsection{Monads}
-A monad $(T,r_T,b_T)$ consists of a type~$TA$ for each type~$A$ and two
-operations
+A monad $(T,r_T,b_T)$ consists of a type constructor~$T$ together with two
+families of terms indexed by types~$A$
 \[
-r_T:A\to TA
-\qquad\qquad
-b_T:(A\to TB)\to TA\to TB
+r_T^A:A\to TA
+\qquad\text{and}\qquad
+b_T^A:(A\to TB)\to TA\to TB
 \]
-such that
-\begin{equation}
-  \label{eq:monad-laws}
-  b_Tk(r_T x)\equiv_T kx
+respectively called \emph{return} and \emph{bind} such that
+\[
+  b_Tk(r_T x)\mreduces{} kx
+  \qquad
+  b_Tr_Te\mreduces{} e
+  \qquad
+  b_T(\lambda x.b_Th(kx))e\mreduces{} b_Th(b_T k e)
+\]
+(we often omit the type superscripts for concision).
+
+\begin{example}
+  The list monad~$T$ is defined as follows. We write~$[x;y;z]$ for a list with
+  three elements $x$, $y$ and~$z$. Given a type~$A$, $TA$ is the type for lists
+  whose elements are of type~$A$. The return and bind function respectively have
+  the following $\tau$-reduction rules:
+  \[
+  r_Tx\reduces\tau[x]
   \qquad\qquad
-  b_Tr_Te\equiv_T e
-  \qquad\qquad
-  b_T(\lambda x.b_T(kx)h)e\equiv_T b_Tk(b_T e k)
-\end{equation}
+  b_Tfl\reduces\tau[x_1^1;\ldots;x_1^{k_1};x_2^1;\ldots;x_2^{k_i};\ldots\ldots;x_n^1;\ldots;x_n^{k_n}]
+  \]
+  where~$l=[x_1;\ldots;x_n]$ and~$f x_i=[x_i^1;\ldots;x_i^{k_i}]$. It can easily
+  be checked that the axioms for monads are satisfied.
+\end{example}
 
 \subsection{Coercions}
-Intuitively, the return operation~$r_T$ allows us to \emph{coerce} or
-\emph{cast} a value of type~$A$ into a value of type~$TA$. We would like to make
-these coercions implicit. For instance, if $T$ is the list monad then the term
-$(\add\ [1;2;3]\ 1)$ should be automatically converted to ... which evaluates
-to~$[2;3;4]$.
+Intuitively, the return operation~$r_T$ of a monad~$T$ allows us to
+\emph{coerce} or \emph{cast} a value of type~$A$ into a value of type~$TA$, and
+similarly the bind operation allows us to cast an argument of type~$TA$ of a
+function into an argument of type~$A$. We would like to make these coercions
+implicit. For instance, if $T$ is the list monad and the calculus contains usual
+contants and types for maniuplating integers, then the term
+\[
+\add\ [1;2;3]\ 1
+\]
+should be automatically converted to
+\[
+(\lambda x'y.\ b_T\ (\lambda x.\ r_T\ (add\ x\ y))\ x')\ [1;2;3]\ 1
+\]
+which is typable and evaluates to~$[2;3;4]$.
 
-Every monad thus defines a preorder relation, called \emph{casting}, on types as
-the reflexive and transitive closure of the smallest relation~$\cast$ on
-types, where \hbox{$A\cast B$} means that every value of type~$A$ may be
-casted into a value of type~$B$, or more precisely that every typing proof on
-the left of~\eqref{eq:cast} may be transformed in to a typing proof of the form
-given on the right of~\eqref{eq:cast}, what we write
+Every monad thus defines a preorder relation on types, called \emph{casting}, as
+the reflexive and transitive closure of the smallest relation~$\cast$ on types,
+where \hbox{$A\cast B$} means that every value of type~$A$ may be casted into a
+value of type~$B$, or more precisely that every typing proof on the left
+of~\eqref{eq:cast} may be transformed in to a typing proof of the form given on
+the right of~\eqref{eq:cast}, what we write
 \begin{equation}
   \label{eq:cast}
   \inferrule{\pi}{\Gamma\vdash M:A}
-  \qquad\rightsquigarrow\qquad
+  \qqrewrites
   \inferrule{\casted\pi}{\Gamma\vdash\casted{M}:B}
 \end{equation}
 
@@ -106,18 +190,19 @@ that:
 \begin{enumerate}
 \item $A\cast TA$
 \item $A\to TB\cast TA\to TB$
-\item if~$A\cast A'$ and~$B\cast B'$ then $A'\to B\cast A\to B'$\TODO{Do we
-    really want to allow casting for~$A$? If so, we have \hbox{$A\to TB\cast
-      TA\to TB \cast A\to TB$} ... Or restrict to the case where~$A'$ is not of
-    the form~$TA$?}
+\item if~$B\cast B'$ then $A\to B\cast A\to B'$
+\item if~$A\cast A'$ then $A'\to B\cast A\to B$
 \item if $A\to C\cast A'\to C'$ then $A\to B\to C\cast A'\to B\to C'$
+\item if $A\cast A'$ then $TA\cast TA'$
 \end{enumerate}
 The typing proof transformation is defined by the following rewriting rules:
+\TODO{With bind we can also have the casting \hbox{$TA\cast (A\to TB)\to TB$} Do
+  we want that?}
 \begin{enumerate}
 \item \emph{Return.}
   \[
   \inferrule{\pi}{\Gamma\vdash M:A}
-  \qquad\rightsquigarrow\qquad
+  \qqrewrites
   \inferrule{
     \inferrule{\pi}{\Gamma\vdash M:A}
   }
@@ -126,7 +211,7 @@ The typing proof transformation is defined by the following rewriting rules:
 \item \emph{Bind.}
   \[
   \inferrule{\pi}{\Gamma\vdash M:A\to TB}
-  \qquad\rightsquigarrow\qquad
+  \qqrewrites
   \inferrule{
     \inferrule{\pi}{\Gamma\vdash M:A\to TB}
   }{\Gamma\vdash b_TM:TA\to TB}
@@ -134,7 +219,7 @@ The typing proof transformation is defined by the following rewriting rules:
 \item \emph{Abstraction.}
   \[
   \inferrule{\pi}{\Gamma\vdash M:A\to B}
-  \qquad\rightsquigarrow\qquad
+  \qqrewrites
   \inferrule{
     \inferrule{\casted\rho}{\Gamma,x:A\vdash \casted{Mx}:B'}
   }
@@ -143,7 +228,7 @@ The typing proof transformation is defined by the following rewriting rules:
   whenever
   \[
   \inferrule{\rho}{\Gamma,x:A\vdash Mx:B}
-  \qquad\rightsquigarrow\qquad
+  \qqrewrites
   \inferrule{\casted\rho}{\Gamma,x:A\vdash\casted{Mx}:B'}
   \]
   where $\rho$ is the derivation
@@ -156,12 +241,35 @@ The typing proof transformation is defined by the following rewriting rules:
   }
   {\Gamma,x:A\vdash Mx:B}
   \]
-  and~$x\not\in\FV\Gamma$.\TODO{Define~$\FV\Gamma$}
-\item \emph{Argument.}
+  and~$x\not\in\FV\Gamma$.
+\item \emph{Argument restriction.}
+  \[
+  \inferrule{\pi}{\Gamma\vdash M:A'\to B}
+  \qqrewrites
+  \inferrule{
+    \inferrule{
+      \inferrule{
+        \inferrule{\pi}{\Gamma\vdash M:A'\to B}
+      }
+      {\Gamma,x:A\vdash M:A'\to B}
+      \\
+      \inferrule{\casted\rho}{\Gamma,x:A\vdash\casted{x}:A'}
+    }
+    {\Gamma,x:A\vdash M\casted{x}:B}
+  }
+  {\Gamma\vdash\lambda x.M\casted{x}:A\to B}
+  \]
+  whenever
+  \[
+  \inferrule{\null}{\Gamma,x:A\vdash x:A}
+  \qqrewrites
+  \inferrule{\casted{\rho}}{\Gamma,x:A\vdash\casted{x}:A'}
+  \]
+\item \emph{Argument lifting.}
   \[
   \hspace{-10ex}
   \inferrule{\pi}{\Gamma\vdash M:A\to B\to C}
-  \qquad\rightsquigarrow\qquad
+  \qqrewrites
   \inferrule{
     \inferrule{
       \inferrule{\casted\rho}{\Gamma,x:A',y:B\vdash\casted{\lambda x.Mxy}:A'\to C'}
@@ -174,7 +282,7 @@ The typing proof transformation is defined by the following rewriting rules:
   whenever
   \[
   \inferrule{\rho}{\Gamma,x:A',y:B\vdash\lambda x.Mxy:A\to C}
-  \qquad\rightsquigarrow\qquad
+  \qqrewrites
   \inferrule{\casted\rho}{\Gamma,x:A',y:B\vdash\casted{\lambda x.Mxy}:A'\to C'}
   \]
   where $\rho$ is the derivation
@@ -183,11 +291,13 @@ The typing proof transformation is defined by the following rewriting rules:
   \inferrule{
     \inferrule{
       \inferrule{
-        \inferrule{\pi}{\Gamma\vdash M:A\to B\to C}
-      }
-      {\Gamma,x:A',y:B,x:A\vdash M:A\to B\to C}
-      \and
-      \inferrule{\null}{\Gamma,x:A',y:B,x:A\vdash x:A}
+        \inferrule{
+          \inferrule{\pi}{\Gamma\vdash M:A\to B\to C}
+        }
+        {\Gamma,x:A',y:B,x:A\vdash M:A\to B\to C}
+        \and
+        \inferrule{\null}{\Gamma,x:A',y:B,x:A\vdash x:A}
+      }{\Gamma,x:A',y:B,x:A\vdash Mx:B\to C}
       \and
       \inferrule{\null}{\Gamma,x:A',y:B,x:A\vdash y:B}
     }
@@ -196,20 +306,58 @@ The typing proof transformation is defined by the following rewriting rules:
   {\Gamma,x:A',y:B\vdash\lambda x.Mxy:A\to C}
   \]
   and~$x,y\not\in\FV\Gamma$.
+\item \emph{Monad restriction.}
+  \[
+  \hspace{-13ex}
+  \inferrule{\pi}{\Gamma\vdash M:TA}
+  \qqrewrites
+  \inferrule{
+    \inferrule{
+      \inferrule{\null}{\Gamma\vdash b_T:(A\to TA')\to TA\to TA'}
+      \\
+      \inferrule{\casted\rho}{\Gamma\vdash\casted{\lambda x.x}:A\to TA'}
+    }
+    {\Gamma\vdash b_T\casted{(\lambda x.x)}:TA\to TA'}
+    \and
+    \inferrule{\null}{\Gamma\vdash M:TA}
+  }
+  {\Gamma\vdash b_T\casted{(\lambda x.x)}M:TA'}
+  \]
+  whenever
+  \[
+  \inferrule{\rho}{\Gamma\vdash\lambda x.x:A\to A}
+  \qqrewrites
+  \inferrule{\casted\rho}{\Gamma\vdash\casted{\lambda x.x}:A\to TA'}
+  \]
+  where~$\rho$ is the derivation
+  \[
+  \inferrule{
+    \inferrule{\null}{\Gamma,x:A\vdash x:A}
+  }{\Gamma\vdash\lambda x.x:A\to A}
+  \]
+  and~$x\not\in\FV\Gamma$.
 \end{enumerate}
 
-\begin{theorem}
-  $\rightsquigarrow$ implies $\cast$.
-\end{theorem}
+\begin{proposition}
+  For any rewriting
+  \[
+  \inferrule{\pi}{\Gamma\vdash M:A}
+  \qqrewrites
+  \inferrule{\casted{\pi}}{\Gamma\vdash\casted{M}:A'}
+  \]
+  of a derivation, we have that~$A\cast A'$.
+\end{proposition}
+\begin{proof}
+  Immediate induction.
+\end{proof}
 
 \section{Properties of coercions}
 \subsection{Determinism}
 We suppose fixed monads~$(T_i,r_{T_i},b_{T_i})$ and write~$\equiv$ for the
-smallest congruence containing $\alpha$-equivalence, $\beta$-reduction, (typed)
-$\eta$-equivalence as well as all the~$\equiv_{T_i}$, as defined
-in~\eqref{eq:monad-laws}. Notice that the typing proof rewriting
-rule~$\rightsquigarrow$ that we have defined is non-deterministic. However, we
-show here that it is deterministic up to~$\equiv$.
+smallest congruence containing $\alpha$-equivalence, $\beta$-reduction,
+$\tau$-reduction, (typed) $\eta$-equivalence. Notice that the typing proof
+rewriting rule~$\rewrites$ that we have defined is non-deterministic. However,
+we show here that it is deterministic up to~$\equiv$.
 
 \begin{theorem}
   Given types~$A$ and~$A'$ such that~$A\cast A'$, and a derivation
@@ -219,17 +367,28 @@ show here that it is deterministic up to~$\equiv$.
   if
   \[
   \inferrule{\pi}{\Gamma\vdash M:A}
-  \rightsquigarrow
+  \rewrites
   \inferrule{\pi'}{\Gamma\vdash M':A'}
   \qquad\text{and}\qquad
   \inferrule{\pi}{\Gamma\vdash M:A}
-  \rightsquigarrow
+  \rewrites
   \inferrule{\pi''}{\Gamma\vdash M'':A'}
   \]
   then~$M'\equiv M''$.
 \end{theorem}
 
 \subsection{Minimality}
+Notice that~$\cast$ is not a partial order but only a preorder because for any
+types~$A$ and~$B$, we have
+\[
+A\to TB
+\qcast
+TA\to TB
+\qcast
+A\to TB
+\]
+In the following we restrict.... TODO
+
 A type~$A$ is \emph{expanded} when it is generated by the following grammar
 \[
 A\gramdef X\gramor A\to A\gramor TX
@@ -245,6 +404,61 @@ following, we restrict ourselves to expanded types.
 
 \section{A typing algorithm}
 \subsection{Inference up to coercion}
+TODO: actually we should do everything preceding in this style because it
+enables us to talk about applications which might not be well-typed!!!!
+
+In the same spirit as~\cite{luo2008coercions}, we define inference of a term up
+to coercion as derivations for sequents of the form
+\[
+\Gamma\vdash M\rewrites N:A
+\]
+where~$\Gamma$ is a context, $M$ and~$M'$ are terms and~$A$ is a type, meaning
+that the term~$M$ coerces to the term~$M'$ which has type~$A$. Derivation rules are
+\[
+\begin{array}{c@{\qquad}c}
+  \inferrule{\Gamma,x:A\vdash M\rewrites M':B}{\Gamma\vdash\lambda x.M\rewrites \lambda x.M':A\to B}{\trule{Abs}}
+  &
+  \inferrule{
+    \Gamma\vdash M\rewrites M':A\to B
+    \\
+    \Gamma\vdash N\rewrites N':A
+  }
+  {\Gamma\vdash MN\rewrites M'N':B}{\trule{App}}
+  \\[4ex]
+  \inferrule{\Gamma\vdash M\rewrites M':A}{\Gamma\vdash M\rewrites r_T^AM':TA}{\trule{Ret}}
+  &
+  \inferrule{\Gamma\vdash M\rewrites M':A\to TB}{\Gamma\vdash M\rewrites b_T^AM':TA\to TB}{\trule{Bnd}}
+  \\[4ex]
+  \inferrule{\null}{\Gamma,x:A\vdash x\rewrites x:A}{\trule{Ax}}
+  &
+  \inferrule{\null}{\Gamma\vdash t\rewrites t:A_t}{\trule{Ax}}
+  \\[4ex]
+  \inferrule{\Gamma\vdash M\rewrites M':A}{\Gamma,x:B\vdash M\rewrites M':A}{\trule{Weak}}
+  &
+  \inferrule{\Gamma\vdash M\rewrites\lambda x.M'x:A\to B}{\Gamma\vdash M\rewrites M':A\to B}{\trule{Eta}}
+  \\[4ex]
+  \inferrule{\Gamma\vdash M\rewrites \lambda xy.(\lambda x M'xy)x:A\to B\to C}{\Gamma\vdash M\rewrites M':A\to B\to C}{\trule{Arg}}
+  &
+  TODO: \text{monad restriction}
+\end{array}
+\]
+
+\begin{proposition}
+  The proposed system is an extension of the usual typing system, in the
+  following sense.
+  \begin{enumerate}
+  \item If $\Gamma\vdash M\rewrites M':A$ is derivable then~$\Gamma\vdash M':A$
+    is derivable.
+  \item If $\Gamma\vdash M:A$ is derivable then~$\Gamma\vdash M\rewrites M:A$ is
+    derivable.
+  \end{enumerate}
+\end{proposition}
+
+\begin{proposition}
+  If $\Gamma\vdash M:A$ and~$\Gamma\vdash M\rewrites M':A'$ are derivable
+  then~$A\cast A'$.
+\end{proposition}
+
 \subsection{The algorithm}
 
 \subsection{Properties of the algorithm}
@@ -258,8 +472,14 @@ Explain streams + feedback.
 \section{Future works}
 Extend to more general cases.
 \begin{itemize}
-\item Other constructions such as products and coproducts
-\item Composition of monads
+\item Composition of monads: via a distributive law~$l_{TU}:TUA\to UTA$.
+\item Remove the restriction to expanded type. This can be done if we suppose
+  that monads we consider are equipped with a strength $s_T:T(A\to B)\to TA\to
+  TB$. In this case, we can add the relation~$T(A\to B)\cast TA\to TB$ and adapt
+  the algorithms.
+\item Other constructions such as products and coproducts. Similar to the
+  previous cases, we should add strengths such as~$p_T:T(A\times B)\to TA\times
+  TB$.
 \item Type schemes with Hindley-Milner type
   inference~\cite{hindley1969principal, damas1982principal}. Notice that it
   breaks let-polymorphism: each instance of a value declared by a let has to be
@@ -267,6 +487,7 @@ Extend to more general cases.
   should evaluate (in one step) to~$[1;2;3]$ or to~$[id\ 1;id\ 2;id\ 3]$? We
   should be able to obtain results with parametricity though... (in the previous
   example, both evaluations lead to the same result!)
+  see~\cite{wadler1989theorems}.
 \end{itemize}
 
 \bibliographystyle{alpha}
