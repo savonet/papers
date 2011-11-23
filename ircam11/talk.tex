@@ -224,7 +224,6 @@ output.icecast(%vorbis,mount="myradio",
 \end{lstlisting}
 \end{block}
 
-Also a way to enable multi-threading
 \end{frame}
 
 %% ===========================================
@@ -470,7 +469,7 @@ At line 1, char 15: the variable blanc used here
 
 \vfill
 
-Content usually inferred from encoding formats
+\textbf{Content is inferred}, usually from encoding formats
 \begin{lstlisting}
 $ output.file(%mp3,"/tmp/dump.mp3",
            input.http("http://blah"),fallible=true) ;;
@@ -483,7 +482,7 @@ $ output.file(%mp3(mono),"/tmp/dump.mp3",
 
 \vfill
 
-Explicit conversions, content-sensitive decoding
+Explicit conversions, \textbf{content-sensitive} decoding
 \begin{lstlisting}
 $ output.pulseaudio(
     audio_to_stereo(playlist("list.txt")),
@@ -516,13 +515,10 @@ $ output.pulseaudio(
 \begin{block}{Future}
 \begin{itemize}
 \item Video and MIDI, interactive uses, community
-\item Language-wise
-\begin{itemize}
-  \item More structured programming, OO-like
-  \item Get rid of \emph{black-box sources}, out-of-time programs
-  \item \emph{Compile} the language, efficient DSP
+\item More structured programming, OO-like
+\item Get rid of \emph{black-box sources}, out-of-time programs
+\item \emph{Compile} the language, efficient DSP
   % To name a few: chuck, puredata, faust, streamit \ldots
-\end{itemize}
 \end{itemize}
 \end{block}
 
