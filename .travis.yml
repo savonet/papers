@@ -6,6 +6,7 @@ addons:
     - texlive-pictures
     - texlive-latex-extra
     - pgf
+    - latex-beamer
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y rubber
