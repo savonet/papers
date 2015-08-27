@@ -4,6 +4,7 @@ addons:
     packages:
     - texlive
     - texlive-pictures
+    - texlive-latex-extra
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y rubber
