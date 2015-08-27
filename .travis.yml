@@ -4,5 +4,7 @@ addons:
   apt:
     packages:
     - texlive
+    - texlive-pictures
+    - rubber
 
 script: make
