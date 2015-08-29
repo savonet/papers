@@ -6,6 +6,7 @@ module type M = sig
   val b : ('a -> 'b t) -> 'a t -> 'b t
 end
 
+(** The monad. *)
 module M : M = struct
   type 'a t = unit
 
@@ -13,6 +14,38 @@ module M : M = struct
 
   let b _ _ = ()
 end
+
+(** Derived operations for the monad. *)
+module M = struct
+  include M
+
+  let lift_fun f = b (fun x -> r (f x))
+end
+
+(** Stream. *)
+module S = struct
+  type t = int M.t
+
+  let incr = M.lift_fun (fun x -> x + 1)
+end
+
+let app (f:int->int) (x:int) = f x
+
+let s =
+  (* We want to lift app. *)
+  let app f x =
+    (* Get rid of the argument x. *)
+    let app f = app f x in
+    
+  in
+  app S.incr 0
+
+let () = ()
+
+
+
+
+
 
 type 'a t = 'a M.t
 let b = M.b
@@ -40,27 +73,3 @@ let lift_fun2 f x y = M.b (fun x' -> M.b (M.r * (f x')) y) x
 let lift_fun3 f x y z = M.b (fun x' -> M.b (fun y' -> M.b (fun z' -> M.r (f x' y' z')) z) y) x
 
 let lift_fun3'' f x y z = M.b (fun x -> f x y z) x
-
-(** Dummy implementation of feedback. *)
-let feedback : ('a -> 'a t) -> 'a -> 'a t = fun _ x -> r x
-
-let dt = 1
-
-(** Derivation when s is static. *)
-let derivate s =
-  let d x y = (y - x) / dt in
-  let f (x',d') =
-    let x = s in
-    r (x, d x' x)
-  in
-  b (fun (x,y) -> r y) (feedback f (0,0))
-
-(** Derivation. *)
-let derivate (s : int t) : int t =
-  let d x y = (y - x) / dt in
-  let d : int t -> int t -> int t = lift_fun2 d in
-  let f (x',d') : (int * int) -> (int * int) t  =
-    let x = s in
-    r (x, d x' x)
-  in
-  (fun (x,y) -> r y) (feedback f (r 0, r 0))
